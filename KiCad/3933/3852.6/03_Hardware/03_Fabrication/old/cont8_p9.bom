@@ -1,0 +1,117 @@
+Bill of Material for c:\advpcb~1\saet\cont8_p9.PCB
+On 28-Sep-2016 at 09:56:11
+
+ Comment             Pattern   Quantity  Components
+------------------------------------------------------------------------------
+
+
+                     PRA1105        1    T3
+
+                     SIP2           1    LD1
+
+                     SIP4           1    CN5
+
+ 0R                  0302           2    R15, R32
+
+ 100K                0302           1    R6
+
+ 100nF               0302           6    C3, C8, C15, C17, C21, C31
+
+ 100pF               0302           1    C11
+
+ 10M                 0302           1    R3
+
+ 10uF                0805           1    C4
+
+ 11nH                0302           1    L2
+
+ 120nH               0302           1    L1
+
+ 1K                  0302           1    R24
+
+ 1M                  0302           2    R2, R44
+
+ 1pF                 0302           1    C27
+
+ 1pF_                0302           1    C5
+
+ 1uF                 0302           2    C6, C36
+
+ 1uF                 0603           1    C26
+
+ 2.2M                0302           1    R7
+
+ 2.2nF               0302           1    C34
+
+ 2.2uF               0603           1    C7
+
+ 2.7pF               0302           1    C24
+
+ 220nF               0302           2    C22, C23
+
+ 2214TK              2214TK         1    U5
+
+ 2M                  0302           1    R8
+
+ 3.3pF               0302           1    C13
+
+ 3.9pF               0302           1    C9
+
+ 30MHz               FH30           1    QZ1
+
+ 32KHz               0805           1    QZ2
+
+ 33nH                0302           1    L7
+
+ 33pF                0302           1    C10
+
+ 4.7uF               0805           2    C2, C30
+
+ 4148                0603           1    D1
+
+ 470R                0302           2    R4, R10
+
+ 47K                 0302           1    R9
+
+ 47uF                1206           2    C32, C35
+
+ 50R                 0302           1    R1
+
+ 56pF                0302           2    C28, C29
+
+ 6,8V                1206           1    DZ1
+
+ 6.8pF               0302           1    C18
+
+ 68pF                0302           2    C1, C20
+
+ 9nH                 0302           1    L6
+
+ BC817               SOT-23         1    Q1
+
+ C12  39pF           0302           1    C12
+
+ C14  6pF            0302           1    C14
+
+ L11  5.6nH          0302           1    L11
+
+ L4  15nH            0302           1    L4
+
+ L5  15nH            0302           1    L5
+
+ LIS3DH              LGA-16         1    U3
+
+ MSP430G2433         QFN32          1    U2
+
+ POWER               RAD0.2         1    CN1
+
+ SL4432              QLP20SILIC     1    U1
+
+ STRIP               SIP8           1    CN3
+
+ TAMP                TAST           1    T2
+
+ TAPP                SIP2           1    CN2
+
+ TPS71501DCKR        SOT-323        1    U4
+

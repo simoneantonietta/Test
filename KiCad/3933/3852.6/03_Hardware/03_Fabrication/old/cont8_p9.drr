@@ -1,0 +1,22 @@
+---------------------------------------------------------------------------
+NC Drill File Report For :  c:\advpcb~1\saet\cont8_p9.PCB   28-Sep-2016  09:54:04
+---------------------------------------------------------------------------
+
+
+
+Layer Pair : Top - Bottom
+ASCII File : c:\advpcb~1\gerber\cont8_p9.TXT
+EIA File   : c:\advpcb~1\gerber\cont8_p9.DRL
+
+Tool         Hole Size          Hole Count        Tool Travel
+---------------------------------------------------------------------------
+T1        15mil (0.381mm)          172       20.041 Inch (509.044 mm)
+T2        35mil (0.889mm)          8         1.921 Inch (48.800 mm)
+T3        39mil (0.9906mm)         4         1.119 Inch (28.422 mm)
+T4        40mil (1.016mm)          3         1.998 Inch (50.746 mm)
+T5        47mil (1.1938mm)         1         1.818 Inch (46.169 mm)
+T6        106mil (2.6924mm)        1         0.239 Inch (6.075 mm)
+---------------------------------------------------------------------------
+Totals                             189       27.136 Inch (689.256 mm)
+
+Total Processing Time : 00:00:00
