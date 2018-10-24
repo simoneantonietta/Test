@@ -1,0 +1,3 @@
+Elenco versioni distribuite:
+
+1.0 b0363	Bergamo, cliente Pierluigi con 6 muduli Varco.	

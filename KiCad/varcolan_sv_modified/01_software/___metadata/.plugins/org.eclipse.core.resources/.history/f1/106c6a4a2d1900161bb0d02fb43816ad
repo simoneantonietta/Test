@@ -1,0 +1,582 @@
+/*
+ *-----------------------------------------------------------------------------
+ * PROJECT: gpsnif
+ * PURPOSE: see module UDPCommTh.h file
+ *-----------------------------------------------------------------------------
+ */
+#include <errno.h>
+#include <unistd.h>   //close
+#include <arpa/inet.h>    //close
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+
+#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
+
+#include "UDPCommTh.h"
+
+extern Trace *dbg;
+extern globals_st gd;
+extern RXHFrame *rf;
+
+
+/**
+ * ctor
+ */
+UDPCommTh::UDPCommTh()
+{
+name="UDPInterface";
+answeredFrom=0;
+
+endApplication=false;
+createThread(false,0,'r');
+
+resetClients();
+}
+
+/**
+ * dtor
+ */
+UDPCommTh::~UDPCommTh()
+{
+cout << "UDP communication end" << endl;
+}
+
+/**
+ * open serial communication
+ * @param dev
+ * @param param
+ * @param p
+ * @return
+ */
+bool UDPCommTh::impl_OpenComm(const string dev,int param,void* p)
+{
+bool ret;
+/*
+ * socket: create the parent socket
+ */
+sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+if(sockfd < 0)
+	{
+	dbg->trace(DBG_ERROR, "opening UDP socket");
+	ret=false;
+	}
+else
+	{
+	/* setsockopt: Handy debugging trick that lets
+	 * us rerun the server immediately after we kill it;
+	 * otherwise we have to wait about 20 secs.
+	 * Eliminates "ERROR on binding: Address already in use" error.
+	 */
+	optval = 1;
+	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *) &optval, sizeof(int));
+
+	/*
+	 * build the server's Internet address
+	 */
+	bzero((char *) &serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serveraddr.sin_port = htons((unsigned short) param);
+
+	hostaddrp = inet_ntoa(serveraddr.sin_addr);
+	/*
+	 * bind: associate the parent socket with a port
+	 */
+	if(bind(sockfd, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
+		{
+		dbg->trace(DBG_ERROR, "on binding server addr %s @ port %d",hostaddrp,param);
+		ret=false;
+		}
+	else
+		{
+		//dbg->trace(DBG_NOTIFY, "listening server addr %s @ port %d",hostaddrp,param);
+		dbg->trace(DBG_NOTIFY, "listening UDP server at port %d",param);
+		connected=true;
+		clientlen = sizeof(clientaddr);
+		rf->setPrintParam(true,true,true,true,gd.dumpTrigger);
+		ret=true;
+		}
+	}
+return ret;
+}
+
+/**
+ * close serial communication
+ * @param p
+ */
+void UDPCommTh::impl_CloseComm(void* p)
+{
+close(sockfd);
+}
+
+/**
+ * write data to serial
+ * @param buff
+ * @param size
+ * @param p
+ * @return true: ok
+ */
+bool UDPCommTh::impl_Write(uint8_t* buff,int size,void* p)
+{
+// search the client data
+int cl=getClientFromID(buff[HPROT_FLD_DST]);
+if(cl>=0)
+	{
+	dbg->trace(DBG_DEBUG,"send data to client %d, id %d, ip %s, port %d",cl,clients[cl].id, ip_uint32_2_string(clients[cl].clientIP.ip).c_str(), gd.port );
+	n = sendto(sockfd, buff, size, 0, (struct sockaddr *) &clients[cl].clientaddr, clients[cl].clientlen);
+	if(n < 0)
+		{
+		dbg->trace(DBG_ERROR,"in sendto");
+		}
+	last_client=cl;
+	return true;
+	}
+else
+	{
+	dbg->trace(DBG_ERROR,"client with id %d not found",buff[HPROT_FLD_DST]);
+	return false;
+	}
+}
+
+/**
+ * read data from UDP (blocking)
+ * @param buff contains the protocol frame
+ * @param size
+ * @param p
+ * @return ndata read
+ */
+int UDPCommTh::impl_Read(uint8_t* buff,int size,void* p)
+{
+ndata=0;
+// recvfrom: receive a UDP datagram from a client
+bzero(internal_buf, UDP_BUFSIZE);
+n = recvfrom(sockfd, internal_buf, UDP_BUFSIZE, 0, (struct sockaddr *) &clientaddr, (unsigned int *)&clientlen);
+if(n < 0)
+	{
+	dbg->trace(DBG_ERROR,"in recvfrom");
+	}
+else
+	{
+	// determine who sent the datagram
+//	hostp = gethostbyaddr((const char *) &clientaddr.sin_addr.s_addr, sizeof(clientaddr.sin_addr.s_addr), AF_INET);
+//	if(hostp == NULL)
+//		{
+//		dbg->trace(DBG_ERROR,"on gethostbyaddr");
+//		}
+	hostaddrp = inet_ntoa(clientaddr.sin_addr);
+	if(hostaddrp == NULL)
+		{
+		dbg->trace(DBG_ERROR, "on inet_ntoa");
+		}
+
+	ClientData::clientIP_u actual_ip;
+	actual_ip.ip=ip_string_2_uint32(hostaddrp);
+
+	last_client=addClient(HPROT_INITIAL_ID,clientaddr,clientlen,actual_ip.ip);	// id wil be updated in the onframe
+
+	if(n>HPROT_BUFFER_SIZE)
+		{
+		dbg->trace(DBG_ERROR, "too many data (max %d): %d from %s",HPROT_BUFFER_SIZE,n,hostaddrp);
+		}
+	else
+		{
+		memcpy(clients[last_client].buffer,internal_buf,n);
+		memcpy(buff,internal_buf,n);
+		clients[last_client].nDataAvailable=n;
+		pd=&clients[last_client].protocolData;
+		ndata=n;
+		}
+	}
+return ndata;
+}
+
+
+/**
+ *
+ * @param id
+ * @return -1 not found
+ */
+int UDPCommTh::getClientFromID(uint8_t id)
+{
+int ret=-1;
+for(int i = 0;i < UDP_MAX_CLIENTS;i++)
+	{
+	if(clients[i].id == id)
+		{
+		ret=i;
+		}
+	}
+return ret;
+}
+
+/**
+ * get the client number form its ip (uint32)
+ * @param ip
+ * @return
+ */
+int UDPCommTh::getClientFromIP(uint32_t ip)
+{
+int ret=-1;
+for(int i = 0;i < UDP_MAX_CLIENTS;i++)
+	{
+	if(clients[i].clientIP.ip == ip)
+		{
+		ret=i;
+		break;
+		}
+	}
+return ret;
+}
+
+/**
+ * get the client number form its ip dotted string
+ * @param ip dotted string
+ * @return
+ */
+int UDPCommTh::getClientFromIP(string ip)
+{
+uint32_t i_ip=ip_string_2_uint32(ip);
+return getClientFromIP(i_ip);
+}
+
+/**
+ * dotted string IP conversion to uint32
+ * @param ip dotte string
+ * @return uint32
+ */
+uint32_t UDPCommTh::ip_string_2_uint32(string ip)
+{
+ClientData::clientIP_u actual_ip;
+sscanf(ip.c_str(),"%hhu.%hhu.%hhu.%hhu",&actual_ip.ip_fld[0],&actual_ip.ip_fld[1],&actual_ip.ip_fld[2],&actual_ip.ip_fld[3]);
+return actual_ip.ip;
+}
+
+/**
+ * uint32 ip to dotted string conversion
+ * @param ip
+ * @return dotted string
+ */
+string UDPCommTh::ip_uint32_2_string(uint32_t ip)
+{
+char str_ip[20];
+ClientData::clientIP_u actual_ip;
+actual_ip.ip=ip;
+sprintf(str_ip,"%hhu.%hhu.%hhu.%hhu",actual_ip.ip_fld[0],actual_ip.ip_fld[1],actual_ip.ip_fld[2],actual_ip.ip_fld[3]);
+return string(str_ip);
+}
+
+
+/**
+ * load the udp ip map file
+ *
+ * format:
+ * id ipaddress(dotted string)
+ * @param fname
+ * @return true: ok
+ */
+bool UDPCommTh::loadUdpIpFile(string fname)
+{
+bool ret=true;
+ifstream f;
+string line;
+int nline=0;
+vector<string> toks;
+int id;
+int nclients=0;
+
+resetClients();
+
+f.open(fname.c_str());
+if(f.is_open())
+	{
+	// read the file
+	while (!f.eof())
+		{
+		toks.clear();
+		nline++;
+		getline(f, line);
+		trim(line);
+		if(line.empty()) continue;
+		if(line[0]=='#') continue;
+		Split(line,toks," \t");
+		if(toks.size()==2)
+			{
+			id=atoi(toks[0].c_str());
+
+			/*
+			 * build the server's Internet address
+			 */
+			bzero((char *) &clientaddr, sizeof(clientaddr));
+			clientaddr.sin_family = AF_INET;
+			inet_aton(toks[1].c_str(),&clientaddr.sin_addr);
+			clientaddr.sin_port = htons((unsigned short) gd.port);
+
+			addClient(id,clientaddr,sizeof(clientaddr),ip_string_2_uint32(toks[1]));
+			dbg->trace(DBG_NOTIFY, "mapped ID %d with ip %s",id, toks[1].c_str());
+			nclients++;
+			}
+		else
+			{
+			dbg->trace(DBG_ERROR, "syntax error @ line %d",nline);
+			}
+		}
+	}
+dbg->trace(DBG_NOTIFY, "loaded UDP IDIP map file: %d entries", nclients);
+mapRuntimeAdded=0;
+return true;
+}
+
+/**
+ * add an UDP client if not present else return the existing one
+ * @param id (can be HPROT_UNKNOE
+ * @param clientaddr
+ * @param clientlen
+ * @param ip		uint32_t format
+ * @return client number
+ */
+int UDPCommTh::addClient(uint8_t id, struct sockaddr_in clientaddr, int clientlen, uint32_t ip)
+{
+// search if client exists
+int cl=-1;
+bool found=false;
+for(int i = 0;i < UDP_MAX_CLIENTS;i++)
+	{
+	if(ip == clients[i].clientIP.ip && id==clients[i].id)
+		{
+		found=true;
+		cl=i;
+		break;
+		}
+	}
+if(!found)
+	{
+	// add to the client list
+	found=false;
+	for(int i = 0;i < UDP_MAX_CLIENTS;i++)
+		{
+		// search for an empty position
+		if(clients[i].clientIP.ip==0)
+			{
+			found=true;
+			clients[i].free=false;
+			clients[i].clientIP.ip=ip;
+			clients[i].id=id;
+			memcpy(&clients[i].clientaddr,&clientaddr,sizeof(struct sockaddr_in));
+			clients[i].clientlen=clientlen;
+			clients[i].ip_string=ip_uint32_2_string(ip);
+			cl=i;
+			break;
+			}
+		}
+	}
+return cl;
+}
+
+/**
+ * update the idip file with the incoming connections
+ * @param fname
+ * @param id
+ * @param ip
+ * @return true:ok
+ */
+bool UDPCommTh::updateMapFile(string fname,int id, string ip)
+{
+ofstream f;
+//bool update_file=false;
+int cl_ip=getClientFromIP(ip);
+int cl_id=getClientFromID(id);
+int free_pos=-1;
+
+if(cl_id==-1)	// if has IP but not ID
+	{
+	dbg->trace(DBG_NOTIFY, "update IDIP file with id %d ip %s", id, ip.c_str());
+
+	// search a free position
+	for(int i = 0;i < UDP_MAX_CLIENTS;i++)
+		{
+		if(clients[i].)
+		}
+
+	clients[cl_id].id=id;
+
+	f.open(fname.c_str(),ofstream::out | ofstream::app);	// open in append mode
+	if(f.is_open())
+		{
+		if(mapRuntimeAdded==0)
+			{
+			f << "\n";
+			}
+		f << id << "\t\t\t" << ip << endl;
+		f.close();
+		mapRuntimeAdded++;
+		}
+	else
+		return false;
+	}
+
+#if 0
+
+if((cl_ip==-1) || (cl_id==-1))	// if not present...
+	{
+	f.open(fname.c_str(),ofstream::out | ofstream::app);	// open in append mode
+	if(f.is_open())
+		{
+		if(mapRuntimeAdded==0)
+			{
+			f << "\n";
+			}
+		f << id << "\t\t\t" << ip << endl;
+		f.close();
+
+		// update in memory if need
+		if(cl_ip != -1)
+			{
+			if(clients[cl_ip].id==HPROT_INVALID_ID)
+				{
+				dbg->trace(DBG_NOTIFY, "client %d has id %d", cl_ip, id);
+				clients[cl_ip].id=id;
+				}
+			else if(clients[cl_ip].id!=id)
+				{
+				dbg->trace(DBG_NOTIFY, "client %d has changed its id, from %d -> %d", cl_ip,clients[cl_ip].id,id);
+				clients[cl_ip].id=id;
+				}
+			}
+		mapRuntimeAdded++;
+		}
+	else
+		return false;
+	}
+#endif
+return true;
+}
+
+
+//-----------------------------------------------------------------------------
+// mutex protected
+//-----------------------------------------------------------------------------
+/**
+ * print in readable form the data received
+ * @param buff
+ * @param size
+ * @param error (=0 unknow; protcondition)
+ */
+void UDPCommTh::printRx(uint8_t* buff, int size,rxParserCondition_t fr_error)
+{
+if(size==0) return;
+
+// check if neet to update map idip file
+if(fr_error==pc_ok)
+	{
+	updateMapFile(SRV_UDP_IDIP_MAP_FILE,(int)buff[HPROT_FLD_SRC],ip_uint32_2_string(clients[last_client].clientIP.ip));
+	}
+
+gd.rxFrameCounter++;
+if(gd.logmode_flag)
+	{
+	rf->putQueue('-',buff,size,fr_error);
+	}
+else
+	{
+	rf->putQueue('r',buff,size,fr_error);
+	}
+}
+
+/**
+ * print in readable form the data transmitted
+ * @param buff
+ * @param size
+ */
+void UDPCommTh::printTx(uint8_t* buff, int size)
+{
+if(size==0) return;
+
+gd.txFrameCounter++;
+if(gd.logmode_flag)
+	{
+	rf->putQueue('-',buff,size);
+	}
+else
+	{
+	rf->putQueue('t',buff,size);
+	}
+}
+
+/**
+ * reset all the clients
+ */
+void UDPCommTh::resetClients()
+{
+for(int i = 0;i < UDP_MAX_CLIENTS;i++)
+	{
+	clients[i].free=true;
+	clients[i].clientIP.ip = 0;
+	clients[i].id=HPROT_INVALID_ID;
+	clients[i].nDataAvailable=0;
+	clients[i].protocolData.myID=gd.myID;
+	hprotInit(&clients[i].protocolData,NULL,NULL,NULL,NULL);
+	}
+}
+
+#if 0
+//=============================================================================
+// EVENT
+//=============================================================================
+/**
+ * executes all the defined callbacks and interprets events and some commands
+ * @param f
+ */
+void UDPCommTh::onFrame(frame_t &f)
+{
+globals_st::frameData_t _f;
+//_commth_mutex->lock();
+
+// before all I have to check if it is for me or is a gateway frame
+if(f.dstID==gd.myID)
+	{
+	// is for me :)
+	if(clients[last_client].id!=HPROT_INITIAL_ID)
+		{
+		if(clients[last_client].id!=f.srcID)
+			{
+			dbg->trace(DBG_DEBUG,"client %d has changed id, from %d to %d -> updated",last_client,clients[last_client].id,f.srcID);
+			clients[last_client].id=f.srcID;
+			}
+		}
+	else
+		{
+		dbg->trace(DBG_DEBUG,"client %d has id %d",last_client,f.srcID);
+		clients[last_client].id=f.srcID;
+		}
+
+
+	bool needAnswer = (f.hdr==HPROT_HDR_REQUEST);
+	switch(f.cmd)
+		{
+		//...............................................
+		case HPROT_CMD_CHKLNK:
+			dbg->trace(DBG_DEBUG,"checklink from id=%d",f.srcID);
+			if(needAnswer) sendAnswer(f.srcID,HPROT_CMD_ACK,NULL,0,f.num);
+			linkChecked=true;
+			//break;
+
+		//...............................................
+		default:
+			// save data received
+
+			memcpy(&_f.frame,&f,sizeof(frame_t));
+			memcpy(&_f.frameData,f.data,f.len);
+			_f.frame.data=_f.frameData;
+			_f.channel=globals_st::frameData_t::chan_serial;
+			//pthread_mutex_lock(&mutexRx);
+			gd.frameQueue.push(_f);
+			//pthread_mutex_unlock(&mutexRx);
+			break;
+		}
+	}
+//_commth_mutex->unlock();
+}
+
+#endif

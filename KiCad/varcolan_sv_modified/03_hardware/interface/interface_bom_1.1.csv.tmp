@@ -1,0 +1,51 @@
+Component,Description,Part,References,Value,Footprint,Quantity Per PCB,Datasheet,NOT_MOUNT,Product,Saet_code
+1,,Battery,BT1,Battery,BatteryHolderCR2032,1,,X,,
+2,Condensateur polarise,0.33F,C6,0.33F,SUPER_CAP,1,,,EECS0HD334V,CV1476
+3,Unpolarized capacitor,C,C1 C4 C5 C7 C13,100n,C_0603,5,,,,
+4,Unpolarized capacitor,C,C11,10p,C_0603,1,,,,
+5,Unpolarized capacitor,C,C2 C3,12p,C_0603,2,,,,
+6,Polarised capacitor,CP,C8 C9 C18,22u/20V,TantalC_SizeC_EIA-6032_Wave,3,,,T491C226K020AT,CV0226
+7,Unpolarized capacitor,C,C10 C17,470n,C_0603,2,,,,
+8,Unpolarized capacitor,C,C12,470p,C_0603,1,,,,
+9,,WURTH_90,COM_A1 COM_B1,WURTH_90,Wurth_90_deg_2ways,2,,,COM02-9M1,WK2320
+10,Diode schottky,B360A,D5 D6,B360A,SMA_Standard,2,,,B360A-13-F,DSB360A
+11,,LED_R_0603,D1 D2 D3,LED_R_0603,LED-0603_handSoldering,3,,,KP-1608SURCK,LE7010
+12,,PMEG4005AEA,D4 D7,PMEG4005AEA,SOD-323,2,,,PMEG4005AEA,DSG4005
+13,,Hole,HL1 HL2,Hole,HOLE_3.2,2,,,,
+14,,SN65HVD,IC1,SN65HVD11D,SOIC-8,1,,,SN65HVD11D,IL1138
+15,,JUMPER,JP1,JUMPER,Pin_Header_Straight_1x02,1,,,,
+16,,INDUCTOR_3.3uH,L1 L2,INDUCTOR_3.3uH,IND_7.5x7.5,2,,,744 778 003,TB3020
+17,Connector 01x02,CONN_01X02,P4,CONN_01X02,Adimpex_3.5_2_ways,1,,X,,
+18,Connector 01x04,CONN_01X04,P2,CONN_01X04,Pin_Header_Straight_1x04,1,,X,,
+19,Connector 02x20,CONN_02X20,P3,CONN_02X20,Pin_Header_Straight_2x20,1,,,,
+20,Connector 01x02,CONN_01X02,P5,TAMPER CONN,Adimpex_3.5_2_ways,1,,,,
+21,,RJU003N,Q1 Q2 Q3 Q4,RJU003N,SOT-323_inv,4,,,RJU003N03T106,QT3134
+22,Resistor,R,R1 R5,0,R_0603,2,,X,,
+23,Resistor,R,R9 R10,10,R_0603,2,,,,
+24,Resistor,R,R2 R4,10k,R_0603,2,,,,
+25,Resistor,R,R12,120,R_0603,1,,,,
+26,Resistor,R,R3 R7 R11,1k,R_0603,3,,,,
+27,,R-EU,R19,30.1k,R_0603,1,,,,
+28,,R-EU,R16 R18,40.2k,R_0603,2,,,,
+29,Resistor,R,R6 R8 R13,510,R_0603,3,,,,
+30,,R-EU,R17,7.68k,R_0603,1,,,,
+31,,Switch,SW1,Switch,Switch_DTSM_6_Series,1,,,,
+32,,ATECC508a,U2,ATECC508a,SOIC-8,1,,,,
+33,,DS1302,U1,DS1302S,SOIJ-8_5.3x5.3mm_Pitch1.27mm,1,,,,IT001
+34,,LT3501,U3,LT3501,SSOP-20_TP_4.4x6.5mm_Pitch0.65mm,1,,,LT3501IFE#TRPBF,IL1186
+35,,JXS_32k,X1,JXS_32k,JXS_3.2mm_1.5mm,1,,,Q0.032768-JTX310-12.5-20-T1-LF,YQ1323B
+
+
+
+
+
+Component Groups:,35
+Component Count:,61
+Fitted Components:,61
+Number of PCBs:,1
+Total components:,61
+Schematic Version:,1.1
+Schematic Date:,2016-05-17
+BoM Date:,mer 24 ott 2018 08:41:57 CEST
+Schematic Source:,/home/simone/Desktop/Progetti/Kicad/varcolan_sv_edited/03_hardware/interface/interface.sch
+KiCad Version:,Eeschema 4.0.2+dfsg1-stable

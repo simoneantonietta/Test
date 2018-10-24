@@ -1,0 +1,2 @@
+#set solib-search-path /home/luca/applications/rasptools/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/arm-linux-gnueabihf/libc/lib/arm-linux-gnueabihf
+set solib-search-path /opt/rasptools/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64

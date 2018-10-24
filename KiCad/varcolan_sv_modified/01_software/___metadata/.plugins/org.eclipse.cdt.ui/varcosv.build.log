@@ -1,0 +1,213 @@
+15:36:55 **** Incremental Build of configuration Debug for project varcosv ****
+make pre-build main-build 
+auto build increment
+../src/common/cbuildinc.sh ../src/version.h
+Build number increment (C/C++ version)
+actual dir:
+/data/projects/saet/00_projects/varcolan_sv/01_software/varcosv/Debug
+ 
+Building file: ../src/db/DBWrapper.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/db/DBWrapper.d" -MT"src/db/DBWrapper.o" -o "src/db/DBWrapper.o" "../src/db/DBWrapper.cpp"
+Finished building: ../src/db/DBWrapper.cpp
+ 
+Building file: ../src/comm/CommTh.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/comm/CommTh.d" -MT"src/comm/CommTh.o" -o "src/comm/CommTh.o" "../src/comm/CommTh.cpp"
+In file included from ../src/comm/CommTh.h:25:0,
+                 from ../src/comm/CommTh.cpp:8:
+../src/comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+../src/comm/CommTh.cpp: In member function ‘bool CommTh::startThread(void*, char)’:
+../src/comm/CommTh.cpp:609:7: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+ void *_arg;
+       ^
+Finished building: ../src/comm/CommTh.cpp
+ 
+Building file: ../src/comm/SerCommTh.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/comm/SerCommTh.d" -MT"src/comm/SerCommTh.o" -o "src/comm/SerCommTh.o" "../src/comm/SerCommTh.cpp"
+In file included from ../src/comm/../comm/CommTh.h:25:0,
+                 from ../src/comm/../RXHFrame.h:26,
+                 from ../src/comm/SerCommTh.h:29,
+                 from ../src/comm/SerCommTh.cpp:8:
+../src/comm/../comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+Finished building: ../src/comm/SerCommTh.cpp
+ 
+Building file: ../src/comm/SktCliCommTh.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/comm/SktCliCommTh.d" -MT"src/comm/SktCliCommTh.o" -o "src/comm/SktCliCommTh.o" "../src/comm/SktCliCommTh.cpp"
+In file included from ../src/comm/../comm/CommTh.h:25:0,
+                 from ../src/comm/../RXHFrame.h:26,
+                 from ../src/comm/SktCliCommTh.h:28,
+                 from ../src/comm/SktCliCommTh.cpp:8:
+../src/comm/../comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+Finished building: ../src/comm/SktCliCommTh.cpp
+ 
+Building file: ../src/comm/SktSrvCommTh.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/comm/SktSrvCommTh.d" -MT"src/comm/SktSrvCommTh.o" -o "src/comm/SktSrvCommTh.o" "../src/comm/SktSrvCommTh.cpp"
+In file included from ../src/comm/../comm/CommTh.h:25:0,
+                 from ../src/comm/../RXHFrame.h:26,
+                 from ../src/comm/SktSrvCommTh.h:28,
+                 from ../src/comm/SktSrvCommTh.cpp:8:
+../src/comm/../comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+Finished building: ../src/comm/SktSrvCommTh.cpp
+ 
+Building file: ../src/comm/SocketServer.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/comm/SocketServer.d" -MT"src/comm/SocketServer.o" -o "src/comm/SocketServer.o" "../src/comm/SocketServer.cpp"
+../src/comm/SocketServer.cpp:629:25: warning: missing terminating " character [enabled by default]
+     Try again later!\r\n");
+                         ^
+Finished building: ../src/comm/SocketServer.cpp
+ 
+Building file: ../src/comm/UDPCommTh.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/comm/UDPCommTh.d" -MT"src/comm/UDPCommTh.o" -o "src/comm/UDPCommTh.o" "../src/comm/UDPCommTh.cpp"
+In file included from ../src/comm/../comm/CommTh.h:25:0,
+                 from ../src/comm/../RXHFrame.h:26,
+                 from ../src/comm/UDPCommTh.h:26,
+                 from ../src/comm/UDPCommTh.cpp:17:
+../src/comm/../comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+Finished building: ../src/comm/UDPCommTh.cpp
+ 
+Building file: ../src/CommData.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/CommData.d" -MT"src/CommData.o" -o "src/CommData.o" "../src/CommData.cpp"
+In file included from ../src/comm/CommTh.h:25:0,
+                 from ../src/CommData.cpp:12:
+../src/comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+Finished building: ../src/CommData.cpp
+ 
+Building file: ../src/RXHFrame.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/RXHFrame.d" -MT"src/RXHFrame.o" -o "src/RXHFrame.o" "../src/RXHFrame.cpp"
+In file included from ../src/comm/CommTh.h:25:0,
+                 from ../src/RXHFrame.h:26,
+                 from ../src/RXHFrame.cpp:8:
+../src/comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+Finished building: ../src/RXHFrame.cpp
+ 
+Building file: ../src/Script.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/Script.d" -MT"src/Script.o" -o "src/Script.o" "../src/Script.cpp"
+In file included from ../src/comm/CommTh.h:25:0,
+                 from ../src/Script.cpp:11:
+../src/comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+In file included from ../src/Script.cpp:18:0:
+../src/BadgeReader.h: In member function ‘bool BadgeReader::startThread(void*)’:
+../src/BadgeReader.h:118:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+../src/Script.cpp: In member function ‘bool Script::parseScriptLine(std::string, char*)’:
+../src/Script.cpp:660:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     if(i<(toks.size()-1))
+                        ^
+Finished building: ../src/Script.cpp
+ 
+Building file: ../src/Slave.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/Slave.d" -MT"src/Slave.o" -o "src/Slave.o" "../src/Slave.cpp"
+In file included from ../src/comm/CommTh.h:25:0,
+                 from ../src/Slave.cpp:11:
+../src/comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+In file included from ../src/Slave.cpp:16:0:
+../src/BadgeReader.h: In member function ‘bool BadgeReader::startThread(void*)’:
+../src/BadgeReader.h:118:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+../src/Slave.cpp: In member function ‘void Slave::mainLoop()’:
+../src/Slave.cpp:178:9: warning: enumeration value ‘sl_unk’ not handled in switch [-Wswitch]
+   switch(gd.deviceList[f.frame.srcID].mainState)
+         ^
+../src/Slave.cpp: In member function ‘void Slave::worker_terminalReq(int)’:
+../src/Slave.cpp:542:7: warning: enumeration value ‘wkr_unk’ not handled in switch [-Wswitch]
+ switch(gd.deviceList[id].workerState)
+       ^
+../src/Slave.cpp: In member function ‘bool Slave::firmwareUnpack(uint8_t, std::string)’:
+../src/Slave.cpp:1272:6: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
+ bool ret=false;
+      ^
+Finished building: ../src/Slave.cpp
+ 
+Building file: ../src/TXHFrame.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/TXHFrame.d" -MT"src/TXHFrame.o" -o "src/TXHFrame.o" "../src/TXHFrame.cpp"
+In file included from ../src/comm/CommTh.h:25:0,
+                 from ../src/TXHFrame.h:25,
+                 from ../src/TXHFrame.cpp:8:
+../src/comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+../src/TXHFrame.cpp: In member function ‘bool TXHFrame::parseDescFrame(std::string&)’:
+../src/TXHFrame.cpp:198:15: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+ if(tok.size()>ntok) // has data
+               ^
+../src/TXHFrame.cpp:86:6: warning: unused variable ‘tmp’ [-Wunused-variable]
+ char tmp[10];
+      ^
+Finished building: ../src/TXHFrame.cpp
+ 
+Building file: ../src/TelnetServer.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/TelnetServer.d" -MT"src/TelnetServer.o" -o "src/TelnetServer.o" "../src/TelnetServer.cpp"
+../src/TelnetServer.cpp: In member function ‘virtual void TelnetServer::onDataRead(int, char*, int)’:
+../src/TelnetServer.cpp:68:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+ for(int i=0;i<toks.size();i++)
+                         ^
+Finished building: ../src/TelnetServer.cpp
+ 
+Building file: ../src/main.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -DHPROT_USE_CRYPTO -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/main.d" -MT"src/main.o" -o "src/main.o" "../src/main.cpp"
+In file included from ../src/comm/../comm/CommTh.h:25:0,
+                 from ../src/comm/../RXHFrame.h:26,
+                 from ../src/comm/SerCommTh.h:29,
+                 from ../src/main.cpp:12:
+../src/comm/../comm/../UDPProtocolDebug.h: In member function ‘bool UDPProtocolDebug::startThread(void*, char)’:
+../src/comm/../comm/../UDPProtocolDebug.h:199:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+In file included from ../src/main.cpp:15:0:
+../src/BadgeReader.h: In member function ‘bool BadgeReader::startThread(void*)’:
+../src/BadgeReader.h:118:8: warning: variable ‘_arg’ set but not used [-Wunused-but-set-variable]
+  void *_arg;
+        ^
+Finished building: ../src/main.cpp
+ 
+Building target: varcosv
+Invoking: GCC C++ Linker
+g++  -o "varcosv"  ./src/db/DBWrapper.o ./src/db/sqlite3.o  ./src/common/utils/SimpleCfgFile.o ./src/common/utils/Trace.o ./src/common/utils/Utils.o  ./src/common/serial/serial.o  ./src/common/prot6/hprot.o  ./src/comm/CommTh.o ./src/comm/SerCommTh.o ./src/comm/SktCliCommTh.o ./src/comm/SktSrvCommTh.o ./src/comm/SocketServer.o ./src/comm/UDPCommTh.o  ./src/CommData.o ./src/RXHFrame.o ./src/Script.o ./src/SimpleServer.o ./src/Slave.o ./src/TXHFrame.o ./src/TelnetServer.o ./src/crc.o ./src/main.o   -ldl -lpthread
+Finished building target: varcosv
+ 
+
+15:37:01 Build Finished (took 5s.987ms)
+

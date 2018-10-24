@@ -1,0 +1,3337 @@
+23-08-2016
+- (contactid_athena.c) Implementazione contactID per scheda Athena.
+
+03-08-2016
+- (master.c) Nel caso in cui il loop di invio comandi fosse svegliato
+             ma poi non ci fosse un comando inviabile (mm ritardato),
+             occorre reincrementare il semaforo altrimenti l'invio
+             va fuori sincrono.
+
+03-08-2016
+- (master.c) Sincronizzati l'invio dei messaggi sul campo con il
+             reset dei moduli master per evitare potenziali situazioni
+             di blocco in caso di notx. Modificate le temporizzazioni
+             per l'invio comandi alla partenza.
+- (radio.c) Modificata la generazione degli id di centrale per
+            risolvere il problema di id duplicati dopo l'elaborazione
+            interna dell'SC8R.
+
+20-05-2016
+- (lara.h) Attributo "packed" per le strutture dei messaggi Lara.
+
+09-05-2016
+- (gsm.c) Il conteggio dei retry per provocare lo spegnimento e
+          riaccensione del modulo se qualcosa non va viene azzerato
+          a fronte della ricezione di un OK o simili, non più a
+          fronte della semplice ricezione di qualcosa. I moduli
+          molto vecchi facevano echo sempre, quindi la gestione
+          poteva entrare in loop senza uscirne.
+
+20-04-2016
+- (command.c) La rimessa in servizio di un sensore 868 associato al
+              sensore +1 generava l'impostazione della manomissione
+              periferica che poi non andava più via. La verifica
+              del tipo di periferica F (virtuale 868) viene ora fatta
+              per prima.
+
+11-04-2016
+- (database.c) Eseguito il sync dopo il salvataggio di saet.nv.
+
+01-03-2016
+- (codec.c) Eseguito il sync dopo il trasferimento file da Com90.
+- (audio_athena.c) Eseguito il sync dopo la registrazione audio.
+- (strings.c) Eseguito il sync dopo il salvataggio file.
+
+15-02-2016
+- (radio.c) Invio di UniqueID differenti ad ogni modulo master per creare
+            sotto impianti. L'SC8R 868 gestisce al massimo 4 concentratori
+            per lo stesso UniqueID.
+- (toolweb.c) Predisposizione all'autoapprendimento limitato solo ad uno
+              specifico modulo master o ad uno specifico SC8R.
+
+11-02-2016
+- (master.c) Inoltrata alla gestione radio 868 anche il messaggio 4
+             (manomissione periferica) per azzerare le eventuali
+             candidature di periferiche rilevate.
+
+10-02-2016
+- (delphi.c) Ignorata la COM4 dei consumatori (Athena)
+- (protocol.c) Ignorata la COM4 dei consumatori (Athena)
+
+28-01-2016
+- (master.c) Accettazione fronti sensori 868.
+- (command.c) Accettazione fronti sensori 868.
+- (radio.c) Accettazione fronti sensori 868.
+
+25-01-2016
+- (master.c) Corrette alcune mancanze per SC8C.
+- (command.c) Corretta una mancanza per SC8C.
+
+21-01-2016
+- (gsm.c) Gestione audio Athena
+- (audio_athena.c) Audio via libasound.
+
+05-01-2016
+- (gsm.c) Rilevamento GL865 (Athena)
+- (protocol.c) Iconcorporato il file modem.conf.
+- (support.c) Implementata la funzione gettid come system call e sostituita
+              agli identificativi pthread_self per i task. In questo modo
+              gli identificativi Athena corrispondono a quelli Iside.
+
+27-11-2015
+- (tebe.c) Sblocco tessera (CODE_BLKBADGE) solo se c'è cambio area,
+           altrimenti lascio che il tempo di blocco scada in modo
+           naturale. Tempo di blocco incrementato da 1 a 2 minuti.
+           
+18-11-2015
+- (support.c) Verifica centrale tipo Athena.
+- (delphi.c) Restart network tipo Athena.
+
+09-09-2015
+- (command.c) Refresh sensore dirottato al concentratore radio se si
+              tratta di periferica radio.
+
+19-08-2015
+- (database.h) Definito il bitBattery per SE.
+
+06-08-2015
+- (console) Corretto baco storico per cui venivano gestiti solo i
+            terminali da 1 a 62 anziché da 1 a 63.
+            
+06-07-2015
+- (lara.c) Invio TEBE_OUT con i dati del terminale a fronte di un LARA_ID,
+           quando il terminale risulta modificato.
+           
+10-06-2015
+- (master.c) Corretta la ricezione stato 08 per periferiche SC8C.
+
+04-06-2015
+- (master.c) Gestione nuova periferica SC8C current loop.
+
+30-04-2015
+- (codec.c) Storico eventi salvato in shared memory, così si preserva
+            a fronte di un riavvio del processo (crash o kill).
+            Non si preserva a fronte di un reboot o reset elettrico.
+
+05-03-2015
+- (master.c) La ricezione di messaggi dai moduli master non rimane
+             più in attesa infinita ma si sveglia ogni 200ms. In caso
+             di moduli master virtuali, questi entravano nella gestione
+             della ricezione solo se un altro modulo master trasmetteva
+             qualcosa dopo la registrazione. Quindi non era possibile
+             definire un modulo master virtuale in assenza di moduli
+             master fisici, ora è possibile.
+
+02-03-2015
+- (lara.c) In caso di assenza lara.gz, l'inizializzazione termina
+           solo se è configurato TebeBadgeDisableOnErr.
+- (lara.c) Gestione codici badge senza passaggio da nibble (direttamente
+           10 byte nel messaggio LARA_ID).
+           
+12-02-2015
+- (audio.c) I cicli di pulizia dei buffer (loop stretto con read)
+            si interrompono ora anche per esito < 0.
+
+11-02-2015
+- (gsm.c) Se la procedura di accensione (power on) non attiva la
+          segnalazione su CTS, scaduto il timeout anziché procedere
+          con la comunicazione e ad un eventuale spegnimento per
+          fallimento, passo direttamente a tentare una nuova
+          accensione.
+- (audio.c) In caso di timeout ACK oltre a mandare lo stop all'Atmel
+            eseguo anche un flush della seriale per evitare che se
+            il CTS bloccasse la trasmissione si saturi il buffer in
+            uscita a forza di accodare roba che non partirà. */
+- (gsm.c) In caso di ricezione di sms da "404" (Vodafone) o "40916"
+          (TIM) al di fuori di una richiesta di credito, la lettura
+          dell'sms avveniva in modo anomalo portando al blocco della
+          macchina a stati in attesa dell'OK già bruciato. Corretto
+          quindi lo stato di destinazione per il processamento
+          corretto dell'sms.
+
+09-02-2015
+- (gsm.c) Il timeout sms viene impostato solo se è definita la
+          funzione di callback, altrimenti rimane in coda senza
+          scadenza.
+
+06-02-2015
+- (gsm.c) Invio sms con possibilità di specificare una funzione di
+          callback chiamata a fronte dell'esito di invio. Utilizzato
+          per il backup ContactID di AllSystem, se l'invio SMS
+          fallisce l'evento non viene scartato ma riproposto nella
+          logica di invio.
+- (gsm.c) Lo svuotamento della coda chiamate (e sms e gprs) chiama
+          anche le callback registrate con l'esito di fallimento.
+
+23-12-2014
+- (gsm.c) La richiesta credito Wind può rispondere "+CUSD:4" senza
+          messaggio, quindi se non trova la parola credito passa
+          oltre senza fare nulla. Capita anche con +CUSD=1, quindi
+          dipende o dal modulo o dall'operatore.
+
+09-12-2014
+- (gsm.c) Aggiunto un cotrollo nella elaborazione del valore CSQ per
+          verificare che il numero letto sia corretto. E' capitato di
+          ricevere un messaggio "+CSQ:*12,0" e quell'asterisco ha
+          mandato in crash la visualizzazione delle tacche sul TD.
+          Sicuramente un errore di comunicazione sulla seriale che
+          non capiterà mai più.
+
+21-05-2014
+- (delphi.h) Modificati i valori di RTC_RD_TIME_V1 e RTC_SET_TIME_V1,
+             nessuno se n'è mai accorto ma è stata solo la versione
+             con kernel 2.4.19 ad avere i valori di default diversi.
+             Dalla 2.4.26 sono tornati quelli giusti e le define sono
+             diventate uguali ai valori base, con il risultato che le
+             schede con kernel 19 non gestivano più l'RTC.
+             
+20-05-2014
+- (protocol.c) Il file saet.debug viene aperto solo dal consumatore in
+               effettivo debug, altrimenti il file viene aperto più
+               volte e non è detto che venga popolato.
+- (command.c) Nell'impostare la data, l'RTC viene sempre programmato
+              anche se la data di sistema risulta già allineata.
+- (delphi.c) Disattivato l'allineamento orologio ogni ora, sulle schede
+             vecchie (linux 2.4.19) non funziona la lettura dell'RTC
+             e la scheda va in loop.
+               
+09-05-2014
+- (lara.c/tebe.c) Definita la struttura "lara_timbrato" per tenere traccia
+                  dell'id tessera che ha timbrato su ogni fessura.
+
+20-02-2014
+- (delphi.c) Scorporata la chiamata a string_load() da delphi_read_conf()
+             così che il plugin di lingua possa impostare un Variant
+             partendo da una configurazione già caricata.
+             
+10-02-2014
+- (gsm.c) Nel caso in cui a seguito di una chiamata audio la risposta
+          al comando AT sia "0" anziché "OK", spengo e riaccendo il
+          modulo per essere sicuro di tornare ad una configurazione
+          nota.
+
+24-07-2013
+- (master.c) Implementata funzione master_register_module() per
+             sostituire un modulo master fisico con uno emulato.
+             
+20-06-2013
+- (command.c) Corretto un baco sul calcolo dei codici di controllo,
+              il libuser risultava sempre 0000.
+- (delphi.c) Salvataggio in version del checksum libuser per verifica.
+
+13-05-2013
+- (contactid.c) La verifica della presenza del modulo audio deve essere
+                fatta subito all'accodamento del messaggio, non al
+                tentativo di riproduzione. Altrimenti partono un sacco
+                di chiamate a vuoto.
+                Inoltre a fronte della mancanza del modulo audio non
+                veniva scartato il messaggio generando un ciclo di
+                chiamate infinito.
+
+20-05-2013
+- (gsm.c) Con la nuova gestione gsm era completamente saltato l'inoltro
+          dei messaggi Vodafone (comunque gli unici messaggi inoltrati).
+          Ripristinato il funzionamento.
+
+15-05-2013
+- (delphi.c) Salvataggio all'avvio dei log in una cartella separata. In
+             caso di crash posso recuperare cosa sia avvenuto anche a
+             distanza di tempo.
+- (support.c) Implementata la funzione support_save_last_log().
+             
+25-03-2013
+- (lara.c) Implementato comando specifico di abilitazione/disabilitazione
+           tessere, per gestione CEI ABI AllSystem. altrimenti non riuscivo
+           a generare l'evento correttamente.
+- (lara.c) In lara_set_abil() non permetto di abilitare/disabilitare una
+           tessera che non esiste.
+
+02-03-2013
+- (gsm.c) Gestione reset modulo GSM (spegnimento+riaccensione) tramite
+          singolo flag di prenotazione per evitare potenziali casi di
+          erroneo spegimento permanente.
+
+30-01-2013
+- (gsm.c) Riconoscimento modulo GC864 in sostituzione al GM862.
+- (gsm.c) In caso di CME ERROR 100 salto il comando per non rimanere nel
+          loop della richiesta. Capita con la richiesta credito Wind.
+          
+16-01-2013
+- (gsm.c) Gestione di un secondo numero di backup per il contactid.
+
+12-12-2012
+- (master.c) In caso di tastiere tipo 7, l'eventuale rimessa in servizio
+             di un sensore non invia più il comando di refresh stato.
+             Le vecchie tastiere Atlas non lo digeriscono e vanno fuori
+             servizio. In realtà pare che sia il sensore +3 ad andare
+             fuori servizio, sicuramente perché nel +3 vado a scrivere
+             il codice digitato e alcuni valori li interpreto con il bit
+             di FS nel momento in cui viene rimesso tutto in servizio.
+             Andrebbe gestito a monte.
+- (command.c) Stessa cosa in master_sensors_refresh().
+
+26-11-2012
+- (gsm.c) Aggiunta gestione "+CME ERROR: 5XX" per ripetere la connessione
+          ripassando da ST_MAIN, così da esaurire i 3 tentativi prima di
+          segnalare il fallimento definitivo.
+          In questo modo viene anche correttamente gestita la chiusura
+          dell'eventuale chiamata entrante concomitante all'attivazione.
+- (gsm.c) Attivazione +CUSD=1 per tutti gli operatori, in modo che gli sms
+          flash non vengano presentati come +CMTI. Solo Wind gestisce questi
+          sms ai fini del credito, gli altri operatori buttano via.
+- (con_sms.c) Corretta la visualizzazione credito Wind.
+
+23-11-2012
+- (gsm.c) In caso di attivazione GPRS verifico anche se sia cambiato il
+          server di destinazione affinché vengano rifatte le inizializzazioni
+          per il socket. Anzi no, invio #SKTSET sempre, prima di ogni
+          connessione.
+          
+05-10-2012
+- (master.c) Tolto il codice di eliminazione programma utente in caso di
+             partenza anomala. Non aveva più motivo di esistere e poteva
+             solo creare problemi. E' capitato più volte che il programma
+             utente andasse perso senza motivo reale.
+             
+03-10-2012
+- (gsm.c) Se il GSM si spegne devo annullare l'inizializzazione del gprs
+          per poterla rifare.
+          
+02-10-2012
+- (gsm.c) Aggiunta funzione GSM_Call_refuse() per chiudere una chiamata
+          con squillo da numero sconosciuto.
+
+28-09-2012
+- (gsm.c) Aggiunta l'inizializzazione GPRS per i messaggi ContactID in
+          modo che il blocco sia 16 byte e non ci siano accorpamenti,
+          tutto come nella Facile.
+
+29-06-2012
+- (gsm.c) Vodafone ha cambiato mittente per il credito da +404 a 404.
+
+26-06-2012
+- (gsm.c) Se si tenta una richiesta di connessione GPRS ed il GPRS non c'è
+          (GSM non configurato, o senza SIM, o modulo vecchio...), viene
+          subito chiamata la funzione di callback per sbloccare lo stato.
+
+14-05-2012
+- (gsm.c) Corretto baco nella lista CMGL UNREAD che segue una chiamata audio.
+          Non veniva scartato il ritorno a capo come per CMGR, quindi l'sms
+          ricevuto risultava con la prima riga vuota e l'eventuale telecomando
+          non veniva quindi gestito.
+- (audio.c) A fine riproduzione non faccio più tcdrain, ci pensa già il while
+            ad aspettare a sufficienza senza il rischio di rimanere bloccato.
+
+13-05-2012
+- (gsm.c) Corretto baco nella ricerca del credito con la virgola, mancava la
+          reinizializzazione del messaggio e se falliva la ricerca con il
+          punto, poi falliva sistematicamente anche quella con la virgola.
+          
+12-05-2012
+- (gsm.c) Nello stato si spento occorre verificare prima il flag di spegnimento
+          per poterlo bruciare e poi quello di accensione per riaccendere,
+          senza quindi che una volta acceso si spenga nuovamente.
+
+30-05-2012
+- (gsm.c) Un CME ERROR continuativo (10 tentativi, uno ogni 5s) provoca lo
+          spegnimento e la riaccensione del modulo GSM.
+
+23-05-2012
+- (lara.c) Anticipata la chiamata a tebe_init(), altirmenti una attuazione
+           precoce poteva trovare i timer ancora non inizializzati.
+           
+21-05-2012
+- (contactid.c) L'accodamento ContactID avviene solo se il numero è abilitato
+                alle chiamate dati.
+          
+20-05-2012
+- (gsm.c) La chiamata ContactID avviene solo se il numero è abilitato alle
+          chiamate dati.
+          
+09-04-2012
+- (gsm.c) Predisposizione connessione GPRS UDP per invio ContactID AllSystem.
+- (gsm.c) Macro GSM_Squillo_sconosciuto() per attivare la gestione callback
+          per AllSystem.
+
+20-04-2012
+- (contactid.c) Aumentati ad 8 i tentativi sia di invio all'interno di una
+                chiamata, sia di chiamate prima di dare il fallimento.
+                
+22-03-2012
+- (gsm.c) Rese nuovamente pubbliche le variabili gsm_sms_event e gsm_user_close,
+          che per qualche motivo ad un certo punto sono diventate "static".
+          
+15-03-2012
+- (gsm.c) Capita in condizioni ancora non chiare che l'interrogazione degli
+          sms presenti in SIM restituisca "0,0" anziché "x,50". Sembra essere
+          una situazione permanente, perciò per uscirne spengo e riaccendo
+          il modulo GSM.
+          
+05-03-2012 (bis)
+- (gsm.c) I numeri di emergenza vanno chiamati senza prefisso internazionale!
+
+05-03-2012
+- (contactid.c) La gestione dei buchi di segnale sembra funzionare bene,
+                rilascio con debug disattivato.
+- (gsm.c) La Wind ha cambiato il testo dell'sms di credito. Modificata la
+          gestione Wind e TIM allineandola a quella Vodafone con la semplice
+          ricerca della virgola, catturando i numeri prima e dopo. Non si
+          ricerca più alcun testo. L'indicazione del credito deve avvenire
+          entro 120s dalla richiesta, segnalazioni al di fuori di questa
+          finestra vengono scartate per evitare false interpretazioni.
+                
+02-03-2012
+- (contactid.c) Gestione degli ack "monchi", la durata di un secondo viene
+                calcolata dal primo riconoscimento, anche se nel mezzo il
+                segnale audio sparisce. Debug attivo.
+
+29-02-2012
+- (contactid.c) Aggiunta la registrazione della ricezione audio per debug.
+
+21-02-2012
+- (contactid.c) Aggiunto un breve ritardo tra la ricezione conferma e l'invio
+                dell'evento successivo. Mancava la separazione.
+
+24-01-2012
+- (gsm.c) La Vodafone ha nuovamente cambiato il messaggio di credito residuo.
+
+13-12-2011
+- (codec.c) Corretto l'unlock del blocco gestione linea su invio lara.gz.
+- (delphi.c) Salvataggio di eventuali pendenze Tebe all'uscita del processo.
+
+10-12-2011
+- (ethernet.c) Spostata la gestione del cluster dal plugin di ridondanza al
+               saet.new in modo da poter disattivare l'interfaccia subito
+               all'avvio.
+- (delphi.c) Disattivazione immediata alla partenza dell'interfaccia cluster,
+             prima di attivare i plugin in modo che non sia possibile per un
+             consumatore accettare per sbaglio una connessione.
+- (master.c) La funzione master_stop() chiama ora direttamente la funzione di
+             disattivazione dell'interfaccia del cluster.
+
+09-12-2011
+- (master.c) In caso di centrale ridondata, la slave deve attendere molto di
+             più che la master invii l'impostazione sul campo, quindi la richiesta
+             delle periferiche sulla linea poteva partire a timeout scaduto.
+             Partivano prima le attuazioni di refresh che l'impostazione di linea
+             e relative periferiche manomesse.
+
+03-12-2011
+- (codec.c) Il caricamento del file lara.gz avviene in RAM e subito attivato,
+            senza bisogno di un successivo restart.
+- (lara.c) Creata la funzione lara_reload per caricare il lara.gz temporaneo.
+- (master.c) La gestione dei messaggi di campo Tebe viene bloccata durante il
+             caricamento del file lara.gz.
+
+30-11-2011
+- (master.c) La coda multipla a bassa priorità era troppo piccola, in caso di
+             configurazione di una tastiera smart non riusciva a contenere tutti
+             i messaggi necessari e l'installazione non andava a buon fine.
+             Non era però nemmeno possibile avere 32 code da 18KB (o peggio 32KB,
+             ma 18 poteva risultare sufficiente) perché avrebbe occupato troppa
+             memoria con il rischio che non funzionasse più la Tebe.
+             La coda a bassa priorità è perciò diventata unica, da 64KB, ed è
+             quindi in grado di contenere tutti i messaggi necessari.
+
+29-11-2011
+- (master.c) Il comando 36 con significato di 35 prioritario è un errore!
+             Il comando 36 era già l'impostazione della modalità Texas per il
+             modulo master, quindi il comando di impostazione Texas non veniva
+             più inviato. Per evitare problemi sul campo, viene usato il 36
+             come 35 prioritario (sul campo va 35), mentre l'impostazione
+             Texas viene fatta con il comando 37 (sul campo va 36).
+- (gsm.c) La reinizializzazione a fronte di un CME ERROR 30x viene fatta
+          partire da ST_INIT_2 anziché ST_INIT_1.
+             
+18-11-2011
+- (command.c) Velocizzata la funzione cmd_memory_control_init(), la lettura byte
+              per byte la rendeva pazzescamente lenta.
+- (master.c) Durante l'inizializzazione dei moduli, anche il comando 6 può passare.
+- (master.c) Gestione dinamica dell'inizializzazione, anziché attendere 9 secondi
+             (in certi casi troppi, in altri troppo pochi) utilizzo un timer che
+             viene rinfrescato ad ogni ricezione di manomissione, ma che termina
+             in fretta finite tutte le ricezioni.
+- (delphi.c) In caso di ridondanza, l'uscita chiama la funzione di sincro registrata
+             per la disattivazione del cluster.
+
+14-11-2011
+- (contactid.c) La ricezione dei toni esegue un'autocalibrazione continua. Ricerca
+                solo i toni 1400Hz e 2300Hz e verifica se siano ricevuti nello slot
+                giusto o in quelli adiacenti. Se sono ricevuti in quelli adiacenti
+                esegue una calibrazione +2 o -2 dell'audio in modo da centrarsi.
+
+09-11-2011
+- (contactid.c) Se l'autocalibrazione iniziale non fosse esatta, la ricezione dei
+                toni indicherebbe uno spostamento di slot e si attiverebbe un
+                aggiustamento automatico della calibrazione (incremento +2).
+
+08-11-2011
+- (audio.c) Variabile globale di versione audio.
+- (contactid.c) Gestione invio eventi contactid via gsm, con toni generati dal chip
+                audio che deve essere in versione 10.2.x.x.
+- (gsm.c) Gestione invio eventi contactid via gsm, su numero unico in rubrica.
+
+03-11-2011
+- (console.c) Blocco del TerminalData per la centrale slave.
+- (master.c) In configurazione ridondata, il NoTX viene gestito con un exit() come
+             una volta, non più tentando di recuperare la situazione visto che
+             sarebbe impossibile gestire l'allineamento tra master e slave.
+
+19-10-2011
+- (contactid.c) Trasferite le funzioni base per il ContactID all'interno del saet.new.
+
+17-10-2011
+- (master.c) Corretto il filtraggio dei comandi delle periferiche manomesse, errore
+             di scrittura nel codice per il calcolo dell'indirizzo.
+
+14-10-2011
+- (master.c) In caso di NoTx, dopo che viene inviata la lista periferiche previste
+             si attendono ancora un paio di secondi prima di iniziare ad inviare
+             i comandi in coda per dare tempo alle periferiche manomesse di
+             inviare la segnalazione. Inoltre eventuali comandi accodati dal
+             programma utente per tali periferiche vengono ancora filtrati prima
+             dell'invio effettivo.
+- (con_impostazioni.c) L'indirizzo IP visualizzato è sempre quello realmente
+             impostato sull'interfaccia eth0, non quello letto dal file di
+             configurazione.
+
+13-10-2011
+- (master.c) Sdoppiata la coda comandi verso i moduli master per gestire comandi
+             primari e comandi secondari (tutti i comandi generici codice 35).
+             Codificato il comando 36 uguale al codice 35 ma accodato tra i
+             comandi primari.
+- (delphi.sym) Esportata la funzione "version_get_short".
+
+18-09-2011
+- (command.c) L'invio delle informazioni interne che il Com90 non imposta il
+              "lastevent". Sono informazioni che possono tranquillamente
+              andare perse e anzi possono causare il blocco del Com90 se questo
+              dovesse ripartire con un lastevent impostato.
+- (protocol.c) Eliminata la gestione di ETB e di timeout_ack (inutilizzato).
+- (protocol.c) L'evento in corso di invio viene costruito nella struttura ProtDev
+               specifica per il consumatore, non in una variabile globale, altrimenti
+               due Com90 in parallelo possono interferire tra loro.
+- (protocol.c) La ricezione dell'STX con "lastevent" in coda scarta il messaggio e
+               prosegue, anziché rimanere bloccato.
+              
+12-09-2011
+- (master.c) Ottimizzazione gestione modulo master. Ogni modulo è gestito con la
+             propria coda dei comandi e gli invii avvengono in una sorta di RR.
+             
+09-09-2011
+- (ethernet.c) Stampa nel log dell'IP di connessione.
+
+10-08-2011
+- (protocol.c) Modificata la gestione del debug del protocollo SaetNet. Ora registra
+               in /tmp/saet.debug per poter essere recuperato tramite log, e lo
+               fa per i primi 5 minuti di connessione Com90. Il file si azzera
+               ad ogni nuova connessione Com90.
+- (delphi.c) Il debug SaetNet si può ora attivare anche tramite saet.conf specificando
+             "Debug=x" dove 'x' è il numero di consumatore.
+- (gsm.c) La richiesta credito via sms non impostava il numero di tentativi, che la
+          malloc poteva quindi inizializzare anche ad un valore molto elevato. Se il
+          credito era finito e non era possibile quindi inviare l'sms di richiesta,
+          l'errore 331 risultante faceva sì decrementare il conteggio, ma ripeteva
+          un numero imprecisato e notevole di volte la richiesta stessa.
+          Ora l'sms di richiesta credito inizializza correttamente il numero di retry.
+
+09-08-2011
+- (gsm.c) La gestione del testo dell'sms in arrivo deve prima consumare lo "\n"
+          residuo che lo precede. Altrimenti viene sempre preso lo "\n" come
+          corpo del messaggio.
+- (gsm.c) Per uniformità, anche lo "\n" residuo prima della riproduzione audio
+          viene consumato qui e non più in audio_play().
+
+08-08-2011
+- (gsm.c) L'arrivo di un sms vuoto bloccava la macchina a stati perché saltava il
+          testo e prendeva l'OK al suo posto. Poi rimaneva in attesa dell'OK che
+          non arrivava più. Ora le righe vuote vengono ignorate solo se non si
+          trova nello stato di lettura testo sms.
+- (audio.c) Alla riproduzione di un messaggio con GSM vecchio, c'era ancora da ricevere
+            lo "\n" dell'OK, invece rimanendo in coda veniva considerato come qualcosa
+            di inatteso e la chiamata veniva interrotta immediatamente.
+- (audio.c) Alcuni gsm con audio tipo 1 sono comunque in grado di gestire il #DIALMODE,
+            quindi l'avvio della riproduzione non dipende più dal tipo audio ma dal
+            risultato del DIALMODE. (Parametro "now" in audio_play())
+          
+22-06-2011
+- (ronda.c) Rese accessibili all'esterno anche le configurazioni delle stazioni
+            e del filtro zona.
+- (codec.c) Aggiunti comandi di configurazione stazioni e filtro zona.
+
+20-06-2011
+- (gsm.c) Impostazione di GSM_Status[3] = -1 allo spegnimento del gsm e
+          concomitante invio di assenza segnale al TerminalData.
+          La prima inoltre blocca l'accodamento di sms durante lo spegnimento.
+          
+16-06-2011
+- (gsm.c) Corretto il meccanismo di chiusura della connessione GPRS
+          tramite +++, occorre aspettare il NO CARRIER che può impiegare
+          anche 5-6 secondi.
+
+13-06-2011
+- (gsm.c) Possibilità di gestire lo squillo dati come squillo normale,
+          senza quindi attivazione del protocollo SaetNet, tramite
+          l'impostazione della variabile "gsm_ring_as_voice".
+
+10-06-2011
+- (gsm.c) Ritoccati alcuni parametri di connessione GPRS.
+
+03-06-2011
+- (gsm.c) Parsificazione completa dell'esito invio alla ricerca del
+          Response Status. Può arrivare in posizioni differenti.
+- (gsm.c) Lo spegnimento resetta GSM_Status[1] per evitare che risulti
+          una chiamata in corso anche se ormai è stata persa, senza che
+          nessun altro lo faccia e bloccando quindi la possibilità di
+          uscita del processo.
+- (delphi.c) E' capitato un blocco inspiegabile, dove di fatto il loop
+          principale di temporizzazione non girava più. Non è chiaro se
+          fosse perché non scattava più il timer o perché la funzione
+          delphi_timer fosse rimasta piantata da qualche parte.
+          Nell'assurdità mi pare comunque più probabile la seconda, quindi
+          è stato aggiunto un controllo sul numero di volte in cui scatta
+          il timer senza essere servito, superata una soglia (5 secondi)
+          il processo esce forzando una ripartenza.
+          
+31-05-2011
+- (delphi.sym) Esportata la funzione support_find_serial_consumer(), serve
+               per il backup delplugin cei_proteus.
+- (gsm.c) Gestione errore connessione GPRS con chiamata a funzione registrata
+          con fd=-1. L'invio mms non fa nulla (viene poi scartata la chiamata
+          accodata), mentre per le connessioni dati generiche serve sapere se
+          sono in fase di attivazione oppure no.
+
+30-05-2011
+- (gsm.c) Predisposizione per connessione GPRS generica.
+
+25-05-2011
+- (con_impostazioni.c) Con DHCP attivo viene visualizzato l'IP corrente.
+- (gsm.c) Implementata la funzione gsm_poweron() per compatibilità verso
+          alcuni plugin che gestiscono il gsm in autonomia.
+
+24-05-2011
+- (gsm.c) Vari ritocchi estetici nel log generato.
+- (console.c) L'anagrafica utenti non viene cancellata su restart. L'unico modo
+              per azzerarla è attraverso il DelphiTool.
+
+14-05-2011
+- (gsm.c) Se la chiamata audio non va a buon fine (NO CARRIER, BUSY, ecc) passo
+          a ST_AUDIO_TERMINA e non a ST_AUDIO_FINE per poter reimpostare +IPR.
+- (gsm.c) Il tempo di attesa risposta alla chiamata audio viene forzato a 30s,
+          senza attendere il timeout naturale del modulo.
+- (gsm.c) A fronte di un +CMS ERROR 322 inspiegabile, spengo e riaccendo il modulo.
+
+13-05-2011 (17.38)
+- (gsm.c) Corretta la gestione dello stato di connessione, poteva accadere che
+          si azzerasse e poi non veniva più reimpostato.
+
+16-05-2011
+- (gsm.c) L'errore invio MMS era dovuto al timeout di lettura seriale, per cui
+          l'esito non veniva letto correttamente. Ora viene dato l'ok.
+- (gsm.c) La chiamata audio squilla per 30 secondi, se non riceve risposta termina
+          e procede oltre, eventualmente riaccodando la chiamata per un secondo
+          tentativo. Non attendo quindi più i 60s di timeout del modulo.
+
+13-05-2011
+Errore MMS non ancora analizzato, ma lo spegnimento sembra sia a posto.
+Rialsciato DelphiTool con nuova gestione GSM.
+- (gsm.c) Disattivato il debug su console.
+
+11-05-2011
+- (gsm.c) L'invio MMS che restituisce MMS Error viene comunque considerato
+          definitivo e non genera quindi ulteriori tentativi. Per debug in /tmp
+          viene salvato un file con l'esito dell'invio errato.
+- (gsm.c) L'impulso di spegnimento per il gsm viene generato nello stesso modo
+          dell'impulso di accensione. Prima c'era la possibilità che il gsm
+          bloccato non si spegnesse, senza avere quindi la possibilità di
+          recuperarlo.
+
+10-05-2011
+- (gsm.c) Corretto l'invio degli MMS, anche se spesso restituisce MMS Error.
+- (gsm.c) Corretto il rilevamento del modulo GSM per alcuni lotti con descrizione
+          inattesa. Ora mi basta solo GM862 per funzionare almeno come GSM.
+
+05-05-2011
+- (delphi.c) Il pulsante di restart occorre premerlo per almeno 500ms, non basta
+             più un solo campione. E' stato visto infatti che in alcuni casi il
+             GSM può disturbare la lettura, anche se saltuariamente e solo durante
+             un invio di SMS/MMS, e questo provocava un restart.
+             
+28-04-2011
+- (gsm.c) Nel caso arrivino più sms contemporaneamente, cancello il successivo solo
+          dopo aver finito di leggerli tutti.
+- (gsm.c) Se la sim è piena, prima leggo i messaggi non letti e solo dopo cancello
+          il messaggio numero 1.
+- (gsm.c) Dopo ogni chiamata audio verifico se sia variato il numero di sms nella
+          sim, per valutare se siano arrivati sms nuovi e quindi leggere la lista
+          dei non letti. Questo metodo è più veloce che non leggere la lista
+          direttamente e non rallenta quindi la riproduzione.
+
+22-04-2011
+- (gsm.c) Corrette le segnalazioni di credito e di sms inviato nel log.
+
+15-04-2011
+- (delphi.c) Timeout di chiusura gsm per non rimanere bloccato nel loop di attesa.
+- (gsm.c) Gestione registrazione messagi audio e connessione dati. Invio MMS.
+
+09-04-2011
+- (delphi.c) Eliminata l'inizializzazione del gsm, viene eseguita completamente
+             all'interno di gsm.c.
+- (gsm.c) Riscrittura completa del codice con macchina a stati più rigida.
+          La versione originale era più reattiva ma aveva troppi incroci da
+          gestire, la nuova versione invece è molto più pulita e lineare,
+          quindi più robusta a discapito di una impercettibile riduzione
+          delle prestazioni.
+- (audio.c) La funzione audio_init() reimposta il baudrate a 19200 prima di
+            ritornare.
+- (con_sms.c) Modificata la gestione dei messaggi GSM per visualizzare la lista sms.
+          
+23-02-2011
+- (delphi.c) Aggiunta segnalazione nel log per modifica data/ora (compensazione).
+- (codec.c) Aggiunta segnalazione nel log per modifica data/ora (supervisione).
+- (con_impostazioni.c) Aggiunta segnalazione nel log per modifica data/ora (terminale).
+
+03-02-2011
+- (gsm.c) Corretta la gestione del messaggio di credito residuo Vodafone.
+
+24-11-2010
+- (gsm.c) Variato il messaggio di credito residuo Vodafone.
+
+04-11-2010
+- (tebe.c) Nella funzione tebe_set_area(), dopo la modifica per la gestione
+           unificata dei contatori presenza mi ero perso l'invalidazione
+           della tessera, per cui i terminali slave non ricevevano la nuova
+           area.
+           
+29-10-2010
+- (gsm.c) La forzatura dell'overflow scattava, ma il comando era errato perché
+          mancava il punto interrogativo. Il comando quindi andava in errore
+          e non innescava la cancellazione!
+          
+25-10-2010
+- (lara.c) L'impostazione del profilo nelle ME alla timbratura viene ora
+           protetto tramite lock del database, per evitare che alla gestione
+           del fronte sulla fessura la memoria ME associata sia alterata
+           in qualche modo subito prima.
+- (tebe.c) Protezione con lock del dababase per la funzione tebe_set_fe_alarm().
+
+20-10-2010
+- (lara.c) Corretta la gestione del conteggio delle presenze in area.
+- (tebe.c) Corretta la gestione del conteggio delle presenze in area.
+
+14-10-2010
+- (lara.c) Create le due nuove funzioni lara_set_area_counters() per centralizzare
+           la gestione dei contatori di area, e lara_set_area_group() per mantenere
+           allineate le aree di gruppi di tessere associate alla stessa persona
+           fisica.
+           La creazione dei gruppi avviene o tramite la funzione lara_join_id(),
+           oppure direttamente all'interno del lara.gz, al quale è stata aggiunta
+           una sezione per espandere i dati delle tessere, sezione presente solo
+           se attivo il bit LARA_PARAM_EXTRA_ID nell'header del file.
+- (tebe.c) Anche i transiti Tebe agiscono sui raggruppamenti di id.
+
+12-10-2010
+- (gsm.c) Modificata la gestione dell'overflow, per cui se la procedura non si
+          conclude per qualche motivo, ne forzo una nuova.
+
+29-09-2010
+- (con_impostazioni.c) Corretta la rappresentazione della festività selezionata
+          per l'impostazione del tipo, prima risultava il giorno precedente anche
+          se poi veniva correttamente modificato quello selezionato inizalmente.
+          Corretta anche la rappresentazione sul nuovo TerminalData, il tipo
+          giorno finiva per sovrascrivere l'indicazione del giorno.
+          
+29-07-2010
+- (gsm.c) I tentativi di trasmissione a fronte di un errore 331 sono ridotti a 2.
+          L'errore 331 si ha tipicamente a credito insufficiente, inutile provare
+          di più.
+          
+27-07-2010
+- (lara.c) Separati l'invio dell'ora ai terminali ed il salvataggio lara.gz. Prima
+           venivano effettuati entrmabi al 59esimo secondo, a 59 mando l'ora e
+           a 50 faccio il salvataggio. Giusto per separare temporalmente le due cose.
+- (lara.c) La funzione lara_time() invia l'ora attuale maggiorata di 1 secondo per
+           compensare un minimo la differenza di allienamento dovuta ai tempi di
+           trasmissione, utilizzando l'ora del sistema operativo.
+- (delphi.c) La temporizzazione di sistema da 100ms è stata riportata alla modalità
+             con setiitimer e SIGALRM, altrimenti in certi casi si aveva un vistoso
+             rallentamento dell'orologio interno. Anche di 10-15 secondi al minuto.
+
+09-07-2010
+- (codec.c) Uniformato l'indice di programmazione ronda sempre in formato binario.
+            Prima si aveva il percorso in formato ascii e l'orario in formato binario.
+
+08-07-2010
+- (master.c) Inserita la chiamata a master_zones() all'interno della protezione
+             del lock, per evitare possibili doppi fronti sulle zona quando un
+             allarme arrivava tra la chiamata a master_zones() e l'acquisizione
+             del lock.
+- (master.c) Corretto il conteggio dei notx consecutivi al fine di mettere fuori
+             linea il modulo master che non rientra dopo un reset.
+             
+20-05-2010
+- (master.c) In caso di reset dei moduli master non devono essere azzerati i
+             puntatori nel buffer comandi, il semaforo di gestione mentiene
+             la storia che deve rimanere coerente con il buffer.
+- (master.c) Se al termine della procedura di reset dei moduli master mi trovo
+             con dei moduli che non sono tornati in linea, allora provoco un
+             nuovo notx per resettare uteriormente. Questa procedura viene
+             ripetuta per 3 volte, dopodiché il modulo viene dichiarato
+             definitivamente perso.
+
+19-05-2010
+- (master.c) Gestione dell'evento "Rilevato MM" da modulo Tebe con sistema già
+             attivo. Forza la reinizializzazione dei nodi, considerandolo un
+             sintomo di reset del modulo.
+             Gestione anche dell'evento di versione a sistema Tebe attivo.
+- (tebe.c) In caso di doppio modulo Tebe o di reinizializzazione, la funzione
+           tebe_init() non esegue più volte la propria configurazione.
+- (master.c) Introdotto lo stato di sospensione per i moduli master in fase di
+             reinizializzazione. I comandi accodati per i moduli sospesi vengono
+             mentenuti in coda finché il modulo non torna pronto o viene dichiarato
+             non più presente per timeout.
+
+03-04-2010
+- (lara.c) Risolto un deadlock introdotto il 12-04 per cui la funzione lara_input
+           faceva regolarmente il lock quando chiamata da un evento di campo, ma
+           rifaceva il lock anche su in servizio sensore (cmd_sensor_on) chiamata
+           da programma utente, quindi con lock già attivo. Doppio lock che bloccava
+           tutto.
+           Ora la funzione lara_input fa un lock selettivo, il lock viene fatto se
+           la funzione è chiamata dal campo, non lo fa se chiamata da programma utente
+           o da codec.
+- (con_sensori.c) Protetta la chiamata a cmd_sensor_on con il lock per sincronizzare
+                  verso il programma utente.
+
+30-04-2010
+- (gsm.c) Rimosso il tentativo di recupero di funzionalità del GSM tramite reset
+          della centrale, confido in tutti gli altri meccanismi. In casi dove
+          veniva configurato il GSM ma non c'era portante, finiva che la centrale
+          diventava inutilizzabile.
+
+16-04-2010
+- (gsm.c) Corretto problema di rilevazione credito all'arrivo dell'sms. Il numero
+          veniva cercato nel buffer sbagliato (problema introdotto son SELINT=2 [o
+          forse prima], per evitare di troncare i dati aggiuntivi).
+
+13-04-2010
+- (tebe_sa) Modificato l'ordine di inizializzazione dei terminali in modo da
+            gestire correttamente la richiesta iniziale della lista nodi, altrimenti
+            andava persa e risultavano tutti i terminali presenti.
+- (lara.c) Modificato l'ordine di inizializzazione in lara_init().
+
+12-04-2010
+- (lara.c) Se varia la lista nodi previsti, forzo tutti i nodi presenti.
+- (lara.c) Sincronizzati gli allarmi (master_set_alarm) con il programma utente
+           (database_lock/unlock).
+           
+07-04-2010
+- (gsm.c) Il #SELINT=2 modifica i messaggi +CRING in caso di connessione dati. Corretto.
+
+26-03-2010
+- (gsm.c) Gestione dei messaggi UCS2 per i moduli nuovi, gli unici che siano in grado
+          di trattarli. I moduli vecchi restituiscono il messaggio vuoto.
+- (con_sms.c) Gestione dei messaggi UCS2 anche nella lista sms.
+- (gsm.c) Inizializzazione della connessione GPRS spostata in gsm_queue_mms() così
+          che venga fatta solo in caso di effettiva necessità. E' stato notato che
+          in moduli molto vecchi, anche se GPRS, l'inizializzazione può avere problemi.
+          Inutile quindi fare i salti mortali per qualcosa che raramente viene usato.
+- (con_sms.c) Lettura sms su terminale nuovo spezzando le frasi negli spazi.
+          
+25-03-2010
+- (gsm.c) Gestione CMS ERROR 330. Può capitare in risposta alla richiesta di +CSCA e
+          non pare recuperabile. Ignoro quindi il numero SMSC e passo oltre, ma per
+          farlo ho dovuto spostare tutta l'inizializzazione alla ricezione del #MONI
+          anziché alla ricezione dell'esito di +CSCA.
+- (gsm.c) Gestione impostazione #SELINT=2. Grazie a questa impostazione ottengo due
+          benefici. Il primo è di ottenere già nella lista CMGL la data del messaggio,
+          con la possibilità quindi di evitare la doppia lettura CMGL/CMGR. Il secondo
+          è di poter gestire il charset dei messaggi in arrivo, in particolare per i
+          messaggi UCS2 per i quali occorre fare la conversione a livello applicativo.
+          Il problema rimane però quando leggo gli sms da TerminalData, il solo CMGL
+          non restituisce il charset.
+- (con_sms.c) Gestione della data direttamente da +CMGL per ottimizzare la lista.
+- (con_sms.c) Corretto baco sulla lettura degli sms da TerminalData vecchio, introdotto
+              nella gestione del TerminalData nuovo. La lettura degli sms forza il tipo
+              di terminale sempre a nuovo.
+- (con_sms.c) La lista degli sms sul TerminalData nuovo indica anche l'anno.
+
+16-03-2010
+- (gsm.c) Reinizializzazione del GSM in caso di ricezione errore 304.
+- (gsm.c) Modificara richiesta stato pin da +CPIN a +CPIN? per evitare l'errore 4.
+          Idem per +CREG e +CSCA.
+- (con_sms.c) Ritaglio preciso del numero di telefono durante la lista sms.
+- (gsm.c) Le modifiche del "?" e del ritaglio corretto in +CMGL è necessario per
+          l'impostazione #SELINT=2.
+
+23-02-2010
+- (master.c) Il blocco del programma utente non viene più temporaneamente controllato,
+             in attesa di capire perché in CSI ci siano dei ritardi che lo innescano
+             senza essere comunque definitivi.
+             Nel log viene comunque salvata l'insorgenza.
+
+03-02-2010
+- (command.c) La zona insieme impedita non cerca l'impedimento nelle zone ritardate
+              per evitare che la ritardata si attivi comunque.
+- (command.c) La zona ritardata si attiva sempre almeno con allarme, ma senza
+              tentare prima l'attivazione normale (se richiesta). In questo modo
+              non scrivo prima attivazione impedita e subito dopo attivo con allarme,
+              attivo subito con allarme.
+- (delphi.c) Il timer di attivazione zona ritardata non ha più bisogno di verificare
+             se la zona si sia effettivamente attivata.
+
+02-02-2010
+- (gsm.c) Cambiato il numero di servizio Tim da 4916 a 40916.
+
+27-01-2010
+- (gsm.c) In fase di inizializzazione viene interrogata la versione del firmware
+          del modulo GSM e salvata nel log.
+
+25-01-2010
+- (gsm.c) In caso di errore inizializzazione gsm viene indicato nel log anche il
+          valore di GSM_Status[3] per tracciare il problema specifico.
+          
+20-01-2010
+- (master.c) Il comando 6 per il numero di polling prolungato per le tastiere è
+             esteso anche alle tastiere DEK.
+
+19-01-2010
+- (master.c) In master_zones() l'anomalia di una zona generata dallo stato Gest*
+             è valida solo se è attivo il bitMUNo* relativo. Altrimenti la funzione
+             SetMU(0x200, anomalia) che attiva lo stato Gest può generare un nuovo
+             fronte di anomalia sulla zona anche se il quel momento il campo è a
+             riposo.
+             
+15-01-2010
+- (command.c) Corretto il controllo azioni su sensore +1, per errore filtravo
+              ogni 4 anziché ogni 8, quindi il controllo finiva sul +1 e sul +5.
+              Problema presente in particolare se una periferica non presente
+              viene utilizzata come banco di sensori virtuali.
+
+15-12-2009
+- (master.c) Il controllo del NoTxMM per il modulo master Lara non era in
+             lara.c (vedi 22-10-2009) ma in master.c.
+             Disabilitando l'ottimizzazione si è perso questo controllo che
+             viene quindi ora reintrodotto.
+             
+04-12-2009
+- (gsm.c) Corretto il tipo di dato (unsigned) per il campo data della lista
+          cancellazioni, e impostato l'intervallo corretto per il mese (-1)
+          nella funzione gsm_parse_time().
+
+02-12-2009
+- (support.c) Il salvataggio o meno dello stato di fuori servizio sensore
+              per i terminali Tebe è ora un'opzione da programma utente.
+              Per default il salvataggio avviene sempre, solo utilizzando
+              la macro Tebe_OOS_volatile() i fuori servizio Tebe non sono
+              salvati su flash.
+
+01-12-2009
+- (support.c) Non viene salvato lo stato di fuori servizio sensore per i
+              terminali Tebe, così che se da programma utente attivo e
+              disattivo frequentemente, non vado a scrivere in flash di
+              continuo. Effetto collaterale: se si mette fuori servizio
+              un terminale da Com90/GEMSS e poi c'è un crash, il terminale
+              torna in servizio.
+- (master.c) Aggiunto un controllo al semaforo di sincronizzazione del
+             programma utente. Se il loop si blocca da qualche parte, il
+             valore del semaforo cresce e superata la soglia di 20 fa
+             ripartire la centrale.
+
+30-11-2009
+- (volto.c) La gestione dell'anagrafica sul server volto viene demandata alla
+            centrale configurata esplicitamente per questo ruolo, per evitare
+            che in situazioni dove più centrali facenti riferimento allo stesso
+            server ricevano e quindi inoltrino la stessa richiesta di gestione.
+- (support.h) Creata la variabile di configurazione VoltoServerUpdate per
+              l'abilitazione a quanto sopra. Per default la centrale non gestisce
+              l'anagrafica del server.
+
+23-11-2009
+- (tebe.c) Eliminato l'invio del CODE_STOP per evitare di bloccare il terminale
+           slave, che richiederebbe una riprogrammazione dell'indirizzo (o un
+           reset) per tornare in linea.
+- (codec.c) Blocco di 5 secondi su accettazione attuatori per limitare gli
+            eventi generati in caso di comando ripetuto molte volte.
+- (delphi.c) Inizializzazione del timer per il blocco di 5 secondi.
+
+23-11-2009
+- (master.c) Refresh sensori solo per moduli master non Tebe. Modifica prima
+             presente solo nella versione ottimizzata, ora ripresa.
+
+20-11-2009
+- (console_strings2.c) Corretta una traduzione per le imostazioni IP, per
+          il quale arrivati alla configurazione Gateway il terminale si
+          bloccava.
+
+17-11-2009
+- (gsm.c) Il timeout delle chiamate è riportato da 80 a 60 secondi, inutile
+          insistere se non c'è risposta.
+- (master.c) Disattivata nuovamente l'ottimizzazione.
+- (master.c) Aggiunto un ritardo di 20ms tra i comandi verso i moduli master
+             tipo 5 (Tebe) per assicurare la possibilità di ricezione eventi.
+
+16-11-2009
+- (gsm.c) In caso di timeout della chiamata voce, butto via la chiamata
+          senza ulteriori tentativi, altrimenti il conteggio non funziona
+          e inizia un ciclo infinito di chiamate che presumibilmente non andrà
+          mai a buon fine.
+          Nota: la chamata voce va in timeout perché non c'è risposta, ed il
+          modulo non fornisce risposta perché il numero continua a squillare.
+
+12-11-2009
+- (master.c) La lista stato zona ora riflette fedelmente la lista stato sensori,
+             quindi in caso di gestione CEI, se il sensore torna a riposo ma
+             non è stato ancora accettato (quindi lista stato sensori ancora in
+             allarme), continuo a vedere la zona in allarme e non a riposo.
+             (Variante riportata anche nella gestione non ottimizzata)
+- (command.c) Accettazione automatica all'attivazione zona inibita in caso di
+              gestione CEI delle accettazioni.
+- (command.c) La messa fuori servizio di un sensore, oltre a dare il ripristino
+              delle anomalie in corso genera anche l'evento di accettazione.
+- (command.c) La disattivazione di una zona allarmata esegue il ripristino del
+              sensore solo se non è una gestione CEI opure se è stato
+              preventivamente accettato.
+             
+09-11-2009 - ore 15:30
+- (master.c) Riattivata l'ottimizzazione sulle code per i moduli master, dopo
+             aver individuato e corretto il problema. Nella gestione delle
+             temporizzazioni, in un ciclo for era sbagliato un indice.
+             Migliorato anche il funzionamento, evitando l'introduzione di
+             piccoli ritardi nell'invio dove non necessario, ritardi che
+             sarebbero comunque dovuti risultare multipli di 10ms.
+
+09-11-2009
+- (con_sms.c) Corretta la gestione degli SMS flash di Wind con TerminalData
+              disabilitato.
+
+06-11-2009
+- (master.c) Ripristinato il funzionamento non ottimizzato per problemi sul campo,
+             in attesa delle verifiche e relativa soluzione.
+             
+05-11-2009
+- (lara.c) Gestione dei nodi posticipata. Prima chiedo la lista nodi, poi forzo
+           i nodi previsti preservando i nodi presenti.
+
+27-10-2009
+- (master.c) Modificata l'ottimizzazione dell'invio comandi in modo da usare
+             tempistiche relative anziché assolute, altrimenti il cambio ora
+             rischiava di bloccare tutto.
+- (master.c) Refresh sensori solo per moduli master non Tebe.
+             
+23-10-2009
+- (master.c) Ottimizzato ulteriormente l'invio dei comandi, distribuendoli anche
+             sui vari attestaggi e non solo in sequenza.
+
+22-10-2009
+- (master.c) Invio dell'impostazione timeout single solo una volta.
+- (master.c) Divisione della coda comandi, gestione di una coda per ogni modulo.
+             Ottimizzato l'invio dei comandi sul campo.
+- (user.c) Chiamate a mmaster_queue condizionate dall'esistenza del modulo master,
+           per evitare il reset della centrale per anomalia.
+- (badge.c) Chiamate a mmaster_queue condizionate dall'esistenza del modulo master,
+            per evitare il reset della centrale per anomalia.
+- (command.c) Chiamate a mmaster_queue condizionate dall'esistenza del modulo master,
+              per evitare il reset della centrale per anomalia.
+- (console_modem.c) Ripristinata la stringa str_9_33 e sostituito il puntatore str_9_42.
+- (lara.c) Gestione del NoTxMM per modulo Tebe.
+
+20-10-2009
+- (master.c) Gestione analogica dei sensori filtrata sul fuori servizio.
+
+01-10-2009
+- (lara.c) Modificato il calcolo del modulo master base in lara_actuators() per
+           poter gestire due moduli master Tebe.
+- (volto.c) Tampone: se viene rilevato che la configurazione delle connessioni
+            si è azzerata, reimposto i valori di default. Questo in attesa di
+            capire come sia possibile che si azzeri a volte VoltoMaxConn.
+
+24-09-2009
+- (master.c) Generazione diretta degli eventi sensore di cambio fascia analogica.
+             La funzione si attiva congiuntamente alla SetSAN per il mascheramento
+             degli eventi di allarme.
+
+23-09-2009
+- (master.c) In caso di errore accodamento verso un modulo master, forzo comunque
+             un'uscita completa e un riavvio, per assicurarmi che l'errore possa
+             essere superato. (E' capitato che nonostante la rilevazione del modulo
+             master, per qualche motivo è successivamente sparito e non è più stato
+             possibile accodare nulla verso il campo)
+
+15-09-2009
+- (gsm.c) Piccolo ritocco per attendere almeno 3 risposte consecutive di connessione
+          assente (+CREG=3) prima di dichiarare la connessione persa e dare inizio
+          ad una sequenza di spegnimento e accensione.
+
+10-09-2009
+- (lara.c) Il codice del giustificativo nel caso Lara deve essere swappato.
+
+09-09-2009
+- (gsm.c) Attivata una procedura di reset del modem in caso la cancellazione di un
+          sms provochi un errore di indice sbagliato. In teoria dovrei sempre e solo
+          cancellare sms esistenti, quindi se capita questa combinazione significa
+          che il modulo si è impallato. Se si impalla la cancellazione si satura
+          la sim e non riceve poi più nulla. Resettando torna tutto a posto.
+- (console) Corretta la traduzione della stringa str2_9_3 per la quale non appariva
+            la stringa sul TerminalData nuovo.
+
+08-09-2009
+- (lara.c/tebe.c) Creata la nuova variabile array lara_giustificativo, popolata con
+           il codice di giustificativo associato alla timbratura. L'indice è dato
+           dal nodo, quindi dal numero di terminale. In caso di timbratura normale,
+           il valore è pari a 0xffff.
+
+04-09-2009
+- (printer.so) Predisposta la lettura dal canale in modo che eventuale trasmissione
+               da parte della periferica non porti alla saturazione della memoria.
+               Verifica inoltre della connessione del cavo seriale, in caso di
+               cavo non connesso gli eventi vengono scartati e non trasmessi.
+---- NO ----
+- (gsm.c) In caso di errore 321 durante la cancellazione degli sms, viene invalidata
+          la lista cancellazioni e forzata un nuovo popolamento con conseguente
+          cancellazione aggiornata. -> verificare risposta Telit a problema aperto,
+          perché il caso sembra più un errore del modulo e non è detto che questa
+          soluzione risolva.
+---- NO ----
+
+31-08-2009
+- (lara.c) L'impostazione di una tessera di anagrafica direttamente da GEMSS attiva
+           il controllo di cambio area per la gestione dei contatori di presenza.
+           In teoria avrebbe dovuto essere il GEMSS a ricalcolare le presenze ed
+           impostare i contatori tramite specifico messaggio, ma visto che non lo
+           fa, rendo il controllo intrinseco.
+- (udp.c) Corretta la gestione dei comandi /52 e /53 (segreto ed evento).
+- (codec.c) Con il parametro -p attivo il debug anche su codec_parse, così da poter
+            controllare anche i consumatori diversi dal SaetNet.
+- (radio.c) Spostata la registrazione della funzione di impostazione lingua subito
+            all'_init del plugin, così che la gestione della console potesse avere
+            già la funzione disponibile al rilevamento. Corretto anche il problema
+            della presenza dei telecomandi 1858 e 1859 in elenco.
+
+26-08-2009
+- (volto.c) Revisione del sistema di scelta per l'apertura iniziale delle connessioni.
+
+26-08-2009
+- (codec.c) Aggiunta la dimensione dei messaggi estesi Tebe 64 e 65 che mancava!!!
+
+20-08-2009
+- (gsm.c) Le verifiche +CSQ e +CREG vengono ora alternate anziché essere richieste
+          in coppia. Inoltre la verifica scatta solo se la lista comandi GSM è
+          vuota.
+- (gsm.c) In caso di +CMS ERROR 303 reinizializzo il gsm nello stesso modo in cui
+          facevo per il 302.
+
+31-07-2009
+- (volto.c) Aggiunto del debug per capire perché ad un certo punto il processo volto
+            smetta di gestire i socket verso il server di riconoscimento, indicando
+            il limite delle connessioni nonostante ne risultino 2 libere (addirittura
+            anche quando non ci sono state mai richieste nel frattempo).
+
+24-07-2009
+- (gsm.c) Si è scoperto che il gsm si può sganciare dal ponte senza però che ve ne
+          sia segnalazione (non è stato attivato l'unsolecited report), pensando che
+          il gsm comunque tentasse sempre di riconnettersi. Invece è stato trovato
+          sganciato senza che tentasse una riconnessione, +CREG fisso a 0,3.
+          Aggiunto quindi un check ogni 15 secondi insieme al +COPS per controllare
+          lo stato di registrazione, e in caso di fallimento il gsm viene spento e
+          riacceso.
+- (console.c) In caso di terminale connesso, ogni 5 secondi controllo tramite un ATI
+          che effettivamente lo sia ancora. Se il terminale viene disconnesso, il
+          resend del comando attiva il meccanismo di check presenza. In questo modo
+          assicuro il riconoscimento del terminale subito alla connessione.
+
+16-07-2009
+- (gsm.c) Aggiunto un controllo in gsm_init per assicurare l'apertura della seriale
+          ed in caso di fallimento scrive un messaggio nel log.
+- (gsm.c) Aggiunto un controllo in gsm_init per assicurare l'inizializzazione della
+          comunicazione. Se l'interrogazione dello stato SIM non ottiene nessuna
+          delle risposte attese (o proprio nessuna risposta), dopo 5 tentativi
+          spengo e riaccendo il gsm e ricomincio a provare. La procedura esce solo
+          quando ottengo una risposta valida. Questo controllo non dovrebbe mai
+          scattare all'avvio, dal momento che l'inizializzazione avviene solo se
+          ho appena rilevato il gsm. Potrebbe invece avvenire se dopo una prima fase
+          di dialogo con il gsm, ci si ritrova a doverlo reinizializzare. Se prima
+          funzionava, devo fare di tutto per tornare a farlo funzionare.
+- (gsm.c) Errore: all'init venivano sempre riallocati anche gli oggetti timeout,
+          quindi alla lunga mi ritrovavo con un sacco di timeout appesi. Ora li
+          alloco solo all'inizio e poi basta.
+- (delphi.c) Creato un nuovo parametro TebeBadgeDisable in saet.var per attivare
+          la disabilitazione delle tessere su pin errato. Questo parametro forza
+          il parametro analogo in lara.gz.
+- (lara.c) Creato il parametro LARA_PARAM_BADGEDISABLE in lara.gz per attivare la
+           disabilitazione delle tessere su pin errato.
+- (gsm.c) Eliminata l'uscita forzata a seguito di reset continuato del GSM. Pare che
+          i precedenti interventi per il recupero della comunicazione sulla seriale
+          fossero sufficienti, non risulta che l'uscita sia più intervenuta da allora.
+          L'eliminazione permette alla nuova logica per il recupero del funzionamento
+          del GSM di spegnere e riaccendere il modulo ripetutamente, fino al recupero
+          effettivo.
+
+15-07-2009
+- (gsm.c) Lettura livello segnale +CSQ ogni 10 secondi anziché 4 per aumentare la
+          copertura del log.
+- (lara.c) La timbratura in AreaSelf ora indica l'ID del template e non sempre 0.
+           L'ID 0 viene indicato se non ci sono template in anagrafica.
+- (support.[ch]) Nuova funzione di log support_logmm() per la storicizzazione dei
+          soli messaggi da e per i moduli master. Il log normale contiene ora solo
+          i messaggi di stato ed eventi particolari. La dimensione nominale del
+          file vale per il log del modulo master, mentre il log normale ha dimensione
+          pari alla metà (analogamente al log del GSM).
+- (master.c) Utilizzo della nuova funzione di log per i messaggi da e per i moduli.
+- (tebe.c) Gestione della disabilitazione tessera su messaggio da terminale, dopo
+           tre inserimenti errati consecutivi del PIN.
+
+14-07-2009
+- (gsm.c) Corretta la dimensione del buffer per il log dei numeri non riconosciuti.
+          La dimensione precedente era troppo piccola e andava a sovrascrivere altri
+          dati, in particolare poi non accodava più correttamente gli eventi stringa
+          gsm, con i primi due byte preimpostati.
+- (console_impostazioni.c) L'impostazione dell'IP forza automaticamente in modalità
+          statica, anche se prima era configurato il DHCP.
+
+13-07-2009
+- (gsm.c) Migliorata la gestione del log per evitare di cancellare l'ultimo carattere
+          dal testo degli sms multiriga.
+          
+06-07-2009
+- (console.c) Introdotto un meccanismo che permette aiplugin di modificare le
+              stringhe a seconda del tipo di TerminalData connesso. Quando non
+              si pianta, il meccanismo cambia le stringhe anche sostituendo il
+              TerminalData passando da un tipo all'altro.
+
+30-06-2009
+- (audio.c) Gestita anche la presenza di valori pari a B5h come non permessi, anche
+            se eliminati in modo molto empirico.
+- (console) Gestione TerminalData nuovo, tipo STL02. Per ora solo tipo Delphi.
+
+16-06-2009
+- (audio.c) Gestita anche la presenza di valori pari a D1h come non permessi, in
+            alcuni casi provocano il blocco della riproduzione.
+- (gsm.c) L'evento stringa per l'sms limita la dimensione a 60 caratteri (compreso
+          il mittente).
+
+12-06-2009
+- (gsm.c) Possibilità di generare un evento stringa con il testo degli sms ricevuti.
+          I mittenti degli sms devono essere tra quelli autorizzati in rubrica.
+          L'attivazione della prestazione avviene tramite flag "gsm_sms_event" posto a 1.
+
+06-04-2009
+- (gsm.c) Gestione squillo da numeri in rubrica.
+
+01-04-2009
+- (gsm.c) Funzione GSM_Soglia_Credito_cont() analoga a GSM_Soglia_Credito() ma
+          con segnalazione continua anziché impulsiva.
+          
+27-03-2009
+- (tebe_sa) Gestione AreaSelf anche su Terminale Master.
+
+07-03-2009
+- (gsm.c) L'invio di codici di telecomando via sms ora non è più sensibile al case,
+          la sigla "TC" può essere sia maiuscola che minuscola in tutte le combinazioni.
+          
+24-02-2009
+- (lara.c) Definiti i comandi di gestione dell'anagrafica volto.
+
+21-01-2009
+- (lara.c) Gestione continua degli allarmi di forzatura porta e apertura prolungata,
+           anziché impulsiva.
+
+20-01-2009
+- (gsm.c) In caso di resend fallito, provo a chiudere la seriale e a far ripartire
+          il processo di ascolto. Solo se fallisce di nuovo faccio il reset della
+          centrale. Ma pare che la chiusura sia sufficiente a recuperare il funzionamento.
+          Impostazione di stati vari in modo che il gsm si reinizializzi correttamente
+          e riparta in modo regolare la coda dei comandi.
+          Nota: il blocco a seguito di una chiamata audio sembra essere dovuto alla
+          mescolanza di ricezione a due baudrate differenti (audio 115k, gsm 19k, con
+          centrale impostata a 115k). Da test effettuati senza che il gsm inviasse
+          alcunché durante la riproduzione, non si sono mai avuti blocchi.
+- (gsm.c) Modificata la procedura gsm_init per evitare che accensioni anomale del gsm
+          facessero entrare in un ciclo eccessivamente lungo la verifica di SIM pronta.
+          Si generava un disallineamento dei comandi e delle risposte, ora evitato.
+- (audio.c) Gestione audio per gsm vecchi con echo analoga a quella dei gsm nuovi
+            senza echo, per la gestione dei pacchetti incompleti.
+
+15-01-2009
+- (lara.[ch]) Il ritardo di forzatura porta è gestito singolarmente per ogni terminale.
+              E' stato definito un bit di attivazione nella struttura del singolo
+              terminale ed il tempo è pari a quello del timeout di porta aperta.
+- (gsm.c) Ripristinato il vecchio comportamento di reset della centrale, la chiusura
+          della seriale non sblocca nulla e anzi rimane fermo su gsm_init.
+          Almeno così in qualche modo si riprende.
+
+13-01-2009
+- (string.c) Corretto un problema su string_zone_name() per cui ora si può utilizzarla
+             anche con cod = NULL.
+
+12-01-2009
+- (audio.c) L'errore di riproduzione non è causato solo dalla ricezione di dati GSM.
+            Può capitare che vada perso un byte del pacchetto audio, l'ACK non arriva
+            e la gestione va in timeout inviando un nuovo pacchetto. In realtà quello
+            precedente non era ancora completo e non va in timeout, quindi il byte
+            di comando viene usato per completare il pacchetto precedente e mettendo
+            tutto fuori sincrono. Nel caso peggiore, i dati che seguono vengono gestiti
+            come comandi, e se per ipotesi arriva qualcosa di interpetabile, le
+            conseguenze possono essere gravi. Ad esempio parte la registrazione!
+            Quindi ad ogni timeout, prima di inviare il pacchetto successivo viene
+            inviato un pacchetto di stop per essere sicuri di riportare il sistema audio
+            in uno stato noto.
+- (audio.c) C'è differenza tra l'errore per timeout e l'errore per ricezione errata.
+            Nel primo caso occorre gestire quanto sopra e non serve più mantenere la
+            riproduzione per 20 secondi.
+            Nel secondo caso posso interrompere la comunicazione immediatamente.
+- (audio.c) Per la chiamata muta non c'è nulla da fare, l'audio viene riprodotto
+            correttamente, è la comunicazione radio che fallisce.
+- (gsm.c) A seguito di una chiamata audio capita a volte che la comunicazione verso
+          il gsm si blocchi in modo anomalo. Il comando AT viene trasmesso regolarmente
+          e anche l'OK viene ritrasmesso dal gsm, che però non viene ricevuto! Lo
+          spegnimento e la riaccensione del gsm non modifica il comportamento, è proprio
+          la centrale a diventare sorda (ma non muta!). L'unica soluzione è chiudere e
+          riaprire la seriale, ma per fare questo occorre anche reinizializzare il
+          thread di gestione.
+          NON E' VERO, ANCHE CHIUDENDO LA SERIALE RIMANE SORDA!
+- (master.c) Gli stati di allarme possono essere invertiti tramite l'array SEinvAlm.
+- (database.[ch]) Salvataggio in saet.nv delle impostazioni SEinvAlm.
+- (lara.c) Nel campo param di lara.gz, nei 16 bit alti imposto il tempo di ritardo per
+           la generazione dell'evento di forzatura porta. Normalmente è 0 e l'evento
+           è immediato. Il ritardo è espresso in secondi. Per maggiore generalità, il
+           timeout è attivato tramite flag sempre nel campo param.
+
+23-12-2008
+- (audio.c) In caso di errore audio, se la causa è un mancato ACK e quindi timeout,
+            si ha un buco di 133ms, pari a 4 pacchetti audio. Ne devo tenere conto
+            altrimenti se si hanno errori ripetuti, il timeout di riproduzione
+            si allunga in modo significativo. Quindi ora ogni timeout viene contato
+            come se fossero stati riprodotti 4 ulteriori pacchetti.
+
+22-12-2008
+- (audio.c) Mi assicuro che il sistema audio non si blocchi mai in uno stato
+            anomalo, tipicamente in registrazione, per averne sempre il
+            controllo.
+            Stati anomali possono essere causati da errori in ricezione, anche
+            un disturbo, e il caso peggiore è quando si attiva la registrazione
+            non voluta: nessuno pensava a fermarla.
+            Ora invio un buffer completo di STOP sia all'inizio che alla fine
+            delle riproduzioni, nonché all'inizializzazione del sistema, per
+            assicurarmi di fermare completamente ogni attività.
+- (audio.c) Oltre all'invio degli STOP, pulisco per bene lo stream dati in
+            ricezione, fino a quando non ricevo più nulla.
+- (gsm.c) La rilevazione del sistema audio fa 3 tentativi prima di dire
+          che non è presente.
+          
+19-12-2008
+- (master.c) Aumentato il numero di byte stampato nei log di campo, 26 per i
+             moduli normali, 38 per i moduli Tebe. In particolare per la Tebe
+             viene tracciato l'intero messaggio dei nodi.
+- (lara.c) In lara_nodes corretta la gestione della manomissione periferica.
+           Per la prima tranche di 8 era commentata la parte di generazione
+           evento, rimaneva solo il tebe_manomissione, ma per la seconda
+           tranche di 8 non era commentata, e quindi si aveva la doppia
+           segnalazione di manomissione.
+
+18-12-2008
+- (audio.c) L'impostazione della velocità della porta seriale viene fatta
+            solo all'inizio e alla fine della riproduzione globale, non ad
+            ogni ripetizione del messaggio.
+            
+16-12-2008
+- (audio.c) La riproduzione contina a bloccarsi lo stesso.
+            Eliminata l'impostazione del controllo di flusso durante la
+            riproduzione, la sezione audio non ne ha bisogno. Casomai fosse
+            il gsm a rimanere piantato da qualche parte.
+            
+15-12-2008
+- (audio.c) La riproduzione conta il numero di pacchetti in uscita, sia per
+            verificare il tempo limite di 60 secondi (sostituendo il timeout),
+            sia per non interrompere la riproduzione in caso di errore nei
+            primi 20 secondi.
+- (gsm.c) La verifica degli sms non letti non viene più accodata dopo ogni
+          chiamata audio ma solo al termine del giro di programma utente se
+          è stata accodata almeno una chiamata. In questo modo se un allarme
+          genera un certo numero di chiamate, la verifica degli sms viene
+          fatta solo una volta al termine, senza quindi rallentare la sequenza.
+- (gsm.c) Aumentato il timeout di +CMGL="REC UNREAD" a 60 secondi.
+- (con_sms.c) Rinfrescato il timeout ad ogni puntino stampato durante la lettura
+              degli sms, per evitare che il terminal data si spenga a metà ricezione.
+- (gsm.c) Modificata la procedura di reset del gsm, la seriale viene chiusa e
+          riaperta prima dello spegnimento e riaccensione. Vediamo se così si
+          riprende come si deve.
+
+26-11-2008
+- (gsm.c) In caso di ricezione sms flash da parte di Wind, il riconoscimento del
+          messaggio di credito era sbagliato e alla fine scartavo tutti gli sms flash.
+- (con_sms.c) Ora tiene conto dei due formati possibili di credito, con e senza
+              credito dati.
+- (gsm.c) E' variato anche il testo del credito TIM, aggiornato.
+
+25-11-2008
+- (TebeSa - termtebe/tebe.c) In tebe_imposta_nodo_remoto() forzo la programmazione
+           del nuovo nodo anche sul modulo master, altrimenti anche se il terminale
+           fosse già indirizzato comunque non lo vedrei.
+- (con_telecomandi.c) Sincronizzazione dell'invio telecomando con il programma utente,
+           per evitare che un telecomando possa arrivare a metà dell'esecuzione del
+           programma e quindi perdere i fronti.
+- (gsm.c) Gestione della lista degli SMS da cancellare. Anziché attivare la procedura
+          di ricerca dell'sms più vecchio ogni volta che se ne vuole cancellare uno,
+          la procedura si attiva solo se la lista è vuota e finché poi contiene elementi
+          la cancellazione avviene pescando da questa lista. La lista è ordinata.
+
+17-11-2008
+- (lara.c) All'avvio vengono forzati sul modulo master tutte le periferiche previste
+           dal programma utente (e rimosse quindi quelle non previste). In questo modo
+           una sostituzione di centrale su un impianto Tebe non costringe a dover
+           riprogrammare tutte le periferiche.
+
+07-11-2008
+- (command.c) Aggiunto un flag modificabile da plugin per impostare un comportamento
+              più simile alla vecchia SYS. In presenza dell'apposito plugin, la Delphi
+              non accetta più automaticamente le anomalie all'attivazione zona e non
+              genera più il ripristino del sensore alla disattivazione zona.
+
+04-11-2008
+- (gsm.c) In caso di CME ERROR resetto anche gli stati per permettere il proseguimento
+          degli invii dei comandi accodati. Un CME ERROR su chiamata ATD bloccava la
+          gestione della coda messaggi (GSM_Status[1] >= 2).
+
+03-11-2008
+- (gsm.c) Il resend del comando +IPR suppone ora che il comando sia stato interpretato
+          ma non sia stata inviata risposta. Per questo motivo viene comunque reimpostato
+          il baudrate della linea seriale.
+- (gsm.c) Il comando +CSCS per il charset è stato separato dal resto delle inizializzazioni
+          poiché pare che per i moduli GSM più vecchi non sia disponibile e dia errore.
+- (gsm.c) Eliminati alcuni send_immediate al termine delle chiamate audio.
+- (gsm.c) Gestione delle chiamate audio sempre in +IPR=0.
+- (gsm.c) Aumentato il timeout di ATH a 2 secondi.
+- (gsm.c) Introdotto ritardo di 20ms in gsm_send_next().
+- (gsm.c) I comandi CMGL e CPMS non vengono duplicati SOLO SE non ci sono chiamate audio
+          nel mezzo. Durante la chiamata audio la situazione potrebbe cambiare e sono
+          obbligato ad accorgermene.
+          
+31-10-2008
+- (gsm.c) Verifica della lista comandi protetta da mutex in gsm_line_status().
+- (gsm.c) Dopo aver sentito Telit, il timeout per il comando ATD è stato impostato
+          a 80 secondi, per non esagerare. Il timeout di default del modem è 60
+          secondi, quindi basta abbondare leggermente per essere sicuri di beccarlo.
+
+10-10-2008
+- (volto.c) Aumentato il timeout per la risposta a 20 secondi. Dopodiché non viene
+            fatto il reinvio ma chiudo direttamente il socket, tanto a quel punto
+            ci pensa l'utente a ripassare il badge.
+- (volto.c) Pulizia generale a seguito della chisura dei socket (aggiunto uno shutdown
+            e azzeramento esplicito sempre di tutte le variabili di connessione).
+            Non pare abbia generato differenze di funzionamento, ma male non fanno.
+- (volto.c) Log di attività con support_log2().
+
+09-10-2008
+- (gsm.c) Aumentato il timeout per il comando ATD da 60 a 180 secondi, per evitare
+          che il timeout di comando in caso di non risposta innescasse un loop
+          infinito di chiamata. (NO CARRIER su reinvio comando, ma poi...)
+
+15-09-2008
+- (gsm.c) La procedura di overflow viene iniziata dalla lettura di qualunque SMS, non
+          necessariamente dal n.1, così se per qualche motivo questo comando andasse
+          perso, la procedura comunque parte.
+
+12-09-2008
+- (volto.c) Distinzione dell'esito tra volto non riconosciuto e volto non presente in
+            anagrafica.
+- (lara.c) Generati i due nuovi eventi Tebe 65 e 66 rispettivamente per volto non
+           riconosciuto e volto non presente in anagrafica.
+            
+28-08-2008
+- (gsm.c) In caso di ricezione sms flash da parte di Wind, lo invio al terminal data
+          solo se si tratta di un messaggio di credito residuo richiesto, non mando
+          qualunque messaggio ricevuto. Altrimenti il formato non viene riconosciuto
+          ed il sistema va in crash.
+
+27-06-2008
+- (lara.c) Per la gestione AreaSelf, il controllo viene fatto con template che possono
+           anche avere i caratteri significativi in mezzo alla stringa.
+           
+24-06-2008
+- (lara.c) Gestione area 128 come AreaSelf. Aggiunti i controlli sulla gestione delle
+           aree in modo che non si indirizzino le strutture al di fuori dei loro limiti.
+           Gestione accesso badge da terminale in AreaSelf.
+- (string.c) Controllo sull'area.
+
+30-05-2008
+- (support.[ch]) Aggiunta la funzione support_log_hook() per agganciare il salvataggio
+                 dei log in modo che un plugin possa attivare la scrittura anche per
+                 altre vie (flash, seriale, ethernet...)
+- (gsm.c) Gestione della porta per il gateway MMS (necessario per TRE).
+
+14-05-2008
+- (gsm.c) Aggiunta la possibilità della connessione in roaming.
+          In particolare l'operatore TRE se non ha campo si connette in roaming a TIM.
+- (gsm.c) Modificato il comando AT+COPS=0,2 in AT+COPS=3,2 ed aumentato il timeout a 180s.
+
+08-05-2008
+- (gsm.c) Modificata la gestione delle lettere accentate, cambiato l'alphabet tramite
+          il comando +CSCS e impostando l'iso-8859-1.
+
+07-05-2008
+- (volto.c) Chiusura dei socket aperti, dopo la fallita connessione.
+
+05-05-2008
+- (gsm.c) Gestito il CMS ERROR 302 come else al 321, prima erano solo due if. Ma se veniva
+          gestito il 302, poi scattava anche l'else del 321 e non era corretto.
+- (gsm.c) Gestito il CMS ERROR 331 per il reinvio dell'sms.
+
+30-04-2008
+- (support.[ch]) Creata la funzione utf8convert() per la gestione delle lettere accentate.
+                 Trasforma le stringhe UTF-8 in stringhe ISO-8859-1.
+- (string.c) Le descrizioni lette da strings.conf vengono convertite in ISO-8859-1.
+- (gsm.c) Il testo degli sms viene convertito in ISO-8859-1 e poi nel default charset prima dell'invio.
+          ATTENZIONE: converte solo le vocali minuscole accentate, ci sono altri caratteri che
+          eventualmente si devono convertire.
+
+29-04-2008
+- (volto.c) Gestione connessioni multiple.
+
+28-04-2008
+- (lara.c) Azzerato il campo "spare" prima di trasmettere qualunque messaggio
+           ai terminali per evitare che mi torni indietro alla timbratura successiva.
+
+11-03-2008
+- (lara.c) Gestione richieste di creazione e cancellazione anagrafica volto.
+- (volto.c) Gestione anagrafica volto.
+- (lara.c) Comandi temporanei di gestione anagrafica volto.
+
+16-02-2008
+- (lara.c) Corretto l'evento generato dalla variazione delle festività di una tessera,
+           prima veniva erroneamente segnalata la variazione dei terminali associati.
+
+15-02-2008
+- (gsm.c) Il controllo di SIM piena viene eseguito solo se non ce n'è già uno in corso.
+          Altrimenti rischio di riempire la coda dei comandi di letture di tutta la SIM
+          prima di riuscire a cancellare effettivamente gli SMS di troppo.
+- (gsm.c) Inoltre evito proprio di accodare un +CPMS se ce n'è già uno in coda.
+
+07-02-2008
+- (console.c) Al logout salva immediatamente eventuali variazioni sull'anagrafica.
+- (lara.c) La funzione lara_save() permette di salvare eventuali salvataggi pendenti.
+           Se non ce ne sono non fa nulla.
+
+15-01-2008
+- (audio.c) Per evitare che il gsm si agganci occorre eliminare anche il byte 0xd4,
+            oltre ai già eliminati 't', 'T', e 0xf4.
+
+04-01-2008
+- (aes.[ch]) Incluse le funzioni di crittografia AES ed esportate in delphi.sym
+             per essere utilizzabili anche dai plugin (es: UDP).
+- (volto.c) Calcolo CRC16 per i messaggi di richiesta e di risposta.
+
+03-01-2008
+- (con_lara_term.c) Aggiunta la gestione dell'opzione biometrico volto.
+- (console_strings.c) Aggiunte varie stringhe per str_7_*.
+- (volto.c) Gestione del sottosistema di riconoscimento volto, ma solo
+            identificazione Lara.
+
+02-01-2008
+- (volto.[ch]) Inizializzazione del sottosistema di riconoscimento volto.
+- (lara.c) Inizializzazione del sottosistema di riconoscimento volto alla partenza
+           e ad ogni variazione dell'anagrafica terminali.
+- (delphi.sym) Esportata funzione delphi_save_conf().
+- (support.h) Definito il parametro di configurazione VoltoServerName, gestito
+              però in saet.var anziché in saet.conf per evitare che possa essere
+              cancellata l'impostazione durante eventuali aggiornamenti.
+              
+24-12-2007
+- (audio.c) Per evitare che il gsm si agganci occorre eliminare proprio tutte le T
+            in tutte le sue forme, indipendentemente da cosa precede il byte.
+
+21-12-2007
+- (master.c) Nella variante BdI, il refresh dei sensori salta le periferiche
+             di tipo SEN.
+- (string.[ch]) Gestione delle descrizioni dei telecomandi radio.
+- (delphi.c) Al restart vengono salvate le descrizioni dei telecomandi radio
+             per non che vadano perse. La gestione è la stessa delle descrizioni
+             dei codici diretti.
+             La cancellazione totale delle descrizioni radio avviene da
+             TerminalData azzerando l'anagrafica.
+
+20-12-2007
+- (master.c) Sostituito il semaforo master_send_queue_sem con un mutex.
+             Solo per pulizia. Sempre per pulizia è stato protetto lo
+             scodamento dei messaggi per il campo con lo stesso mutex.
+             
+18-12-2007
+- (master.c) Nella variante BdI, l'attivazione delle tastiere genera allarme
+             impulsivo e non fisso fino alla disattivazione, in modo da avere
+             il fronte per il programma utente senza avere l'allarme nelle
+             liste.
+- (console.c) Predisposizione menu per la gestione dell'anagrafica radio.
+             
+11-12-2007
+- (command.c) Corretto un errore nella generazione dei codici di controllo
+              quando Variant=1. Veniva calcolato il valore ma poi non veniva
+              scritto nell'evento.
+              Cambiato inoltre l'algoritmo di calcolo, ora usa CRC16 per
+              garantire la variabilità del codice di controllo.
+- (command.c) Il calcolo del checksum dell'eseguibile avviene ora in base al
+              programma che sta effettivamente girando. Come era fatto prima,
+              sulle schede Iside veniva sempre calcolato il checksum di "tebe_sa",
+              perché sempre presente.
+
+10-12-2007
+- (command.c) L'impostazione dell'ora attraverso cmd_set_time() controlla la
+              presenza dei secondi nel comando. Se mancano, i secondi vengono
+              impostati a 0.
+- (command.c) Modificata cmd_set_holydays(), solo i giorni festivi fissi e le
+              domeniche non possono essere variate, ma un altro giorno che
+              manualmente è stato impostato a festivo può essere rimesso a feriale.
+              Anche il sabato normalmente a festivo può diventare feriale.
+              ATTENZIONE: la funzione cmd_set_day_type() continua a bloccare
+              il cambio giorno se è festivo.
+              
+07-12-2007
+- (command.c) Se si aggiorna la data e la data è quella attuale, allora non fa
+              nulla per evitare di perdere le eventuali impostazioni manuali
+              dei giorni FESTIVI.
+              Se invece si cambia proprio la data, anche solo di un giorno,
+              occorre ricaricare le eventuali impostazioni manuali.
+              Aggiunto il controllo in cmd_set_date().
+- (command.c) In cmd_set_holydays() e cmd_set_day_type() l'impostazione
+              di FESTIVI viene variata solo se attualmente non è già festivo.
+              In pratica un giorno festivo rimane tale sempre, non può essere
+              modificato.
+- (user.[ch]) Aggiunta la funzione SetVariante() per impostare la variante di
+              funzionamento del saet.new. Tale impostazione viene subito
+              salvata in saet.conf.
+              
+06-12-2007
+- (delphi.c) Corretto un errore in delphi_save_conf(), veniva salvato il valore
+             di Variant solo se era a 0 e non se era diverso da 0.
+             
+04-12-2007
+- (gsm.c) Modificata la stringa credito residuo per TIM.
+- (support.c) Salvataggio in status.nv anche di ZONAEX per il bit LockDisactive.
+
+03-12-2007
+- (audio.c) Il file in riproduzione deve evitare anche le sequenze "At" e "aT",
+            ma anche le combinazioni con 0xe1 e 0xf4 che sono molto simili a "a"
+            e "t" e possono aggnaciare il soncronizzatore del GSM.
+- (gsm.c) Il gsm riproduce l'audio impostando il baudrate a 2400 se si sta usando
+          un gsm di tipo vecchio, oppure impostando l'autobauding (+ipr=0) in
+          caso di gsm tipo nuovo (QUAD). L'autobauding sul gsm vecchio comunque
+          aggancia qualcosa lo stesso e non si può usare.
+
+30-11-2007
+- (gsm.c) La riproduzione audio avviene impostando l'autobauding del GSM (+IPR=0)
+          per evitare interferenze con l'ATmega16. Viene inoltre attivata una
+          procedura di rilevamento per capire se il gsm è di vecchio tipo (echo
+          sulla seriale) o di nuovo tipo (senza echo), al fine di attivare la
+          modalità di riproduzione più opportuna.
+- (audio.c) Se il gsm è di nuovo tipo, durante la riproduzione si aspetta solo
+            l'ACK, qualunque altra cosa deve interrompere la riproduzione.
+            Inoltre, i gsm di nuovo tipo rispondono OK al comando ATD solo quando
+            viene presa la linea dall'altra parte, quindi non c'è più bisogno
+            di mettere una pausa fittizia (che per i modem vecchi è di 3 secondi).
+- (gsm.c) Aumentato il timeout per il comando ATD; a 60 secondi, visto che i
+          nuovi moduli rispondono OK solo a connessione avvenuta.
+- (audio.c) Dal messaggio audio vengono rimosse le sequenze "AT" e "at" per
+            evitare che il gsm si agganci.
+
+29-11-2007
+- (support.h) Definito il parametro "Variant" nella struttura Config_t, per poter
+              gestire differenze di comportamento tra le versioni.
+- (command.c) In cmd_memory_control(), con Variant=1 il terzo valore dei codici di
+              controllo è una checksum dei parametri di taratura, altrimenti
+              rimane l'indirizzo dell'ultima periferica manomessa.
+- (delphi.c) Gestione lettura e scrittura della configurazione di Variant.
+
+28-11-2007
+- (lara.c) In lara_check_term(), quando risultavano differenti i valori per le
+           temporizzazioni del terminale, l'evento restituito riportava i valori
+           vecchi anziché i nuovi, come invece era correttamente per tutte le
+           altre impostazioni.
+- (codec.c) Corretta la dimensione dell'evento Tebe 52, che passa da 5 a 4 byte.
+           
+22-11-2007
+- (master.c) La sequenza periferiche presenti/previste viene attivato anche quando
+             la centrale è slave attiva, alla ricezione di rilevato modulo master.
+             Questo comunque dovrebbe capitare solo nella ridondanza BdI con modulo
+             master tipo 1 con INIBIT.
+             
+20-11-2007
+- (gsm.c) La funzione gsm_init() esegue 5 tentativi di verifica SIM prima di dichiarare
+          il fallimento. I moduli QUAD rispondo "+CME ERROR: 10" (SIM non inserita)
+          per alcuni secondi prima di dichiararla "READY".
+
+13-11-2007
+- (master.c) In master_zones() viene gestito il solo bit bitMUAlarmZone per ZONAEX,
+             lasciando inalterati tutti gli altri bit.
+- (database.h) Definito il bitLockDisactive per ZONAEX per tenere forzata a disattivata
+               una zona, così che un comando non possa attivarla per sbaglio.
+- (command.c) In cmd_zone_do_on(), se la zona è bloccata in disattivato non la attivo.
+- (codec.c) Riattivati i comandi di gestione lista ronda (questa volta veramente).
+
+12-11-2007
+- (database.[ch]) Definite nuovamente le variabili QRA1, QRA2 e TIPO_RONDA, per l'uso
+                  nei sistemi di BdI da migrare a Delphi.
+- (list.[ch]) Riattivati i comandi di gestione lista ronda.
+- (codec.c) Riattivati i comandi di gestione lista ronda. (non è vero)
+
+31-10-2007
+- (command.c) Corretta la dimensione del buffer della funzione cmd_display_message()
+              che era troppo piccola per contenere il comando, causando un crash.
+              
+26-10-2007
+- (lara.c) Corretto baco gravissimo nella lettura delle tessere via protocollo.
+           Una tessera vuota deve essere resettata (badge ff, resto 00), ma
+           l'azzeramento puntava non al byte 10 della tessera ma a 10 tessere più
+           avanti. Mancava il cast (char*) davanti al puntatore della tessera!
+           
+25-10-2007
+- (lara.c) Salvataggio in due tempi del file lara.gz. Il salvataggio avviene in un
+           file temporaneo e solo alla fine viene rinominato con il nome ufficiale.
+           In questo modo se qualcosa non va a buon fine, comunque una copia buona
+           dell'anagrafica rimane a disposizione.
+- (lara.c) Risolto problema di scrittura tessere > 32767 (short -> unsigned short
+           nel comando 6).
+           
+17-10-2007
+- (database.c) Scorporato il calcolo dell'associazione sensori/zona (SE_ZONA[]).
+- (codec.c) Il comando Z di associazione zona/sensori forza il ricalcolo di SE_ZONA[].
+
+12-10-2007
+- (delphi.c) Se in fase di scrittura del file saet.conf si trova che non esiste
+             il corrispettivo in saet.ref, allora viene copiato quello appena
+             creato. In questo modo si evita che un aggiornamento faccia perdere
+             la configurazione creata manualmente. Ciò è importante soprattutto
+             per i terminali Tebe master, che nascono senza questo file.
+             
+29-08-2007
+- (codec.c) Vengono accettati anche i comandi SaetNet con nodo 37, come arrivano
+            dalle vecchie TastieraLCD aggiornate per Mirus.
+            
+27-06-2007
+- (master.c) L'impostazione dell'invio soglie avviene ora tramite apposito plugin.
+             Il saet.new diventa perciò unico e la funzione viene attivata o meno
+             dalla presenza del plugin apposito.
+- (version.c) La funzione version_get() ora ritorna la stringa completa.
+             
+31-05-2007
+- (codec.c) Corretto un baco per la ridondanza. La funzione codec_do_consume_event()
+            non scartava correttamente tutti i dati nello storico nel caso di
+            eventi estesi Ex2.
+- (con_sms.c) Corretto grave errore nella numerazione degli sms. Il numero dell'sms
+              viene ora assegnato alla lettura dell'sms, non ogni volta che viene
+              eseguita la lista, altrimenti due successivi riordini della lista
+              fanno perdere l'associazione.
+- (con_sms.c) Aumentato il numero di sms gestibili a 50 ed inserito controllo sul
+              numero dell'sms all'atto dell'inserimento in anagrafica.
+- (con_sms.c) Visualizzazione del punto alla lettura degli sms ogni 4 letture.
+              
+24-05-2007
+- (modem.c) Rilevazione modem SiLab o USRobotics per eseguire alcune operazioni
+            solo su SiLab. Le stesse operazioni su USRobotics possono portare
+            al blocco della comunicazione via modem (funziona la prima volta ma
+            non la seconda).
+            
+23-05-2007
+- (delphi.c) Aggiunte informazioni di debug in caso di crash. Viene indicato
+             precisamente il thread responsabile, ed in caso di crash di
+             master_loop() anche il punto in cui avviene.
+             
+22-05-2007
+- (gsm.c) Gestione soglia gredito SIM.
+
+16-05-2007
+- (protocol.c) Aggiunto meccanismo di attesa dell'effettivo avvio dei plugin
+               seriali, affinché le eventuali inizializzazioni siano eseguite
+               prima dell'effettivo avvio della centrale. In particolare il
+               problema si era posto con il plugin di ridondanza: la centrale
+               a volte partiva prima che i plugin impostassero la modalità
+               di lavoro, ed in master_init() non veniva attivata l'attesa
+               della centrale gemella.
+- (delphi.c) La funzione delphi_closeall() ora termina anche tutti i thread.
+- (tebe.c) Introdotta la funzione tebe_stop() per terminare il/i thread LAN.
+- (database.[ch]) Ripristino dimensione dell'array AlarmSabotage al valore
+                  errato MM_NUM*32 anziché MM_NUM per evitare i problemi di
+                  incompatibilità che portano alla segnalazione "saet.nv
+                  corrotto".
+                  
+15-05-2007
+- (gsm.c) Le funzioni di invio sms, chiamata e analoghe, non fanno nulla se
+          la centrale è in modalità slave.
+- (modem.c) Le funzioni di chiamata e analoghe, non fanno nulla se la centrale
+            è in modalità slave.
+- (codec.c) Gli eventi di stringa del gsm con codice >= 100 non provocano il
+            consumo sulla centrale slave, dato che questa non li produce.
+
+14-05-2007
+- (database.[ch]) Definito l'array AlarmSabotageInv che a livello di periferica
+                  permette di invertire l'impostazione AlarmSabotage definita
+                  per il modulo master.
+- (master.c) Gestione dell'impostazione AlarmSabotageInv.
+- (user.c) Eventi estesti on/off attuatore accodati solo se abilitati da almeno
+           un consumatore.
+
+12-04-2007
+- (protocol.c) Gestione separata dei consumatori seriale in prot_plugin_start().
+               Il thread non gestisce più direttamente il loop del consumatore
+               ma una funzione a loop infinito che mantiene sempre attivo il
+               consumatore, anche quando la seriale non è più disponibile.
+               Ad esempio per PTY e seriali USB, la porta può essere chiusa ed
+               occorre ricreare il device.
+
+07-03-2007
+- (master.c -TebeSa) La funzione timer_hook() rimossa il 01/02/07 era in realtà
+            utilizzata per la temporizzazione del terminale integrato in tebe_sa.
+            Anziché reintrodurre la funzione è stata inserita una chiamata
+            esplicita a tebe_timer_term() all'interno di master_do(), con gli
+            identici effetti. Il master.c per TebeSa è specifico, quindi non
+            influenza in nessun modo il saet.new.
+
+12-02-2007
+- (codec.c) Aggiunto comando di lista 'x' per allineamento centrale. Aggiunto comando
+            esteso (DelphiCom) 69 ed evento esteso 101 per allineamento centrale.
+- (list.c) Funzione list_status_sync() per la generazione delle liste di allineamento.
+            
+07-02-2007
+- (codec.c) Ottimizzata la gestione del buffer eventi. Gli eventi estesi 247 non si
+            appoggiano più su memoria allocata dinamicamente ma vengono inseriti
+            direttamente nel buffer eventi. In questo modo si risparmia l'overhead
+            per l'allocazione e la liberazione della memoria e non viene comunque
+            usata memoria aggiuntiva per gli eventi 247 oltre a quella del buffer.
+
+06-02-2007
+- (codec.c) Corretto errore su comando R, il tipo festività veniva letto dal posto sbagliato.
+
+01-02-2007
+- (gsm.c) In caso di ricezione di errore CMS ERROR 302, il gsm viene reinizializzato
+          così come avveniva genericamente prima della modifica del 07/02/2006.
+- (delphi.[ch]) Rimossa la funzione timer_hook(), mai usata e nemmeno più esportata
+                da tempo impedendo di fatto l'utilizzo futuro.
+          
+18-01-2007
+- (codec.c) Corretto un GRAVE errore nella funzione codec_drop_event() per il quale
+            l'estrazione dell'evento esteso o esteso2 calcolava la quantità di byte
+            puntando all'evento al di fuori del buffer.
+
+09-01-2007
+- (codec.c) Corretto il filtraggio degli eventi Ex_Stringa. In precedenza questi
+            eventi venivano comunque stampati anche se in saet.nv risultavano filtrati.
+
+19-12-2006
+- (master.c) Modificate master_send(), master_recv2() e master_set_active() per la
+             gestione dei messaggi di backup modulo master Tebe.
+- (lara.c) Modificate lara_init() e lara_parse() per la gestione dei messaggi di
+           backup modulo master Tebe.
+
+16-12-2006
+- (gms.c) Nel caso in cui l'invio dell'MMS provochi un CME ERROR, anziché ritentare
+          immediatamente l'invio (eventualmente bloccandosi all'infinito) viene
+          accodata una nuova richiesta. In questo modo tutto ciò che è stato accodato
+          nel frattempo viene comunque smaltito.
+
+07-12-2006
+- (codec.c) Aggiunti i comandi /57 per l'on/off attuatore pilotato da protocollo.
+            Utilizzato dal plugin CEI Sepa.
+
+05-12-2006
+- (console.c) Corretto il recupero e stampa degli eventi per lo storico. Gli eventi
+              non stampabili venivano comunque trattati, anche gli eventi che non
+              avevano descrizione (-> crash).
+
+02-12-2006
+- (command.c) La funzione cmd_status_acceptable() ritorna l'allarme accettabile
+              anche se il sensore è ancora in anomalia, se è stato impostato il
+              bit bitNoAlarm.
+
+10-11-2006
+- (tebe.c) La ricezione di CODE_TERM_PROGRAM quando si cambia l'indirizzo di un terminale
+           non imposta più la periferica come presente ma solo come prevista. Ci pensa
+           il successivo LARA_NODES a segnalare il ripristino, che altrimenti si trovava
+           la periferica già presente senza aver segnalato il ripristino.
+           
+09-11-2006
+- (command.c) La disattivazione di una zona allarmata segnala il ripristino di tutti
+              i sensori in allarme.
+- (command.c) La messa fuori servizio di un sensore in allarme (zona attiva) segnala
+              anche il ripristino del sensore stesso.
+              
+02-11-2006
+- (master.c) La manomissione periferica mette a riposo tutte le segnalazioni in corso.
+
+31-10-2006
+- (command.c) La funzione cmd_zone_do_off() rimette in servizio i sensori solo se la
+              zona disattivata è una zona semplice. Altrimenti il sensore può tornare
+              in servizio allarmato con la zona di appartenenza ancora attivata e
+              segnalare quindi l'allarme.
+
+10-10-2006
+- (delphi.sym) Esportati i simboli "_lara", "_laraf" e "lara_NumBadge" per permettere
+               il controllo dell'anagrafica Tebe da parte del programma utente.
+               Esportato il simbolo "lara_save" per permettere di salvare le modifiche
+               eseguite dal programma utente.
+               
+09-10-2006
+- (lara.c) In lara_init() corretta l'inizializzazione degli allarmi di area vuota.
+           L'area considerata partiva da 1, ma l'indirizzo attuatore da 0.
+           
+05-10-2006
+- (master.c) Il numero di attuatori per la periferica TAS (tipo 6) è 0 (prima era 8).
+
+28-09-2006
+- (master.c) Nel caso in cui venga rilevato il modulo master versione 1.x, viene impostato
+             il timeout (/proc/driver/mmaster/timeout/multiple) a 4000.
+             Il default 3000 corrisponde approssimativamente al tempo che il modulo
+             master impiega a fare il polling della linea. Questo tipo di periferica
+             può però ricevere due comandi 02h di fila, e il secondo potrebbe andare
+             in timeout (no tx modulo master).
+             
+15-09-2006
+- (codec.c) La funzione codec_consume_event() tiene conto delle richieste di consumo,
+            così che se la centrale slave non dovesse ancora aver generato l'evento
+            da scartare, questo verrà scartato alla richiesta successiva oppure
+            allo switch.
+- (master.c) Allo switch vengono scartati eventuali eventi residui non consumati
+             dalla ridondanza.
+
+12-09-2006
+- (delphi.c) Gestione consumatore su seriale USB[0-3].
+- (protocol.c) Gestione consumatore su seriale USB[0-3].
+
+11-09-2006
+- (gsm.c) La ricezione di +CME ERROR su AT#SKOPT reinvia il comando.
+
+07-09-2006
+- (lara.c) Variabile lara_save_pending azzerata prima del salvataggio anziché dopo, per
+           evitare la perdita di una richiesta di salvataggio concomitante.
+- (master.c) Predisposizione al modulo master Tebe ridondato. La funzione lara_init()
+             viene chiamata appena ricevuta la dichiarazione di presenza, indipendentemente
+             dalla modalità di funzionamento normale o ridondato. Sarà la funzione
+             lara_init() a gestire le varie modalità di avvio.
+- (master.c) Gestione messaggio 27 di indicazione revisione firmware.
+             
+05-09-2006
+- (delphi.c) Spostata la funzione support_load_status() in master_init().
+- (master.c) Spostata la funzione support_load_status() in master_init().
+
+31-08-2006
+- (database.c) I nuovi eventi estesi dal codice 95 in poi sono tutti filtrati per default.
+               Occorre abilitarli esplicitamente nei casi in cui servano.
+- (console.c) Ordinamento fisso degli utenti del TerminalData.
+- (con_sicurezza.c) Ordinamento fisso degli utenti del TerminalData.
+               
+30-08-2006
+- (console.c) Impostazioni della memoria ME indice 1793 per l'indicazione
+              del logout su TerminalData.
+              
+29-08-2006
+- (command.c) La funzione cmd_command_end_test() imposta ora il bitHLF e non il bitLHF.
+              Prima era sbagliato.
+- (codec.c) Corretta dimensione messaggio esteso 90 (fine test negativo), da 0 a 1.
+- (command.c) La procedura di test automatico imposta la variabile GUASTO_NOTEST anche
+              se il sensore era già guasto in precedenza. Questo per evitare che un
+              nuovo test automatico abbia esito positivo anche se un sensore persiste
+              nel guasto.
+              
+28-08-2006
+- (event.h) Definiti gli eventi estesi 99 e 100 (fuori servizio e in servizio sensore,
+            gestione autoesclusioni) per l'uso con plugin CEI.
+            Questi eventi sono generati dal programma utente.
+- (codec.c) Definite le dimensioni degli eventi estesi 99 e 100 per la trasmissione SaetNet.
+
+23-08-2006
+- (lara.c) La modifica del 19/7 per il ripristino di un terminale Lara non inizializzava
+           l'evento di ripristino, quindi questo risultava sempre relativo alla periferica 0.
+           Ora il problema è stato corretto.
+
+21-08-2006
+- (database.c) Impostazione di default di PrintEventEx2 per l'evento 98 a 0.
+- (event.h) Definito l'evento esteso 98 (salvataggio database per l'uso con plugin CEI.
+            Questo evento è generato in automatico dalla centrale, ma normalmente è
+            filtrato per l'impostazione di PrintEventEx2 a 0.
+            I plugin CEI impostano PrintEventEx2 a 1, così da poterlo tradurre nell'evento
+            specifico (variazione dei parametri di gestione).
+- (codec.c) Definita la dimensione dell'evento esteso 98 per la trasmissione SaetNet.
+- (console.c) Impostazioni delle memorie ME e ME2 indice 1792 per l'indicazione
+              dell'attivazione del TerminalData tramite login.
+
+17-08-2006
+- (database.c) Corretto il caricamento del tag 28 di saet.nv, la lunghezza del campo andava
+               decrementata di 2 e non di 1, altrimenti segnalava saet.nv corrotto.
+
+07-08-2006
+- (master.c) La rilevazione di un modulo master viene registrata nel file /tmp/version.
+
+04-08-2006
+- (database.[ch]) Creazione della struttura PrintEventEx2 per il filtraggio degli eventi
+                  estesi (prima erano tutti abilitati per default).
+- (database.c) Impostazione di default di PrintEventEx2 per gli eventi 96 e 97 a 0.
+- (event.h) Definiti gli eventi estesi 96 e 97 (on/off attuatore) per l'uso con plugin CEI.
+            Questi eventi sono generati in automatico dalla centrale, ma normalmente sono
+            filtrati per l'impostazione di PrintEventEx2 a 0 solo per questi eventi.
+            I plugin CEI impostano PrintEventEx2 a 1, così da poterli tradurre negli eventi
+            specifici.
+- (codec.c) Definite le dimensioni degli eventi estesi 96 e 97 per la trasmissione SaetNet.
+- (user.c) Le funzioni Donanl(), Donala() e Doffa() emettono gli eventi estesi 96 e 97.
+
+01-08-2006
+- (event.h) Definito l'evento esteso 95 (Stato centrale) per l'uso con plugin CEI per
+            la procedura di allineamento. L'evento è emesso da una apposita macro per
+            il programma utente.
+- (codec.c) Definita la dimensione dell'evento esteso 95 per la trasmissione SaetNet.
+- (delphi.c) L'avvio normale del processo di centrale crea il file /tmp/version con
+             l'output dell'opzione -v.
+            
+20-07-2006
+- (command.c) La rimessa in servizio di un sensore allarmato provoca sempre la generazione
+              dell'allarme sensore.
+              
+/* modifiche annullate
+- (command.c) Il fuori servizio sensore preserva il bitGestAlarm. In questo modo, se il sensore
+              è messo fuori servizio con allarme in corso, al ritorno in servizio non viene
+              emesso un evento di allarme. Al contrario, se al ritorno in servizio il sensore
+              non ha il bitGestAlarm impostato, viene emesso un evento di allarme poichè
+              l'allarme è arrivato durante il fuori servizio e quindi non è stato emesso nessun
+              evento in precedenza.
+- (master.c) La funzione master_set_alarm(), oltre a gestire le variazioni di stato di allarme
+             dei sensori, gestisce lo stato di allarme segnalato dal modulo master anche se
+             questo era già presente nel caso però non risulti ancora segnalato l'evento
+             (bitGestAlarm non impostato).
+*/
+
+19-07-2006
+- (lara.c) Il ripristino di un terminale Lara generava un doppio messaggio, uno direttamente
+           in lara_parse() e uno in tebe_ripristino(). Il tebe_ripristino() in lara_parse
+           in realtà non serve, serve solo il master_periph_restore() che è quindi stato
+           aggiunto al posto di tebe_ripristino() [lara_parse() viene chiamata solo se la
+           periferica è Lara!], e non viene più generato il messaggio direttamente.
+
+18-07-2006
+- (tebe.c) Impostazione variabile M_LINEA in tebe_manomissione().
+
+04-07-2006
+- (master.c) La modifica del 29-05-06 per filtrare la segnalazione di allarme 07 ed accettarla
+             solo per gli SC8 era sbagliata. A master_sensor_valid() veniva passata la linea
+             e non il numero di sensore base. Questo comportava che la centrale non gestisse
+             gli allarmi di alcuni SC8, in particolare l'SC8 di centrale per le DelphiTipo.
+             Questa versione corregge il problema.
+- (lara.c) Aggiunti gli eventi Tebe 63 e 64 per indicare l'associazione e la cancellazione di
+           un profilo secondario da una tessera.
+- (lara.c) La funzione lara_check_tessera() trasmette la variazione dei profili e non tutta la
+           lista profili primario/secondari.
+- (codec.c) Aggiunta la gestione degli eventi Tebe 63 e 64.
+- (command.c) La funzione cmd_accept_fronts() azzera i fronti anche per la periferica ATA (MM4).
+
+19-06-2006
+- (list.c) Aumentato il buffer di costruzione evento in list_calibrations() per evitare il crash
+           dovuto al superamento dello spazio disponibile.
+- (badge.c) Aumentato il buffer di costruzione evento in badge_request() per evitare il crash
+           dovuto al superamento dello spazio disponibile.
+
+01-06-2006
+- (command.c) La rimessa in servizio di un sensore di una periferica manomessa non ripristina
+              mai il guasto virtuale.
+- (support.c) support_log2() genera file di log di dimensioni dimezzate.
+- (gsm.c) Log dei comandi gsm sempre attivo tramite support_log2().
+- (string.[ch]) Gestione localizzabile delle stringhe log gsm 100-105.
+- (gsm.c) Gestione localizzabile delle stringhe log gsm 100-105.
+- (delphi.c) Gestione localizzabile delle stringhe log gsm 100-105.
+- (lara.c) Gestione priorità messaggi nel controllo permessi multiprofilo.
+
+31-05-2006
+- (gsm.c) In caso di chiamata audio durante una serie di RING, il comando ATD ritorna
+          subito errore. Fatti i 3 tentativi, lo stato gsm[1] rimaneva a 3 (connesso voce)
+          e la coda comandi rimaneva così bloccata. Ora, scaduti i 3 tentativi, lo stato
+          viene riportato a non connesso e la coda comandi può proseguire.
+
+30-05-2006
+- (command.c) La rimessa in servizio di un sensore di una periferica manomessa pone
+              il sensore in guasto solo se è impostato bitMUNoSabotage sul sensore +1.
+- (lara.c) La creazione di una tessera, poiché assegnata al profilo 1, azzera esplicitamente
+           tutta la struttura dei profili multipli.
+- (tebe.c) La creazione di una tessera, poiché assegnata al profilo 1, azzera esplicitamente
+           tutta la struttura dei profili multipli.
+- (lara.c) La transizione da profilo generico a profilo individuale ora ricopia correttamente
+           le configurazioni del profilo primario precedente.
+- (lara.c) La funzione lara_test_abil_term() non emette più nessun evento ma ritorna l'evento
+           che la funzione chiamante dovrà eventualmente emettere in conseguenza.
+
+29-05-2006
+- (master.c) L'evento 7 da mm controlla che un eventuale stato allarmi sia riferito
+             a periferiche con 8 sensori, per evitare le anomalie di un errato messaggio
+             tipo 07xx80xx venga processato per periferiche tipo sensore semplice.
+             Contemporaneamente viene aggiornato il modulo master per evitare
+             all'origine l'invio di questi messaggi.
+- (con_lara_pass.c) Modifica dei profili multipli delle tessere.
+
+27-05-2006
+- (con_lara_pass.c) Visualizzazione dei profili multipli delle tessere.
+- (lara.c) Modificata lara_check_tessera() per la gestione dei profili multipli.
+
+26-05-2006
+- (lara.c) Corretto il problema delle festività dei profili (festività per i terminali ok)
+           per i terminali Lara.
+- (lara.c) Verifica al caricamento dell'anagrafica se questa è già configurata
+           per i multiprofili. In caso contrario viene azzerato il campo profilo[]
+           per le tessere che lo necessitano.
+- (lara.c) L'impostazione del profilo primario ad una tessera con profilo individuale
+           comporta l'azzeramento del resto del campo profilo[].
+
+25-05-2006
+- (command.c) Attraverso la define ATTIVAZIONE_PARZIALE_ZONE è possibile scegliere
+              tra attivazione parziale zone (si attivano solo le zone non allarmate)
+              e attivazione completa (le zone si attivano solo se sono tutte a riposo).
+              La define è normalmente inattiva (commentata).
+              
+12-05-2006
+- (master.c) Il guasto sensore viene riportato nello stato zona corrispondente per
+             tutti i sensori e non solo per il sensore 0. (mask in master_zone())
+- (lara.c) Il fronte del pulsante apriporta viene generato solo se il pulsante era
+           precedentemente a riposo. Altrimenti tenendo il pulsante premuto poteva
+           entrare qualunque badge, anche non presente in anagrafica.
+
+11-05-2006
+- (master.c) Gestione comando 35, dimensione fissa 15 byte.
+- (master.c) Attuatori validi per il terminale TS2: 1.
+             Attuatore 0: buzzer, attuatore 1: usato per il riallineamento.
+             
+05-05-2006
+- (gsm.c) L'invio si un SMS imposta GSM_Status[6]=1 solo se non vale già 2 (invio in corso).
+          Diversamente, nel caso in cui si mandasse un sms durante l'invio di un altro,
+          e poi quest'ultimo andasse in errore, non verrebbe segnalato l'errore di invio
+          e l'sms continuerebbe a tentare di essere inviato.
+- (gsm.c) Aumentato il timeout per il comando "+CMGL=REC UNREAD" a 30 secondi. Le SIM 128K
+          richiedono anche 20 secondi per fornire una risposta (precedentemente era 6 secondi).
+- (gsm.c) La procedura di overflow degli sms mantiene sempre 2 posizioni libere, in modo
+          che l'eventuale perdita di un sms non blocchi la ricezione. Un nuovo sms è
+          in grado di sbloccare la situazione.
+- (command.c) Gestione Abil anche per periferiche 6 (TAS) oltre che 0 e 1 (SS e SC1).
+          
+02-05-2006
+- (gsm.c) La ricezione dell'errore +CMS ERROR:321 può in qualche caso avvenire anche al
+          di fuori della gestione dell'overflow (es: sovrapposizione overflow e letture),
+          perciò si sblocca sempre l'invio del comando di lettura.
+- (con_sms.c) In caso di lettura di un sms cancellato nel frattempo, blocco la macchina
+              a stati e proseguo con la lettura del messaggio successivo.
+
+20-04-2006
+- (tebe.c) I terminali fuori linea segnalano la manommissione sul sensore +1 come
+           tutte le periferiche normali.
+           
+19-04-2006
+- (audio.c) Il messaggio audio parte dopo 3 secondi di attesa e non 10.
+- (master.c) La periferica tipo 3 è per il modulo master 4 che deve presentare 1 sensore.
+             In più ha anche un attuatore.
+
+14-04-2006
+- (master.c) La periferica tipo 3 per il modulo master 0 presenta 1 sensore (master_sensor_valid()).
+- (master.c) Aggiunta la funzione master_set_texas() per impostare il tipo di periferiche per
+             il modulo master 0. Aggiunto l'array MMTexas per mantenere l'informazione.
+             Default Motorola.
+- (database.c) Salvataggio delle impostazioni MMTexas.
+
+07-04-2006
+- (master.c) Aggiunta predisposizione alla nuova tastiera current loop tipo A (TS2).
+             Invio prima periferica 15 polling, attuazioni, numero sensori e attuatori.
+- (command.c) Accettazione estesa a periferica TS2.
+- (tebe.c) Gli eventi dei terminali generano allarmi solo se arrivano entro 60 secondi
+           sulla centrale. Passato questo tempo, l'evento Tebe viene segnalato ma non
+           vengono generati allarmi.
+           
+05-04-2006
+- (tebe.c) Gli eventi di transito e timbratura vengono segnalati al programma utente come
+           allarmi impulsivi sui sensori di fessura della periferica terminale.
+           Gli eventi di timbratura movimentano la fessura segnalata nell'evento, gli
+           eventi di transito ricavano la fessura in base all'area finale.
+           
+29-03-2006
+- (finger.c) Gestione anagrafica dummy. Per forzare l'anagrafica sulla centrale anche in
+             presenza di lettore MCF, occorre che alla partenza esista almeno una impronta
+             sulla centrale. Questa viene inizializzata tramite il file finger.db che
+             contiene l'impronta 0 dell'id 1 fasulla. Può essere sovrascritta (basta che
+             sia presente una impronta), e nel caso di cancellazione totale delle impronte
+             viene ricreata l'anagrafica dummy.
+
+23-03-2006
+- (delphi.c) Spostata la gestione dello stopclock dopo la gestione deti timer.
+- (delphi.c) Al termine della gestione dello stopclock controlla che SECONDI
+             non sia inferiore o uguale a 30 per evitare un reinnesco del meccanismo
+             (nel caso, SECONDI viene impostato a 31).
+
+16-03-2006
+- (lara.c) La cancellazione di una tessera provoca anche la cancellazione dell'eventuale
+           impronta associata.
+- (finger.c) Salvataggio asincrono delle impronte.
+
+14-03-2006
+- (lara.c) In lara_init(), spostata la chiamata a tebe_init() dopo il caricamento delle
+           tessere, così che il numero di tessere sia valorizzato.
+
+01-03-2006
+- (lara.c) Gestione lara_NumBadge per la dimensione dell'anagrafica tessere, in sostituzione
+           della define BADGE_NUM. Default 4000.
+- (con_lara_pass.c) Verfica del numero ID inserito, non deve superare la dimensione
+                    dell'anagrafica tessere.
+
+22-02-2006
+- (tebe.c) Aggiunto il break in caso di ricezione di CODE_KEEPALIVE, senza il quale la
+           centrale andava in crash.
+           
+13-02-2006
+- rilascio versione ottimizzata
+
+10-02-2006
+- (command.c) Gestione Abil in cmd_actuator_refresh() solo per periferiche 0 e 1 (SS/SC1 o SSA/SST).
+- (master.c) Ottimizzazione master_actuators(). Attuazioni ed uscite di servizio in un unico comando
+             per periferiche del modulo master tipo 0, dove possibile (SC8, SAN, ATT, SC1).
+
+09-02-2006
+- (gsm.c) Aggiunto pthread_detach() a gsm_reset() e a gsm_init().
+- (protocol.c) Aggiunto pthread_detach() a prot_plugin_start().
+- (modem.c) Aggiunto pthread_detach() a modem_init().
+- (audio.c) Aggiunto pthread_detach() a audio_rec_stop().
+- (gsm.c) In caso di reset ripetuto, non vengono ripetuti nella coda i comandi di inizializzazione.
+- (gsm.c) Salvagente: dopo 3 reset ripetuti consecutivamente, la centrale si resetta.
+
+07-02-2006
+- (gsm.c) Alla risposta di una chiamata audio, al set +IPR=2400 l'AT successivo deve essere
+          messo in testa alla lista per essere buttato via da gsm_send_next(), e non in coda
+          come era. Un AT viene comunque messo in coda.
+- (gsm.c) La ricezione di un CMS ERROR provoca il reinvio del comando che l'ha generato.
+          Di solito l'errore ricevuto è il 314 (sim busy) e quindi il reinvio ad oltranza
+          è giustificabile.
+          
+01-02-2006
+- (finger.[ch]) Gestione database impronte per terminali Tebe/FingerChip.
+- (tebe.c) Gestione invio database impronte a terminali Tebe/FingerChip.
+
+25-01-2006
+- (string.c) Inizializzazione della descrizione della zona totale attraverso strdup().
+- (delphi.c) Anticipata la chiamata a delphi_load_lang() e delphi_set_lang() affinché
+             string_init() possa utilizzare le stringhe tradotte in inizializzazione.
+
+23-01-2006
+- (con_impostazioni.c) La modifica delle impostazioni implica un restart della centrale per
+                       avere le connessioni di rete con il bind verso l'indirizzo corretto.
+
+20-01-2006
+- (con_impostazioni.c) La modifica delle impostazioni di rete viene attivata subito senza
+                       necessità di fare un reboot manuale.
+
+18-01-2006
+- (console.c) Ricompilazione del codice con le giuste dipendenze per attivare le traduzioni
+              del menu' INDIRIZZO IP.
+- (gsm.c) In caso di BUSY e affini, viene attivato un timeout di 10 secondi che se non viene
+          sovrascritto da altri comandi inviati, riattiva la sequenza dei comandi.
+- (gsm.c) In caso di resend di un comando ATD; (voce), viene prima ristabilita la comunicazione
+          seriale tramite comandi AT semplici.
+- (gsm.c) Evita il riaccodamento di "AT+CMGL=REC UNREAD" se gia' in coda.
+- (lara.c) Le nuove tessere caricate dal terminale Lara vengono sempre associate al profilo 1,
+           anche le tessere da 1 a 5 che indicano d'ufficio il gruppo 91-95.
+
+10-01-2006
+- (codec.c) Corretto problema introdotto recentemente (ma non so dire quando, probabilmente
+            con l'introduzione della lista giorni festivi fissi/variabili TPDGF e TPDGV) per
+            il quale l'impostazione dei giorni festivi da Com90 non funzionava piu'.
+            La chiamata cmd_set_holydays(cmd2+4) era sbagliata => cmd_set_holydays(cmd2+3)!
+            
+23-12-2005
+- Gestione multilingua. Attraverso il file lang_*.so in /saet/data e' possibile
+  personalizzare le scritte del terminal data.
+- Filtraggio dei simboli esportati per limitarli ai soli necessari ai plugin esterni.
+
+23-11-2005
+- (command.c) Corretta la scansione degli attuatori in cmd_actuator_refresh().
+- (master.c) Aggiunta chiamata a cmd_actuator_refresh() in fase di partenza per
+             allineare le attuazioni di Abil.
+- (command.c) L'accettazione automatica all'attivazione della zona viene fatta
+              solo se la segnalazione non è piu' attiva (es: manomissione accettata
+              solo se il sensore non è più in manomissione).
+              
+15-11-2005
+- (master.c) Corretta la gestione dell'array SANanalogica[].
+- (codec.c) Corretto il formato dell'evento Valori Analogici, non veniva applicata
+            la correzione da 16 a 8 moduli master (protocollo S/SX).
+
+14-11-2005
+- (command.c) Azzeramento fronti manomissione periferica SSA e SST.
+
+10-11-2005
+- (master.c) L'inibizione degli eventi di Guasto Sensore e Manomissione Dispositivo
+             per la periferica SAN avviene solo tramite specifica macro, altrimenti
+             gli eventi vengono generati regolarmente in ogni configurazione.
+             Creato l'array SANanalogica[] per la gestione.
+
+04-11-2005
+- (con_personalizza.c) Possibilita' di personalizzare tutti i 1024 codici.
+- (codec.c) Gestione dell'impostazione della tipologia del sabato via protocollo (comando /546).
+- (command.c) Aggiunta funzione per la gestione del cambio tipo per sabato.
+- (command.c) L'azzeramento delle festività ricalcola immediatamente la lista FESTIVI.
+
+26-10-2005
+- (database.[ch]) Aumentata la dimensione di RONDA per gestire fino a 1024 codici.
+- (database.[ch]) Aumentata la dimensione di ME e ME2 per gestire fino a 1024 codici.
+- (string.[ch]) Aumentata la dimensione CodeName per gestire fino a 1024 codici.
+- (con_impostazioni.c) Possibilita' di impostare tutti i 1024 codici.
+
+03-10-2005
+- (delphi.c) Riposticipate le esecuzioni string_init() e delphi_read_conf() per evitare che le
+             stringhe e le configurazioni vengano caricate prima dell'aggiornamento tramite restart.
+             Alcune inizializzazioni sono state spostate da delphi_read_conf() a delphi_init().
+- (delphi.c) Default stopclock 5 secondi per schede Anubi, 0 secondi per schede Iside.
+
+29-09-2005
+- (gsm.c) MMS_MAX_RETRY tentativi di invio MMS.
+- (gsm.c) Ritardo di 20 secondi dopo l'invio di un mms per evitare l'errore con due MMS consecutivi.
+
+27-09-2005
+- (master.c) Ottimizzazione ciclo di esecuzione di master_actuators().
+- (master.c) On attuatore solo se non e' controllato dal test attivo.
+- (command.c) Disattivazione Abil delle microonde durante il test attivo.
+- (database.[ch]) Dichiarazione "volatile" della struttura AT[].
+- (database.h) Dichiarazione bitSEmuTest, attivo per tutta la durata del test del sensore.
+- (master.c) Mascheramento allarmi con bitSEmuTest attivo.
+
+21-09-2005
+- (master.c) Gestione dinamica del timeout modulo master 0 singolo. Alla ricezione di
+             ripristino periferica viene impostato il timeout a 50ms, a svuotamento
+             della coda dei comandi viene riportato a 200ms.
+- (master.c) Calcolo occupazione CPU con evento stringa di segnalazione.
+- (lara.c) Separazione delle fasce orarie Delphi/Tebe. Le fasce Tebe non si sostituiscono piu'
+           alle fasce Delphi.
+           
+20-09-2005
+- (delphi.c) Default stopclock = 0 solo per "tebe_sa", altrimenti stopclock = 3.
+
+19-09-2005
+- (support.c) Nuovo formato di log senza l'uso di localtime().
+- (lara.c) Eliminato l'uso di localtime() da lara_time(), lara_test_abil() e
+           lara_test_abil_term().
+- (delphi.c) Anticipate le esecuzioni di delphi_init(), string_init() e delphi_read_conf();
+- (delphi.c) Aggiornamento orologio da RTC ogni ora e default stopclock = 0.
+
+18-09-2005
+- (gsm.c) Accodamento eventi su chiamate e invio sms/mms differenziati per livello di Log.
+          Log=2, evento accodato sempre. Log!=2, evento accodato solo se condizioni ok.
+
+16-09-2005
+- (gsm.c) Accodamento eventi su chiamate e invio sms/mms.
+
+14-09-2005
+- (con_storico.c) Aggiunto messaggio per sensore in allarme.
+
+12-09-2005
+- (user.c) Corretta la gestione SetMU per codici 4xx. Resettava tutto lo stato sensore
+           e non solo la memoria MU.
+           
+09-09-2005
+- (codec.c) Generazione evento di variazione tarature ad ogni variazione.
+
+08-09-2005
+- (command.c) Azzeramento fronti manomissione periferica SS e SC1.
+
+07-09-2005
+- (command.c) Azzeramento fronti manomissione contenitore e guasto linea per ATT e QR.
+
+05-09-2005
+- (master.c) Corretto il numero di sensori/attuatori per le periferiche SAN su MM0.
+- (con_impostazioni.c) Aggiornamento struttura SE_ZONA in caso di spostamento sensore
+                       da una zona ad un'altra.
+
+02-09-2005
+- (lara.c) La programmazione delle fasce orarie Lara/Tebe ricalcola la struttura delle
+           fasce orarie Delphi.
+- (database.[ch]) Definita la variabile ZONAEX per la gestione delle segnalazioni
+                  estese. Attualmente utilizzata solo l'indicazione di zona con sensore
+                  da accettare (bitMUAlarmZone).
+- (database.[ch]) Definita la variabile SE_ZONA per la gestione delle liste di sensori
+                  appartenenti ad una determinata zona.
+- (user.h) Ottimizzazione delle funzioni FuoriServizioAlr e InServizioAlr con l'uso
+           di SE_ZONA.
+- (command.c) Ottimizzazione attivazione/disattivazione zone con l'uso di SE_ZONA.
+- (command.c) Ottimizzazione azzeramento fronti per gli attuatori. L'azzeramento
+              avviene solo per le periferiche presenti.
+           
+01-09-2005
+- (delphi.c) La zona ritardata in allarme che dovrebbe essere impedita all'attivazione,
+             viene forzata all'attivazione con allarme.
+- (audio.c) Ottimizzata la gestione della trasmissione dei dati audio.
+
+24-08-2005
+- (audio.c) Chiuso il descrittore di file aperto da audio_play() solo per controllare
+            l'esistenza del file da riprodurre.
+            
+23-08-2005
+- (event.h) Aggiunto l'evento esteso "Attivata zona ritardata".
+- (command.c) L'attivazione di una zona insieme in allarme per una zona ritardata viene
+              comunque eseguita. Se nel frattempo la zona torna a riposo, l'attivazione
+              e' ok, altrimenti alla zona ritardata viene impedita l'attivazione e si
+              disattiva tutta la zona insieme.
+NO - (command.c) L'attivazione impedita di una zona insieme dovuta ad una zona ritardata
+              indica subito la zona ritardata come impedita e non attiva nulla.
+- (delphi.c) Se all'attivazione di una zona ritardata la zona e' impedita allo scadere
+             del ritardo, viene disattivata la zona insieme di appartenenza e tutte
+             le altre zone della zona insieme.
+
+22-08-2005
+- (command.c) L'attivazione impedita di una zona insieme o totale non comporta l'attivazione
+              di eventuali sottozone (zone semplici) ma si limita all'indicazione delle
+              sottozone allarmate con i relativi sensori.
+- (delphi.c) L'attivazione della zona ritardata esegue anche il refresh delle zone, cosi'
+             da attivare/disattivare zone insieme che devono seguirne lo stato.
+
+19-08-2005
+- (master.c) Invio prima periferica per 15 tentativi di polling per entrambe le linee di ogni
+             modulo master (quindi un comando per una periferica con indirizzo minore di 16,
+             ed un comando per una periferica con indirizzo da 16 a 31).
+             
+17-08-2005
+- (delphi.c) In caso di restart centrale via Com90 o ftp oppure tramite pulsantino, vengono ora
+             salvate e successivamente recuperate le informazioni relative ai codici diretti,
+             cioe' codici e descrizioni. In questo modo un aggiornamento del programma utente
+             non provoca la perdita della configurazione.
+             Nota: l'aggiornamento del saet.new comporta la perdita della configurazione poiche'
+             non e' possibile intercettare questo tipo di riavvio!
+22-07-2005
+- (master.c) Controllo lunghezza del messaggio codice 12. E' capitato con la tastiera Key0-code
+             che arrivasse un messaggio di lunghezza 0xff, in questo caso il messaggio viene scartato.
+- (master.c) In caso di modulo master 0 viene impostato il timeout singolo master a 200ms.
+
+20-07-2005
+- (console.c) Lista stato zone nella gestione dei codici diretti limitata alle zone 1-89.
+
+18-07-2005
+- (gsm.c) Modificato parametro +CSMP per impostare SMS class 1, ovviando al problema della ricezione
+          sms su cellulari con SIM piena ma con memoria telefono disponibile.
+- (command.c) Il refresh zone considera una zona semplice in attivazione ritardata come se fosse
+              gia' attiva, impedendo la disattivazione della zona insieme che la contiene.
+
+14-07-2005
+- (con_sms.c) Corretta la visualizzazione del credito Wind.
+- (gsm.c) La funzione GSM_SIM_Credit() ritorna il valore parametrizzato nella tabella operatori.
+- (gsm.c) Corretta visualizzazione ora (+1 al primo messaggio in SIM o dopo il sort) in lista sms.
+- (gsm.c) Implementazione funzione GSM_Clear_Queue() per la rimozione delle chiamate voce/dati
+          e gli sms/mms accodati.
+- (gsm.c) Ottimizzazione accodamento chiamate: non viene accodata una nuova chiamata se una
+          identica e' gia' in coda.
+          
+13-07-2005
+- (gsm.c) Messaggio di log in caso di ricezione SMS.
+- (gsm.c) Verifica SMS non letti dopo ogni chiamata audio.
+- (gsm.c) Richiesta credito WIND.
+
+12-07-2005
+- (console.c) Impostazione zone ritardate da terminal data.
+
+11-07-2005
+- (user.c) Le funzioni FuoriServizioAlr() e InServizioAlr() ora segnalano i sensori che
+           vengono messi fuori servizio e poi nuovamente in servizio.
+- (user.c) La funzione Donanl() ora permette il passaggio diretto da lampeggiante a fisso.
+
+08-07-2005
+- (command.c) Gestione zone semplici ritardate. Se la zona e' ritardata, l'attivazione fa
+              partire un timer allo scadere del quale la zona viene realmente attivata.
+- (delphi.c) Gestione timer di attivazione ritardata delle zone.
+- (database.[ch]) Definite le variabili ZONA_R, ZONA_R_timer e ZONA_R_modo per la gestione
+                  delle zone semplici ritardate. ZONA_R viene salvata in saet.nv.
+- (user.c) Definizione della macro RitardoZona() per la configurazione delle zone ritardate.
+
+05-07-2005
+- (command.c) L'attivazione zona con allarme segnala il sensore solo se non e' impostato il
+              bit NoAlarm. Impostati inoltre i fronti di salita per i sensori e per la zona.
+- (command.c) La disattivazione zona rimette in servizio i sensori messi fuori servizio
+              all'attivazione (bitOOSAZ).
+- (command.c) Accettazione MU automatica all'attivazione di una zona semplice, per i sensori
+              appartenenti alla zona.
+
+04-07-2005
+- (console.c) Nella gestione dei codici diretti, visualizzazione dello stato delle prime 8 zone
+              semplici configurate. Con le frecce su'/giu' e' possibile scorrere le zone
+              disattive ma allarmate per avere il dettaglio dei sensori in allarme.
+- (master.c) Gestione periferica SAN su modulo master 0.
+              
+01-07-2005
+- (gsm.c) La ricezione di una chiamata audio non viene accettata se non ci si e' predisposti
+          con il terminal data per la registrazione di un messaggio.
+- (audio.c) Creata la funzione audio_ready() per conoscere lo stato di predisposizione alla
+            registrazione di un messaggio audio.
+            
+28-06-2005
+- (protocol.h) Riciclata la variabile "terminating" denominata ora "pid". Contiene il PID
+               del processo che ha chiamato prot_init() e serve alle connessioni modem per
+               sbloccare la read() del protocollo in caso di timeout.
+- (protocol.c) In prot_init() inizializzata la variabile "pid" con il numero di processo
+               corrente. In prot_close(), in caso di modem la seriale non viene chiusa ma
+               viene solo sbloccato il processo.
+- (delphi.c) Gestione del segnale SIGUSR2 utilizzato per lo sblocco della connessione modem.
+- (gsm.c) In caso di chiamata dati, la sequnza ATA -> NO CARRIER non blocca piu' la coda
+          dei comandi modem.
+- (console.c) La pagina dei codici diretti presenta anche lo stato di attivazione/allarme
+              delle prime 8 zone semplici configurate.
+              
+24-06-2005
+- (gsm.c) Verifica dell'eventuale ricezione di sms durante una connessione voce. L'sms ricevuto
+          in questa situazione non viene segnalato e quindi occorre fare il controllo esplicito.
+- (gsm.c) Azzeramento icona di segnale sul terminal data durante una connessione dati/voce.
+          Il ripristino e' automatico al termine della connessione.
+- (con_impostazioni.c) Gestione programmazione codici diretti da TerminalData.
+
+22-06-2005
+- (protocol.c) In prot_recv_dev2(), la read() puo' essere sbloccata in caso di connessione gsm
+               o modem. La funzione prot_close() in questo caso imposta un timeout alla ricezione
+               seriale di 1/10 di secondo, timeout che deve essere annullato dal loop di gestione
+               gsm o modem quando riprende il controllo.
+- (delphi.c) Il timeout linea in caso di gsm/modem provoca la chiamata alle rispettive funzioni
+             di chiusura anziche' direttamente a prot_close().
+- (gsm.c) Se lo sblocco di prot_loop() avviene per chiusura forzata (timeout o programma utente)
+          viene annullato il timeout di ricezione seriale.
+- (modem.c) Se lo sblocco di prot_loop() avviene per chiusura forzata (timeout o programma utente)
+          viene annullato il timeout di ricezione seriale.
+
+21-06-2005
+- (protocol.c) Dopo aver ricevuto un comando (STX) ignoro i successivi comandi se prima non
+               ricevo un ACK. Questo permette di gestire i timeout e le relative ritrasmissioni
+               provocati dal GSM.
+
+09-06-2005
+- (protocol.c) Eliminato azzeramento variabile lastevent in prot_recv_dev2(), cosi' che possa
+               essere effettivamente ritrasmesso l'ultimo evento se non viene ricevuto l'ACK.
+- (protocol.c) Spostato il ritardo per la partenza del protocollo via GSM da prot_recv_dev2()
+               a prot_loop() affinche' il ritardo venga introdotto solo una volta alla partenza
+               e non ad ogni attesa di polling. (Problema nato dall'ottimizzazione di
+               prot_recv_dev2() che originariamente era un loop infinito)
+
+08-06-2005
+- (codec.c) codec_send_null() utilizza l'evento NullEvent statico per l'invio, per evitare
+            che un eventuale reinvio utilizzi un buffer non piu' valido.
+            In codec_parse_command() resa statica la variabile "ev" per lo stesso motivo.
+            
+25-05-2005
+- (audio.c) Corretta gestione del timeout riproduzione (se il messaggio era piu' breve
+            del timeout, il timeout non scattava mai).
+- (audio.c) Attesa con timeout anche sulla lettura dell'eco messaggio per evitare il blocco
+            su attesa infinita.
+
+16-05-2005
+- (delphi.c) Aggiunto parametro di avvio -p per il debug del protocollo Saetnet.
+- (protocol.c) Aggiunta gestione debug del protocollo.
+
+13-05-2005
+- (audio.c) Gestione della variabile audio_stop protetta da mutex.
+
+09-05-2005
+- (delphi.c) In delphi_exit(), con chiamate gsm attive l'attesa della fine gestisce il check timeout.
+
+02-05-2005
+- (audio.c) Interruzione riproduzione dopo 16 errori di ricezione (prima erano 20).
+            Inserito log con l'indicazione del numero di errori.
+- (audio.c) Inserito timeout di riproduzione. Interruzione dopo 10 minuti di riproduzione continua.
+
+21-04-2005
+- (tebe.c) Gestione impianti multipli su lan.
+- (database.[ch]) Creazione variabile TPDGV per la gestione festivita' variabili.
+
+20-04-2005
+- (con_lara_term.c) Corretta la gestione della lista terminali, ora la digitazione diretta del numero
+                    del terminale punta al terminale corretto.
+- (con_lara_profilo.c) Corretta la gestione della lista terminali, ora la digitazione diretta del numero
+                    del terminale punta al terminale corretto.
+
+19-04-2005
+- (master.c) Corretta la funzione master_init(), ora il thread parte e la funzione ritorna.
+
+15-04-2005
+- (delphi.c) La chiamata a delphi_timer() non avviene piu' su segnale SIGALRM ma reimplementando il loop
+             infinito del main con una select temporizzata.
+
+13-04-2005
+- (master.c) La funzione master_init e' stata riportata al funzionamento iniziale, pre-ottimizzazione.
+             Viene quindi eseguito master_recv2 come thread separato, ed il loop infinito in delphi_init
+             serve in realta' a gestire le temporizzazioni.
+             
+06-04-2005
+- (command.c) Corretta gestione attivazione zona con fuori servizio sensore.
+- (codec.c) corretta gestione dei comandi /56 di programmazione ronda.
+
+05-04-2005
+- (command.c) Corretta gestione dei fronti nel fuori servizio sensore. Ora non vengono subito azzerati.
+
+04-04-2005
+- (master.c) Chiamata anticipata a Inizializzazione() in modo da avere gia' le configurazioni attive
+             all'arrivo dei primi eventi.
+- (command.c) Gestione dei guasti in caso di sensore rimesso in servizio e periferica assente.
+             
+31-03-2005
+- (master.c) In gestione BdI, fronti di manomissione e guasto coerenti con lo stato segnalato.
+- (codec.c) In gestione BdI, fronti di manomissione e guasto coerenti con lo stato (accettazione).
+- (list.c) Lista sensori/attuatori su tutte le periferiche previste, non solo quelle presenti (LIST_ALL_SENS).
+- (command.c) Fuori servizio sensore genera il fine anomalie in corso.
+
+30-03-2005
+- (master.c) Corretta gestione periferica SC8 per mm tipo 4.
+- (event.h) Definiti eventi estesi 82 e 83 per orologio fuori sincro (predisposizione CEI).
+- (master.c) In gestione BdI, fronti di allarme coerenti con lo stato di allarme segnalato.
+- (codec.c) In gestione BdI, fronti di allarme coerenti con lo stato di allarme segnalato (accettazione).
+
+29-03-2005
+- (master.c) Corretta gestione fuori servizio sensore in caso di guasto. Il guasto va sul +2, ma il
+             controllo sul fuori servizio veniva fatta sul +0.
+- (command.c) La messa fuori servizio di un sensore preserva lo stato di allarme (non i fronti).
+- (codec.c) Gestione EVENTO[3] per reset allarmi stile Keeper.
+- (list.c) Lista stato sensori differenziata per gestione BdI. Il sensore mantiene lo stato di anomalia
+           fino all'accettazione. Non segue quindi lo stato puntuale del sensore.
+
+24-03-2005 (fimage_3.2)
+- (kernel) Configurazione 16MB di RAM
+
+18-03-2005
+- (master.c) Aumentato tempo di partenza centrale da 6 a 9 secondi per adeguarsi al modulo
+             master tipo 4 che e' molto lento a dichiararsi.
+
+14-03-2005
+- (con_lara_pass.c) Impostazione supervisor fuori dalle opzioni per evitare il mascheramento
+                    dovuto dal profilo impostato.
+- (version.c) Indicazione dell'abilitazione all'invio delle soglie nella versione del saet.new.
+
+09-03-2005
+- (lara.c) Check PIN ora corretto: segnalava PIN variato quando erano uguali e viceversa.
+- (lara.c) Segnalazioni di variazioni di stato limitate e Super Coerc e PBK.
+- (lara.c) Corretta la ricerca dei badge solo per tessere abilitate o disabilitate.
+- (tebe.c) Corretta la ricerca dei badge solo per tessere abilitate o disabilitate.
+
+08-03-2005
+- (protocol.c) In caso di ricezione di dati fuori protocollo, questi vengono ignorati anziche'
+               inviare NAK e cerca di risincronizzarsi.
+- (codec.c) I messaggi STX non validi (ma con CKS ok) vengono ignorati anziche' rispondere
+            con l'evento nullo.
+
+07-03-2005
+- (console.c) Interventi per compatibilita' con il terminale Tebe stand alone.
+              Cercare TEBESA nel codice per i punti di intervento.
+              
+25-02-2005
+- (tebe.c) Invio del database ad intervalli regolari solo se ci sono terminali tebe collegati.
+- (command.c) Ritorno al sorgente originale con la funzione prot_recv().
+- (protocol.c) Creata la funzione di compatibilita' prot_recv() che a sua volta chiama prot_recv_dev2().
+
+21-02-2005 (fimage_3.0pre2)
+- (master.c) La funzione master_init non ritorna piu', cosi' che il thread di ricezione eventi
+             dal modulo master rimane il thread principale (-1 sul totale).
+- (protocol.c) Ottimizzazione protocollo SaetNet: comunicazione in un solo thread anziche' due.
+- (command.c) Sostituzione funzione prot_recv() con prot_recv_dev2().
+
+17-02-2005 (fimage_3.0pre1)
+- (lara.c) Azzeramento tessere vuote prima dell'invio su interrogazione GEMSS.
+
+16-02-2005
+- (console.c) Corretto il problema dello spostamento CRTSCTS nei sorgenti.
+
+11-02-2005
+- (master.c) L'inibizione della generazione degli eventi di Guasto Sensore e Manomissione Dispositivo
+             per la periferica SAN avviene solo se CONF_SA = 0, altrimenti il comportamento
+             e' quello normale.
+
+10-02-2005
+- (master.c) Inibita la generazione degli eventi di Guasto Sensore e Manomissione Dispositivo
+             per la periferica SAN.
+
+09-02-2005
+- (tebe.c) Gestione programmazione terminale previsto (CODE_TERM_PROGRAM).
+- (tebe.c) Tutte le richieste provenienti da un terminale non previsto vengono ignorate,
+           tranne CODE_TERM_PROGRAM.
+
+07-02-2005
+- (lara.h) Allineata struttura del database a quella del terminale.
+
+05-02-2005
+- (delphi.c) Le variabili N_MINUTO N_ORA N_GIORNO N_MESE N_ANNO vengono azzerate ad ogni giro
+             del programma utente. Questo assicura che siano allarmate solo per una esecuzione
+             del programa utente. Prima di questa versione, solo N_GIORNO aveva tale comportamento.
+- (con_sms.c) Cancellazione del messaggio corretto dopo il riordino.
+             
+03-02-2005 (fimage_2.13)
+- (con_sms.c) Il riordino degli sms non perde il messaggio piu' riecente, viene ordinato a partire
+              dall'indice 1 anziche' dallo 0. (Lo 0 e' riservato).
+
+01-02-2005
+- (con_sms.c) Lista sms ordinati dal piu' recente al piu' vecchio.
+
+31-01-2005
+- (console.c) Anticipo comando ATL per gestire la digitazione rapida durante il login.
+- (con_sicurezza.c) Anticipo comando ATL per gestire la digitazione rapida.
+- (con_sms.c) Numero SMS aumentato a 30 per gestione SIM 64K
+
+26-01-2005
+- (lara.c) Nuovi ID creati con profilo 1.
+- (lara.c) Profilo 1 inizializzato la prima volta con i terminali configurati.
+- (tebe.c) Nuovi ID creati con profilo 1.
+
+24-01-2005
+- (audio.c) Interruzione riproduzione dopo 20 errori di ricezione.
+- (console.c) Inserimento menu' SMS su terminale Lara.
+
+19-01-2005
+- (codec.c) Gestione eventi 254 e 255 di governo linee.
+- (event.h) Aumentato il limite eventi a 106 per comprendere anche gli eventi di governo linee.
+- (lara.h) Tessere portate a 8000 per liberare memoria.
+- (audio.c) Interruzione riproduzione dopo 10 errori di ricezione.
+- (gsm.c) Rispristino velocita' iniziale al reset del gsm.
+
+11-01-2005
+- (gsm.c) Modificata procedura di inizializzazione per evitare il blocco in caso di spegnimento.
+
+16-12-2004
+- (tebe.c) Gestione sensori fuori servizio
+
+15-12-2004
+- (master.c) Evento 228 (valori analogici) variato: ora indica il numero di periferica e non il sensore base.
+- (codec.c) Variata la dimensione dell'evento 228.
+
+14-12-2004
+- (codec.c) Evento Tebe 61: formato definitivo id+term+codice.
+- (lara.c) Eliminazione della gestione dei badge collettivi. Le tessere vengono quindi caricate regolarmente
+           a partire dall'ID 1.
+
+10-12-2004
+- (codec.c) Aumentato il buffer eventi per garantire > 5000.
+- (codec.c) Evento Tebe 61: aumentato dimensione codice a 2 byte.
+
+02-12-2004
+- (command.c) L'impostazione della data ignora il giorno della settimana, viene ricavato dalla data.
+
+30-11-2004
+- (user.c) Le funzioni Donanl(), Donala() e Doffa() controllano lo stato di test del sensore corrispondente
+           solo se le periferiche sono di tipo sensore (non attuatori o tastiere).
+           
+12-11-2004
+- (lara.c) Definizione struttura di validazione record.
+
+05-11-2004
+- (master.c) Bloccato l'invio delle soglie alle periferiche, fino a nuova gestione.
+
+02-11-2004
+- (lara.c) Salvataggio su disco della configurazione programmata da GEMSS.
+- (delphi.c) Verifica dei giorni festivi posizionandosi sulle 12:00 di ogni giorno anziche' rimanere sulla
+             mezzanotte per evitare l'errore nel cambio da ora legale a ora solare (il primo giorno dell'ora
+             solare veniva posizionato sulle 23 del giorno precedente).
+
+28-10-2004
+- (master.c) Gestione dei codici badge inviati tramite evento 19.
+
+25-10-2004
+- (lara.c) Se si prova a configurare da GEMSS un terminale non previsto viene restituito un codice di errore.
+           Versione corretta.
+- (lara.c) Modificando il segreto ad un pass disabilitato, questo non viene piu' riabilitato automaticamente.
+
+19-10-2004
+- (lara.c) Se si prova a configurare da GEMSS un terminale non previsto viene restituito un codice di errore.
+
+15-10-2004
+- (master.c) Reset centrale su evento 26 modulo master (no tx) anche se il modulo non e' presente.
+             Questo per gestire la situazione sospesa attivita' di linea seguito da no tx, dove il
+             primo evento maschera il secondo bloccando la centrale.
+             
+11-10-2004
+- (lara.c) Gestione nuovo terminale Tebe attraverso i messaggi TEBE_IN.
+
+30-09-2004
+- (string.c) Limitazione ai caratteri ASCII delle stringhe. I caratteri non ASCII vengono sostituiti da spazi.
+
+04-08-2004
+- (con_personalizza.c) Personalizzazione delle zone insieme se sono definite o se hanno gia' una descrizione.
+
+03-08-2004
+- (console.c) Aggiunta voce di menu' Sensori da Accettare.
+- (con_liste.c) Separata la lista sensori in allarme e sensori da accettare.
+- (con_zone.c) Zone insieme sempre tutte visibili anche se non hanno zone semplici associate.
+- (con_liste.c) Lista zone insieme sempre tutta visibile (per zone ritardate).
+
+28-07-2004
+- (gsm.c) Impostazione baudrate fisso ad ogni inizializzazione e non solo alla partenza.
+
+27-07-2004
+- (gsm.c) Permesso l'accodamento di due chiamate voce allo stesso numero.
+- (gsm.c) Aumentato timeout invio mms a 60s.
+
+23-07-2004
+- (gsm.c) Modificata gestione NO CARRIER. Se arriva dopo una connessione effettuata con successo, continua.
+          Se arriva dopo un tentativo di chiamata gestisce i tentativi. Altrimenti continua.
+- (gsm.c) Se viene accodato un comando durante una connessione attiva e la lista era vuota, per non perderlo
+          alla ripartenza della coda comandi viene messo in testa alla lista anche un "AT" neutro.
+
+22-07-2004
+- (gsm.c) Migliorata gestione errori invio mms.
+- (gsm.c) Resend comandi solo se il gsm non e' connesso.
+
+21-07-2004
+- (command.c) Il test attivo non usa piu' il bit Abil per evitare interferenze ma il bit Temp.
+- (database.h) Definizione del bit Temp.
+
+19-07-2004
+- (user.c) On/off attuatore solo se il sensore corrispondente non e' in test.
+- (kernel) Aggiunto supporto packet nelle opzioni di network per ipsetd.
+
+16-07-2004
+- (command.c) Gestione gruppi di test microonde.
+- (command.c) Gli eventi per inizio e fine test attivo non sono piu' generati automaticamente.
+
+15-07-2004
+- (database.h) Aumentati i gruppi di test attivo a 32. Gli ultimi 16 vengono usati per il test microonde.
+- (database.[ch]) Creata la struttura per la definizione di 32 periodi di giorni.
+- (codec.c) Aggiunto comando T per la programmazione dei periodi.
+- (delphi.c) Gestione periodi con attivazione ME.
+- (codec.c) Creati 2 eventi estesi tipo Delphi per inizio e fine test attivo.
+- (command.c) Generazione eventi per inizio e fine test attivo.
+
+14-07-2004
+- (codec.c) Aggiunti comandi Y1 e Y2 per attivazione zona con allarme o con fuori servizio.
+- (con_zone.c) Attivazione/disattivazione zone attraverso il parse comandi per la ridondanza.
+
+12-07-2004
+- (master.c) Gestione di codici 17 (ricevuto codice errato) multipli, il semaforo di invio viene
+             sbloccato solo sul primo avvio di sincronizzazione.
+
+09-07-2004
+- (console.c) Menu' Messaggi audio presente solo se GSM configurato.
+- (master.c) Gestione di codici 17 (ricevuto codice errato) multipli, il contatore di resync
+             viene incrementato di 4 e non assegnato.
+
+08-07-2004
+- (kernel) Modificato driver modulo master singolo (v.0.11)
+
+06-07-2004
+- (master.c) Controllo sulla ricezione di eventi spuri. (Vedi 0xff su tipo 0 al reset)
+- (delphi.c) Caricamento diviso di configurazione e consumatori.
+
+02-07-2004
+- (con_lara_*.c) Aggiunti tutti i nuovi eventi sulle variazioni.
+- (con_lara_impostazioni.c) La modifica di una festivita' richiede la conferma per l'associazione automatica.
+
+01-07-2004
+- (lara.c) Eliminata gestione LARA_CMD (non utilizzato su terminale intermedio).
+- (lara.h) Ridotti i terminali da 64 a 63 (terminale 0 difinitivamente abbandonato).
+- (protocol.c) Se non ci sono abbastanza risorse per lanciare il thread di ricezione in prot_loop() ritorna subito.
+
+30-06-2004
+- (lara.c) lara_input() puo' emettere piu' di un evento.
+- (lara.c) Codifica eventi Tebe.
+- (codec.c) Aggiornata tabella lunghezza eventi 247.
+
+30-06-2004
+- (gsm.c) La chiamata voce imposta la velocita' della seriale a 2400 baud per evitare interferenze con
+          la scheda di riproduzione vocale. Al termine della chiamata viene reimpostata la velocita' iniziale.
+- (audio.c) Funzioni di registrazione e riproduzione audio.
+- (gsm.c) Il lastAT viene aggiornato sull'invio del comando e non sulla ricezione dell'echo.
+- (support.c) Funzioni di gestione lista con parametro associato al comando.
+- (gsm.c) Aggiornata la funzione gsm_send() per utilizzare le nuove funzioni di gestione lista.
+- (modem.c) Aggiornata la funzione modem_send() per utilizzare le nuove funzioni di gestione lista.
+- (console.c) Aggiornata la funzione console_send() per utilizzare le nuove funzioni di gestione lista.
+- (gsm.c) Se aggiungo un comando alla lista vuota (ontop=1) aggiorno anche la testa della lista.
+- (gsm.c) Funzione GSM_Message() per l'invio di messaggi audio.
+- (gsm.c) GSM_Call_Terminate ferma anche l'eventuale registrazione/risproduzione audio.
+
+24-06-2004
+- (console) Ricompilazione per ripristino funzionalita' impostazione fasce orarie Lara.
+
+23-06-2004
+- (lara.c) Corretto calcolo indice per lettura/scrittura id in database.
+
+22-06-2004
+- (lara.c) Gestione indici comandi con offset per profili, terminali, fasce e festivi.
+           Es: profilo 1 -> lara->profilo[0].
+
+17-06-2004
+- (delphi.c) Gestione RTC con compatibilita' immagine 1.x.
+- (command.c) Gestione RTC con compatibilita' immagine 1.x.
+
+14-06-2004
+- (master.c) Introdotto ritardo 200ms tra attuazioni per evitare saturazione.
+
+12-06-2004
+- (master.c) database lock per codici 18 19 21 22 24.
+- (command.c) cmd_accept_fronts() azzera i fronti sensori verificando il tipo periferica prevista.
+
+31-05-2004
+- (gsm.c) La sequenza non e' piu' +CRING -> +CLIP, ma si riceve subito +CLIP. Aggiornata la gestione.
+
+26-05-2004
+- (gsm.c) Aumentata dimensione del buffer gsm_moniX[] e del relativo buffer di invio per risolvere segfault.
+
+24-05-2004
+- (master.c) master_notx() resetta la centrale in tutte le configurazioni.
+- (delphi.c) In caso di ridondanza, il processo saet si blocca per non accettare connessioni. Occorre spegnere.
+
+21-05-2004
+- (master.c) master_reset() azzera il semaforo comandi accodati direttamente, non reinizializzandolo.
+- (master.c) NoTxMM provoca blocco del processo per il master nella ridondanza.
+
+20-05-2004
+- (protocol.c) Maggiore pulizia in chiusura.
+- (ethernet.c) Maggiore pulizia in chiusura.
+
+12-05-2004
+- (kernel) Driver modulo master singolo con timeout di 200ms.
+           Aggiunta anche la dir /proc/driver/mmaster/timeout per l'impostazione dei timeout "single" e "multiple".
+
+08-05-2004
+- (lara.c) ID tessera in formato Intel (rimosso lo swap).
+
+06-05-2004
+- (codec.c) Invertito definizione delle dimensioni per Presense e Fasce orarie Lara.
+- (protocol.h) Aumentata dimensione campo dati degli eventi da 64 a 80 byte.
+- (master.c) Rimosso ritardo 400ms per le sentinelle
+- (master.c) In caso di manomissione periferica, se il sensore +1 e' fuori servizio non genero la manomissione.
+
+05-05-2004
+- (codec.c) Aggiunto supporto per evento esteso 247.
+- (codec.c) Aggiunto supporto per nuovi comandi Lara/Tebe (/L).
+- (lara.c) Aggiunti nuovi comandi di gestione configurazione Lara/Tebe.
+
+03-05-2004
+- (con_sicurezza) Modificate descrizioni da "UTENTE" a "UTENZA".
+- (gsm.c) Richiesta credito via sms ora duplica la stringa di comando ed imposta correttamente lo stato.
+
+30-04-2004
+- (codec.c) La funzione codec_consume_event() incrementa il numero evento.
+- (gsm.c) Corretta richiesta credito Tim.
+
+26-04-2004
+- (delphi.c) La variabile globale "delphi_modo" indica la modalita' operativa della centrale. In caso
+             di DELPHITIPO vengono attivate le limitazioni del caso. In questo modo non e' piu' necessario
+             avere due eseguibili distinti.
+             
+20-04-2004
+- (support.c) Aggiunta funzione support_list_add().
+- (gsm.c) Lista MMS da inviare e gestione CONNECT/NO CARRIER.
+
+19-04-2004
+- (protocol.h) Definito modem tipo GPRS.
+- (protocol.c) Test modem tipo GPRS.
+- (delphi.c) Init gsm/gprs con parametro tipo modem.
+- (gsm.c) Inizializzazione gsm con tipo.
+
+16-04-2004
+- (gsm.c) Gestione invio mms.
+
+14-04-2004
+- (master.c) Parametro di compilazione MASTER_LIMIT. Se impostato limita il numero di periferiche gestite.
+- (delphi.h) Parametro di compilazione DELPHI_FORCE_NODEID. Se impostato forza il numero di nodo.
+- (codec.c) Check del nodo alla ricezione messaggio se impostato DELPHI_FORCE_NODEID.
+
+08-04-2004
+- (modem.c) Reset numero squilli dopo 10 secondi anziche' 5.
+- (console.c) Disattivazione refresh storico realtime impedita se il tasto P non e'
+              premuto a lungo.
+- (con_storico.c) Invio dell'icona evento solo una volta dopo la disattivazione della console.
+
+05-04-2004
+- (ronda.c) Gestione segnalazione ronda attraverso sensore +2, parametro di compilazione.
+- (ronda.c) Scorporato il codice della ronda e creato il plugin.
+- (gsm.c) Gestione credito SIM (Tim).
+
+02-04-2004
+- (delphi.c) Corretto problema caricamento plugin dopo la configurazione consumatori. Ripristinato
+             l'ordine corretto e ripreso il funzionamento dei plugin.
+
+01-04-2004
+- (ronda.c) Controllo inizializzazione ronda in ronda_punzonatura().
+- (delphi.c) Plugin caricati dopo il caricamento del database, cosi' che il plugin CEI possa
+             configurare l'assegnamento delle fasce.
+
+24-03-2004
+- (database.c) Salvataggio valori SEGRETO.
+- (ronda.c) Gestione attuatore 1 su chiamata ronda.
+- (delphi.c) Corretto problema delle fasce orarie su scavalcamento mezzanotte.
+
+22-03-2004
+- (ronda.c) Rimosso timeout led ok su partenza manuale, occorre prima accettare la chiamata.
+- (master.c) Aggiunto ritardo di 400ms dopo l'invio di un'attuazione su sentinella.
+
+18-03-2004
+- (command.c) Gestione terza accettazione per tutte le anomalie e non solo per gli allarmi.
+- (user.c) Aggiunta funzione int GetMUcnt(int x) per la lettura del contatore accettazioni.
+- (ronda.c) Gestione allarmi sensore su sentinelle.
+- (codec.c) Gestione terza accettazione BdI per tutte le anomalie e non solo per gli allarmi.
+- (ronda.c) Aggiunta funzione ronda_chiama() per accensione spegnimento led di chiamata.
+
+17-03-2004
+- (ronda.c) Corretto problema crash su chiusura ronda su ultima punzonatura.
+
+15-03-2004
+- (ronda.c) Gestione tempo minimo tra punzonature e accensione led.
+
+12-03-2004
+- (master.c) Corretta la dimensione del messaggio ricevuto n.20 (verifica interfaccia).
+- (database.c) Gestione del file saet.nv compresso.
+- (database.c) Gestione nuovo tag per soglie singole per sensore.
+- (command.c) Salvataggio soglie nella struttura dati e su file.
+- (master.c) Invio delle soglie singole se configurate.
+
+11-03-2004
+- (event.h) Aggiunto evento Valori analogici.
+- (master.c) Invio evento valori analogici su evento corrispondente modulo master.
+- (codec.c) Definita la dimensione dell'evento 228 (valori analogici).
+- (codec.c) Gestione nuovi comandi di lettura valori analogici ed impostazione soglie.
+- (con_storico.c) Aggiunta gestione evento valori analogici.
+- (command.c) Agginto comando di richiesta valori analogici.
+
+09-03-2004
+- (command.c) Accettazione fronti dei guasti.
+- (master.c) Invio fine evento anche nel passaggio da una fascia ad un'altra.
+
+08-03-2004
+- (timeout.c) Sostituito semaforo con mutex.
+- (timeout.c) Controllo sulla validita' della funzione di scadenza timeout.
+- (modem.c) Sostituito semaforo con mutex.
+- (gsm.c) Sostituito semaforo con mutex.
+
+05-03-2004
+- (master.c) Il terzo byte dell'evento stato sensore viene trattato solo per le periferiche SAN.
+- (list.c) Ripristino liste ridotte per stato sensori.
+
+04-03-2004
+- (console.c) Creazione della voce menu' CHIAVI per la gestione della Delphi Tipo.
+
+03-03-2004
+- (list.c) Lista stato sensori/attuatori di tutti i sensori previsti e non solo di quelli presenti.
+           (Opzione di compilazione LIST_ALL_SENS)
+- (codec.c) Aggiunta gestione comando /ML per la ricezione della configurazione Lara/Tebe.
+
+02-03-2004
+- (ronda.c) La chiusura di una ronda non accettata ora elenca correttamente le stazioni non punzonate.
+
+01-03-2004
+- (command.c) Il ripristino sensore su accettazione ora presenta la zona associata corretta.
+- (codec.c) Il ripristino sensore su accettazione ora presenta la zona associata corretta.
+- (ronda.c) Gestione automatica degli eventi di ronda. Se configurata vengono emessi anche gli eventi relativi
+            senza bisogno di chiamate dal programa utente.
+
+27-02-2004
+- (protocol.c) Corretto invio del puntatore a consumatore di tipo ethernet plugin.
+- (protocol.c) Modificata la procedura di rilevamento modem/gsm per i problemi di quest'ultimo con il comando ATE1V1.
+- (codec.c) Corretta segnalazione fine manomissione sensore con presenza di ripristino periferica.
+
+26-02-2004
+- (con_sms.c) Invio icona di sms ricevuto solo se terminale presente.
+- (con_lara_impostazioni.c) Utilizzo della nuova variabile "pos" al posto della "state" per evitare interferenza
+                            con la ricezione di sms.
+
+25-02-2004
+- (ethernet.c) Se il consumatore ethernet ha dei parametri associati, la gestione del socket (server/client)
+               viene demandata totalmente al plugin, che viene subito attivato.
+               Altrimenti la funzionalita' rimane quella server con attivazione del plugin solo alla connessione.
+- (protocol.c) Migliorata la gestione del timer del plugin, viene creato solo la prima volta che viene usato.
+- (protocol.c) Gestione del timer anche per i plugin ethernet.
+
+24-02-2004
+- (user.c) La funzione SetMU imposta anche i bit per la gestione accettazione in SEmu[].
+- (master.c) L'arrivo dell'allarme sensore durante il test chiama la funzione di gestione fine guasto e non
+             genera piu' direttamente l'evento.
+- (gsm.c) Disabilitazione richiesta periodica degli sms non letti poiche' e' stato risolto il problema della
+          notifica +CMTI nella release 25 del modulo gsm.
+- (command.c) Sprint mette nella lista gruppi test attivo TDTA la lista sensori, non la lista periferiche.
+              Eliminato quindi lo shift <<3 in cmd_command_start_test() e cmd_command_end_test().
+- (gsm.c) Aggiunto ritardo di 20ms alla ricezione dell'OK, secondo documentazione Telit.
+- (gsm.c) Impostazione baudrate fisso per evitare problemi di autobauding.
+- (gsm.c) Check all'avvio di tutti gli sms non letti della SIM e del numero di messaggi memorizzati
+          per eventuale cancellazione.
+- (database.c) Inizializzata struttura V_ANALOG.
+- (master.c) Caricamento valori analogici nella struttura V_ANALOG nell'ordine corretto (arriva nell'ordine inverso).
+
+20-02-2004
+- (master.c) Con la gestione delle accettazioni attivate, la manomissione periferica genera anche guasto per tutti
+             i sensori della periferica.
+- (master.c) Gestione nuovo SA8 tipo 8.
+- (master.c) Gestione differenziata manomissione ingresso per SAN e periferiche di vecchio tipo.
+             
+19-02-2004
+- (master.c) Nuovo codice per l'indicazione di NoTxMM dal concentratore. Non forza il reset di tutti i moduli master
+             perche' gestito localmente. Solo il blocco completo del micro della Delphi provoca un NoTxMM calssico
+             con reset generale.
+- (command.c) Gestione bit accettazione allarme anche con attivazione zona allarmata.
+
+18-02-2004
+- (master.c) Invio soglie ingresso 3 con soglia bassa impostata fissa a 30.
+
+17-02-2004
+- (master.c) Gestione rigida manomissioni e guasti secondo la documentazione Parola di stato sensori SE[].
+- (command.c) Accettazione manomissioni e guasti genera l'evento di fine.
+- (command.c) Contatore MU solo per allarmi.
+- (codec.c) Gestione EVENTO per accettazione allarme/manomissione/guasto.
+
+13-02-2004
+- (console.c) Impostazione associazione zona/sensore e zone semplici/zone insieme ora viene salvato correttamente.
+- (delphi.c) In caso di switch tra centrale master e slave, la master si blocca e non permette ulteriori
+             connessioni verso la centrale.
+
+12-02-2004
+- (console.c) Rimossa variabile inutilizzata 'console_resend_resetting'.
+- (console.c) Gestione dinamica della connessione TerminalData.
+- (console.c) Non e' piu' possibile usare i codici diretti finche' il sistema non e' partito.
+- (console.c) Corretta gestione dei menu' visualizzati in caso di TerminalData multipli di tipo diverso.
+
+11-02-2004
+- (master.c) Modificata la gestione della coda comandi. Viene registrata la lunghezza del comando accodato per
+             non doverla ricavare allo scodamento in base al modulo master indicato. Se per qualche motivo il
+             modulo master fosse andato fuori linea non sarebbe stato piu' possibile ricavare la lunghezza del
+             comando.
+- (master.c) Non viene piu' permesso di accodare comandi verso un modulo master non presente. Anche se il modulo
+             viene messo fuori linea risulta non piu' presente, quindi per essere rimesso in linea occorre prima
+             specificare nella variabile MMPresente[] il tipo di modulo master e successivamente inviare il
+             comando di ripristino linea o eventualmente il comando di richiesta tipo modulo master cosi' da
+             reinizializzare la linea.
+- (support.c) Dimensione log parametrizzata. Configurabile in saet.conf con il paramtero LogLimit (default 100K).
+              La presenza del Lara/Tebe non lo disabilita piu'.
+
+10-02-2004
+- (master.c) Resync dopo ricezione codice errato costituito da 4 byte 0x55 e non 3.
+
+09-02-2004
+- (master.c) Ricezione codice errato segnala la provenienza dal modulo, non da modulo*32.
+
+04-02-2004
+- (console.c) Inizializzazione callback del timeout (evento TT).
+
+27-01-2004
+- (master.c) Il semaforo del ciclo di programma utente viene sbloccato solo quando viene completata
+             l'inizializzazione per evitare l'accumulo di permessi ed un transitorio alla partenza
+             con molti cicli di esecuzione.
+
+26-01-2004
+- (modem.c) corretta gestione successo chiamata in caso di chiamata entrante.
+
+23-01-2004
+- (gsm.c) funzione gsm_shutdown() pubblica.
+- (delphi.c) se e' stato configurato il gsm ma la procedura di verifica della presenza fallisce, esegue uno
+             spegnimento ed una riaccensione e riprova la procedura di verifica. Solo se fallisce anche la
+             seconda volta il gsm e' considerato non presente. In questo modo si riesce a recuperare la
+             situazione all'avvio del riconoscimento con gsm bloccato per qualche motivo.
+- (gsm.c) Aggiunta del prefisso internazionale al numero di telefono a cui si invia un sms.
+
+21-01-2004
+- (lara.c) Il transito ID 0000 ora invia l'evento a Com90.
+- (support.c) Correzione problema data del log.
+
+19-01-2004
+- (support.c) Gestione massima dimensione file di log (100KB) anziche' a tempo.
+
+16-01-2004
+- (master.c) La manomissione periferica genera anche guasto (con fronti) sull'ingresso sensore 0.
+- (database.[ch] codec.c list.[ch]) Eliminazione riferimenti a vecchia gestione ronda (TIPO_RONDA, QRA1, QRA2).
+- (database.[ch]) Corretta la dimensione degli array AlarmSabotage[] e Barcode[].
+- (master.c) Gestione variabile RISPRISTINO_LINEA;
+
+15-01-2004
+- (lara.c) Transito ID 0000 solo se viene aperta la porta senza forzatura.
+- (lara.c) Blocco degli eventi relativi ai sensori lara se questi sono fuori servizio.
+
+14-01-2004
+- (kernel) Timeout invio messaggio a modulo master aumentato a 3s.
+
+13-01-2004
+- (master.c) Corretta inizializzazione di StatoPeriferica al reset dei moduli.
+- (master.c) Aumentato buffer dei comandi per i moduli master per tenere conto di 16 moduli.
+
+12-01-2004
+- (user.c) Nuova funzione fr() per il controllo dei fronti.
+- (command.c) Accettazione fronti anche per fronti manomissione.
+- (master.c) Fronte di salita manomissione e guasto non vincolato alla memoria MU.
+
+08-01-2004
+- (delphi.c) Aggiunta di un eventuale parametro di specializzazione del consumatore. Utilizzato dalla
+             ridondanza per specificare il consumatore ridondato.
+- (protocol.c) Timer dei plugin abbassato a .5s per presisposizione al plugin di remotizzazione periferica.
+             
+07-01-2004
+- (master.c) In caso di ridondanza, allo switch la Delphi che passa in standby esegue un restart, obbligando
+             in questo modo ad eseguire un reset sulla slave per ripristinare il normale funzionamento.
+             Se lo switch e' pilotato dalla centrale non si nota nessun effetto, se invece lo switch e' automatico
+             la centrale non riceve piu' risposta dalla Delphi che era master e passa quindi sulla slave.
+             Lo switch e' quindi unidirezionale.
+- (codec.c) Drop evento ridondato solo se l'evento non e' locale (tipo No_Tx_MMaster).
+
+02-01-2004
+- (codec.c) Estensione comandi per chiamate ronda (/55x) e configurazione ronda (/56x).
+- (codec.c) Estensione comandi per configurazione zona/sensori (Z).
+
+30-12-2003
+- (lara.c) Generazione evento ripristino periferica.
+- (lara.c) Controllo validita' id per ID_RQ e SET_SEGR_ID.
+- (lara.c) Allarme area 0 non inizializzato.
+
+29-12-2003
+- (lara.c) Corretto bug nel controllo delle festivita'.
+
+27-12-2003
+- (support.c) Compressione del file status.nv per velocizzare il salvataggio su flash ed il trasferimento
+              verso la centrale ridondata.
+
+24-12-2003
+- (database.c) Eliminato support_load_status() da database_init().
+- (delphi.c) Spostato support_load_status() dopo l'avvio dei plugin, cosi' che la ridondanza possa
+             allineare il file status.nv.
+
+19-12-2003
+- (master.c) Punzonatura ronda senza controllo della chiave (vedi RONDA_CHECK_CHIAVE in ronda.h).
+- (master.c) Controllo SOS ronda su evento di allarme.
+
+18-12-2003
+- (master.c) Controllo della chiave falsa della ronda, altrimenti chiave falsa generica.
+- (ronda.c) Rilascio ronda.
+- (delphi.c) Caricamento plugin per la visualizzazione versione.
+- (codec.c) codec_parse_cmd() con ridondanza e creazione di codec_parse_cmd2() senza ridondanza.
+- (protocol.h) Ridotta la dimensione del buffer comandi a 264 byte (Len e' su un solo byte).
+
+17-12-2003
+- (delphi.c) ronda_load() dopo timeout_initialize().
+- (delphi.c) Aggiunta chiamata a ronda_timer().
+
+16-12-2003
+- (support.c) Lock del mutex in support_log() prima del rename del file.
+
+15-12-2003
+- (delphi.c) Caricamento configurazione ronda alla partenza.
+- (master.c) Gestione punzonatura ronda con codici da terminali.
+
+12-12-2003
+- (user.c) FuoriServizioAlr() e InServizioAlr() ritornano 1 se modificano lo stato di qualche sensore.
+
+11-12-2003
+- (codec.c) Verifica polling su centrale ridondata solo se configurata come tale.
+- (ronda.c) Inizio gestione ronda
+
+10-12-2003
+- (lara.c) Evento di fine forzatura porta solo in caso di effettiva forzatura.
+
+09-12-2003
+- (master.c) Corretto il controllo di periferica presente (veniva sempre controllato il modulo master 0).
+- (codec.c) Drop eventi ridondati solo per il consumatore configurato.
+- (console.c) Azzeramento utenti al restart.
+- (delphi.c) Eliminazione chiamata a lara_reset_periph() per non perdere la configurazione corrente in caso di modifiche.
+- (master.c) Se modulo master Lara/Tebe, la manomissione viene impostata anche se il sensore e' fuori servizio.
+- (command.c) Se modulo master Lara/Tebe il FS sensore mantiene la manomissione del sensore.
+- (lara.c) ID 0000 sempre abilitato su terminali e senza fasce/festivita'. Le eventuali impostazioni vengono ignorate.
+
+05-12-2003
+- (gsm.c) Gestione successo ultima chiamata.
+- (gsm.c) Gestione liste chiamate tramite funzioni di support.
+- (support.c) Gestione ultime chiamate ricevute.
+- (gsm.c) Gestione ultime chiamate ricevute.
+
+04-12-2003
+- (support.c) Gestione successo ultima chiamata.
+- (modem.c) Gestione successo ultima chiamata.
+- (modem.c) Gestione liste chiamate tramite funzioni di support.
+
+01-12-2003
+- (delphi.c) Inizializzazione dei consumatori (plugin) prima dell'avvio della gestione dei moduli master.
+             In questo modo il plugin della ridondanza puo' variare il normale comportamento alla ricezione
+             degli eventi dai moduli per la ridondanza.
+- (master.c) Aggiunta variabile pubblica "master_behaviour" per l'impostazione della modalita' normale o active/standby.
+             Il default e' normale, il plugin della ridondanza lo imposta al valore opportuno.
+- (master.c) Gestione dei codici di gestione attivo/standby.
+- (database.c) Corretta la funzione database_lock() modificata nella versione precedente per test.
+
+29-11-2003
+- (master.c) Rimosso lock database su ricezione codice 12 nella ricerca della chiave.
+
+28-11-2003
+- (lara.c) Rifiuto di segreti > 65534 per ID.
+
+22-11-2003
+- (support.c) Workaround per il caricamento della struttura AT da saet.nv alla partenza, ed estensione a ZONA e SE.
+
+21-11-2003
+- (gsm.c) Database lock per impostazione ME.
+- (gsm.c) Registrazione in ME2 anche per lista sms e non solo lettura singolo sms.
+
+20-11-2003
+- (delphi.c) Creazione della directory "/saet/data" se questa non esiste gia'.
+
+19-11-2003
+- (database.c) Creata nuova struttura ME2 per dati aggiuntivi ai telecomandi.
+- (gsm.c) Alla ricezione di un telecomando via sms registrazione nella ME2 corrispondente
+          anche dell'indice della rubrica del mittente.
+- (support.h) Rubrica telefonica aumentata a 128 numeri.
+
+13-11-2003
+- (command.c) Gestione assenza programma utente nel calcolo dei checksum.
+- (gsm.c) Modifica gestione NO CARRIER per chiamate voce credito Vodafone. (ATD -> NO CARRIER)
+
+10-11-2003
+- (kernel) Driver per chiavi di memoria USB.
+- (gsm.c) Richiesta credito della SIM (Vodafone).
+- (gsm.c) Gestione gsm_retry per chiamate voce. (ATD -> OK -> NO CARRIER)
+- (master.c) Corretto nome semaforo in caso di fuori sincrono.
+
+07-11-2003
+- (lara.c) Disabilitazione log in caso di presenza Lara per non saturare la memoria.
+
+05-11-2003
+- (lara.c) Spostato il file lara.gz in /saet/data per predisposizione a chiave USB.
+- (support.c) Spostato i file status.nv e status.nv.tmp in /saet/data per predisposizione a chiave USB.
+
+03-11-2003
+- (master.c) Corretto numero attuatori validi per periferiche Lara: SC8=8 TLB=3.
+- (lara.h) Riduzione a 20000 tessere.
+- (con_sms.c) Aggiunto menu' richiesta credito residuo Vodafone.
+
+31-10-2003
+- (console.c) console_reset_callback() non azzera il callback per l'evento di timeout. Deve essere azzerato esplicitamente.
+- (con_sms.c) Azzeramento callback di timeout.
+
+30-10-2003
+- (command.c) Calcolo una-tantum dei cheksum programmi.
+
+29-10-2003
+- (master.c) Controllo sul numero di modulo master passato alle funzioni.
+
+13-10-2003
+- (protocol.* codec.*) Aggiunto supporto per plugin ridondanza.
+- (codec.c) Correzione della gestione scarto eventi, puo' essere necessario scartare piu' di
+            un evento vecchio per fare posto ad un nuovo evento da inserire.
+
+10-10-2003
+- (gsm.c) Gestione SIM piena con cancellazione dell'sms piu' vecchio.
+
+09-10-2003
+- (gsm.c) Gestione lista SMS vuota.
+- (gsm.c) Blocco tentativo di invio sms con sim non presente.
+- (protocol.c) In caso di timeout per l'attesa di ACK, viene scartato l'evento da reinviare. Senza
+               questo, se dovesse arrivare un NAK come prima interrogazione, l'evento che era nello
+               stack non esiste piu'.
+
+08-10-2003
+- (modem.c) Se un comando va in timeout viene reinviato solo se non c'e' una connessione in corso,
+            altrimenti viene riaccodato.
+            
+06-10-2003
+- (gsm.c) GSM_Status[1] a non connesso solo alla ricezione del primo OK dopo la connessione
+          anziche' alla chiusura del protocollo per evitare doppi invii di AT e AT+CSQ con
+          rischio di sovrapposizioni (e resend/reset in caso di non risposta).
+          
+03-10-2003
+- (console.c) Possibilita' di uscire con DEL dalla procedura di login.
+- (con_telecomandi.c) Gestione voci di menu' per le liste preiferiche e associazione sensore/zona.
+
+02-10-2003
+- (gsm.c) bugfix - aumentata la dimensione del buffer lastAT[].
+- (gsm.c) Allineamento verso modem.c per la corretta chiusura del protocollo in connessione dati
+
+01-10-2003
+- (master.c) Inizializzazione StatoPeriferiche al reset.
+
+30-09-2003
+- (gsm.c) Inserimento sleep di 2 secondi all'avvio del sistema prima di interrogare il gsm.
+          I moduli vecchi anche con CTS attivo non rispondono subito.
+- (gsm.c) In caso di ricezione errore CMS scarto del comando e reinizializzazione del gsm.
+- (gsm.c) Attesa connessione gsm tramite +CREG anziche' +COPS.
+- (gsm.c) Accettazione anche solo OK\r anziche' OK\r\n.
+- (master.c) Azzeramento indici dei buffer di scrittura al reset e reinizializzazione semafori.
+
+29-09-2003
+- (gsm.c) Inserimento apici sul numero telefonico inviato.
+- (gsm.c) Aggiunta inizializzazione +CSMP.
+- (gsm.c) Ricerca sms non letti ogni 40s (+CMGL="REC UNREAD").
+- (gsm.c) Scarto del comando di invio sms in caso di timeout su invio messaggio.
+- (master.c) Azzeramento indici dei buffer di lettura al reset.
+
+26-09-2003
+- (support.c) Log con ricoprimento sempre attivo (/tmp/saet.log.[01]).
+- (gsm.c) Reinizializzazione timeout AT+CMGL per evitare doppi invii in caso di lista lunga.

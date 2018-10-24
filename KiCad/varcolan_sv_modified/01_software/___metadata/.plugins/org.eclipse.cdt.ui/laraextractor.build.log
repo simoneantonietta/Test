@@ -1,0 +1,19 @@
+10:22:21 **** Incremental Build of configuration Debug for project laraextractor ****
+make all 
+Building file: ../src/laraextractor.c
+Invoking: GCC C Compiler
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/laraextractor.d" -MT"src/laraextractor.o" -o "src/laraextractor.o" "../src/laraextractor.c"
+../src/laraextractor.c: In function ‘main’:
+../src/laraextractor.c:114:1: warning: control reaches end of non-void function [-Wreturn-type]
+ }
+ ^
+Finished building: ../src/laraextractor.c
+ 
+Building target: laraextractor
+Invoking: GCC C Linker
+gcc  -o "laraextractor"  ./src/laraextractor.o   
+Finished building target: laraextractor
+ 
+
+10:22:21 Build Finished (took 113ms)
+

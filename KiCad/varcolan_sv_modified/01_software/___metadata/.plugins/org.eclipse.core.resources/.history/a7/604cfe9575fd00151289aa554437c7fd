@@ -1,0 +1,71 @@
+/**----------------------------------------------------------------------------
+ * PROJECT: varcosv
+ * PURPOSE:
+ * 
+ *-----------------------------------------------------------------------------  
+ * CREATION: 17 Mar 2016
+ * Author: Luca Mini
+ * 
+ * LICENCE: please see LICENCE.TXT file
+ * 
+ * HISTORY (of the module):
+ *-----------------------------------------------------------------------------
+ * Author              | Date        | Description
+ *-----------------------------------------------------------------------------
+ *-----------------------------------------------------------------------------
+ */
+
+#ifndef COMM_SLAVE_H_
+#define COMM_SLAVE_H_
+
+#include "global.h"
+
+#define MAX_MSG_QUEUE_DEPTH_WARNING		10
+
+class Slave
+{
+public:
+	Slave();
+	virtual ~Slave();
+
+	void mainLoop();
+	bool runScriptFile(string script_fname,string status_fname);
+
+private:
+	unsigned int fwCheckCounter,scriptCounter;
+	globals_st::frameData_t f;
+	uint8_t txData[HPROT_BUFFER_SIZE];
+
+	void handleInternalEvents();
+	void profileCheck();
+	void weektimeCheck();
+	void handleNetworkEvent();
+	void handleRequestArea();
+
+	/*
+	 * container for all devices firmware data
+	 */
+	typedef struct
+	{
+		uint8_t type;
+		FWMetadata_t fwMetadata;
+		string firmwareBin;
+		string firmwareTxt;
+	} fwData_t;
+	vector<fwData_t> firmwares;
+
+	//uint32_t actualFWFileSize;
+	//uint32_t fwCrc32;
+	FWMetadata_t fwMetadata;
+	string actualFWname;
+	string actualFWtxt;
+	string actualFWbin;
+	globals_st::dataEvent_t firmwareCheckForNew();
+	bool firmwareUnpack(uint8_t type);
+	bool firmwareValidate(uint8_t type);
+	bool firmwareCheckVersion(uint8_t major, uint8_t minor);
+	bool firmwareChunkSend(uint32_t startByte,uint8_t amount);
+};
+
+//-----------------------------------------------
+#endif /* COMM_SLAVE_H_ */

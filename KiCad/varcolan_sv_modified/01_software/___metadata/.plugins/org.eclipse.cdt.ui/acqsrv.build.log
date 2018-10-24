@@ -1,0 +1,45 @@
+10:49:49 **** Build of configuration Debug for project acqsrv ****
+make pre-build main-build 
+change build version value
+../../../../common/scripts/cbuildinc.sh ../src/version.h
+Build number increment (C/C++ version)
+actual dir:
+/data/projects/saet/00_projects/varcolan_sv/01_software/acqsrv/Debug
+ 
+Building file: ../src/utils/Serializer.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/utils/Serializer.d" -MT"src/utils/Serializer.o" -o "src/utils/Serializer.o" "../src/utils/Serializer.cpp"
+Finished building: ../src/utils/Serializer.cpp
+ 
+Building file: ../src/utils/SimpleCfgFile.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/utils/SimpleCfgFile.d" -MT"src/utils/SimpleCfgFile.o" -o "src/utils/SimpleCfgFile.o" "../src/utils/SimpleCfgFile.cpp"
+Finished building: ../src/utils/SimpleCfgFile.cpp
+ 
+Building file: ../src/utils/TaggedTxtFile.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/utils/TaggedTxtFile.d" -MT"src/utils/TaggedTxtFile.o" -o "src/utils/TaggedTxtFile.o" "../src/utils/TaggedTxtFile.cpp"
+../src/utils/TaggedTxtFile.cpp: In member function ‘bool TaggedTxtFile::save()’:
+../src/utils/TaggedTxtFile.cpp:214:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+        if(n>=it->second.linebreak)
+                         ^
+Finished building: ../src/utils/TaggedTxtFile.cpp
+ 
+Building file: ../src/utils/Trace.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/utils/Trace.d" -MT"src/utils/Trace.o" -o "src/utils/Trace.o" "../src/utils/Trace.cpp"
+Finished building: ../src/utils/Trace.cpp
+ 
+Building file: ../src/utils/Utils.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/utils/Utils.d" -MT"src/utils/Utils.o" -o "src/utils/Utils.o" "../src/utils/Utils.cpp"
+Finished building: ../src/utils/Utils.cpp
+ 
+Building file: ../src/utils/test.cpp
+Invoking: GCC C++ Compiler
+g++ -DHPROT_ENABLE_RX_RAW_BUFFER -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/utils/test.d" -MT"src/utils/test.o" -o "src/utils/test.o" "../src/utils/test.cpp"
+make: *** [src/utils/test.o] Terminated
+Command canceled
+
+10:49:51 Build Cancelled (took 2s.224ms)
+

@@ -1,0 +1,15 @@
+12:24:22 **** Build of configuration Debug for project rasp_helloworld ****
+make all 
+Building file: ../src/rasp_helloworld.cpp
+Invoking: Cross G++ Compiler
+arm-linux-gnueabihf-g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/rasp_helloworld.d" -MT"src/rasp_helloworld.o" -o "src/rasp_helloworld.o" "../src/rasp_helloworld.cpp"
+Finished building: ../src/rasp_helloworld.cpp
+ 
+Building target: rasp_helloworld
+Invoking: Cross G++ Linker
+arm-linux-gnueabihf-g++  -o "rasp_helloworld"  ./src/rasp_helloworld.o   
+Finished building target: rasp_helloworld
+ 
+
+12:24:22 Build Finished (took 273ms)
+
