@@ -1,3 +1,0 @@
-to test serial port (for the reader):
-stty 1200 cs8 -parenb -ixoff -crtscts -echo -F /dev/ttyUSB0
-cat /dev/ttyUSB0

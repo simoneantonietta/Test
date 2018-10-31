@@ -1,9 +1,0 @@
-1. application to handle protocoll messages and take data from database
-2. database have the info shared with web server
-3. a filesystem in ram handle some pipes to communicates with other apps
-4. web communicates throw a pipes versus the main application
-5. reader writes on a file its data (int tmpfs)
-6. database is in ram andis backed - up by a cron, and at startup a sc.ript copies in tmpfs as working area
-
-evaluate if the database have to be two, one permanent whith anagraphics that no changes frequently and one to store events that changes fast.
-

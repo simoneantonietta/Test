@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;laraextractor/src/lara_tessere.c&apos;" deleteContents="false" description="Delete resource &apos;laraextractor/src/lara_tessere.c&apos;" element1="/laraextractor/src/lara_tessere.c" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1458029901544"/>&#x0A;<refactoring comment="Delete resource &apos;laraextractor/badge&apos;" deleteContents="false" description="Delete resource &apos;laraextractor/badge&apos;" element1="/laraextractor/badge" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1458033738588"/>
-</session>

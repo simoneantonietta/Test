@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename resource &apos;rasp_helloworld/src/varcolansv_arm.cpp&apos; to &apos;rasp_helloworld.cpp&apos;" description="Rename resource &apos;varcolansv_arm.cpp&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/varcolansv_arm.cpp" name="rasp_helloworld.cpp" stamp="1461320656637" updateReferences="true"/>
-</session>

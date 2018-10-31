@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">&#x0A;<refactoring comment="Rename resource &apos;supervisor/src/supervisor.cpp&apos; to &apos;main.cpp&apos;" description="Rename resource &apos;supervisor.cpp&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/supervisor.cpp" name="main.cpp" stamp="1456994132097" updateReferences="true"/>&#x0A;<refactoring comment="Rename resource &apos;supervisor/gpsnif.cfg&apos; to &apos;varcosv.cfg&apos;" description="Rename resource &apos;gpsnif.cfg&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="gpsnif.cfg" name="varcosv.cfg" stamp="1456995525102" updateReferences="true"/>
-</session>

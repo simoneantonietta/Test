@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename resource &apos;varcosv/src/data_structs.h&apos; to &apos;dataStructs.h&apos;" description="Rename resource &apos;data_structs.h&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/data_structs.h" name="dataStructs.h" stamp="1457436326581" updateReferences="true"/>
-</session>

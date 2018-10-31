@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Delete 2 resources" deleteContents="false" description="Delete 2 resources" element1="/rasp_varcosv/src/CommData.cpp" element2="/rasp_varcosv/src/CommData.h" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="2" stamp="1464764037621"/>
-</session>

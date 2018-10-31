@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">&#x0A;<refactoring comment="Rename resource &apos;varcosv/src/comm/SktCommTh.cpp&apos; to &apos;SktCliCommTh.cpp&apos;" description="Rename resource &apos;SktCommTh.cpp&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/comm/SktCommTh.cpp" name="SktCliCommTh.cpp" stamp="1458642916343" updateReferences="true"/>&#x0A;<refactoring comment="Rename resource &apos;varcosv/src/comm/SktCommTh.h&apos; to &apos;SktCliCommTh.h&apos;" description="Rename resource &apos;SktCommTh.h&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/comm/SktCommTh.h" name="SktCliCommTh.h" stamp="1458642925141" updateReferences="true"/>
-</session>

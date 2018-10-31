@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">&#x0A;<refactoring comment="Delete 2 resources" deleteContents="false" description="Delete 2 resources" element1="/varcosv/firmware/varcolan.bin" element2="/varcosv/firmware/varcolan.txt" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="2" stamp="1459847188328"/>&#x0A;<refactoring comment="Delete resource &apos;varcosv/Release&apos;" deleteContents="false" description="Delete resource &apos;varcosv/Release&apos;" element1="/varcosv/Release" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1460101614014"/>
-</session>

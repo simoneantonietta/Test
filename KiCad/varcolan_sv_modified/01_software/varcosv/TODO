@@ -1,9 +1,0 @@
-- vedere perche invia tutti i frame con frame n. 0
-- script: modifica profili
-- script: modifica weektime
-- script: modifica terminali
-- password da telnet
-- ATTENZIONE: per acrchitettura a 32bit tutti gli 1UL devono diventare 1ULL
-- software upgrade
-- spostare tabella area in event (gia fatto nel database, è solo da cancellare in db principale)
-- gestire signal broken pipe per evitare che se ammazzo gpsnif si pianti il sv
