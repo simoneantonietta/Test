@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;rasp_varcosv/core.5525&apos;" deleteContents="false" description="Delete resource &apos;rasp_varcosv/core.5525&apos;" element1="/rasp_varcosv/core.5525" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1468943266829"/>&#x0A;<refactoring comment="Delete 3 resources" deleteContents="false" description="Delete 3 resources" element1="/rasp_varcosv/bl_varcolan_0302" element2="/rasp_varcosv/bl_varcolan_0302.tar" element3="/rasp_varcosv/varcolan_0200.tar" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="3" stamp="1468943282021"/>
+</session>

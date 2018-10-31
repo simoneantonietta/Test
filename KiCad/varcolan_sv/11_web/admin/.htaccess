@@ -1,0 +1,3 @@
+- mettere loader dopo i salva
+- creazione utente: user, nessuna password e poi obbligo al primo accesso a cambiarla
+- log di sistema con le operazioni fatte da user disponibili per admin

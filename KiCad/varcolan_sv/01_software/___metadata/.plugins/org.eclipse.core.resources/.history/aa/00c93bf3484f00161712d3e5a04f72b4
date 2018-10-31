@@ -1,0 +1,21 @@
+/*
+ *-----------------------------------------------------------------------------
+ * PROJECT: froute
+ * PURPOSE: see module Net.h file
+ *-----------------------------------------------------------------------------
+ */
+
+#include "Net.h"
+
+Net::Net()
+{
+// TODO Auto-generated constructor stub
+
+}
+
+Net::~Net()
+{
+// TODO Auto-generated destructor stub
+
+}
+

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Move &apos;core.15916&apos; to &apos;gpsnif&apos;" description="Move &apos;core.15916&apos; to &apos;gpsnif&apos;" destination="/gpsnif" element1="src/core.15916" flags="7" id="org.eclipse.ltk.core.refactoring.move.resources" resources="1" stamp="1460704622924" updateReferences="true"/>
+</session>

@@ -1,0 +1,234 @@
+
+#ifndef GLOBAL_H_
+#define GLOBAL_H_
+
+//-----------------------------------------------------------------------------
+// C section
+//-----------------------------------------------------------------------------
+
+#include <string.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <queue>
+#include "dataStructs.h"
+#include "common/prot6/hprot.h"
+
+//#include "macros.h"
+
+#define APP_NAME 						"VarcoSV"
+#define APP_VERSION					" ver. 1.0"
+
+//-----------------------------------------------------------------------------
+// C++ section
+//-----------------------------------------------------------------------------
+#if __cplusplus
+//-----------------------------------------------------------------------------
+
+#include <string>
+
+#define MAX_MESSAGE_TRACES 	20
+#define DBG_ERROR 					TRACECLASS_ERROR
+#define DBG_WARNING					TRACECLASS_WARN
+#define DBG_FATAL 					TRACECLASS_FATAL
+#define DBG_NOTIFY 					TRACECLASS_NOTIFY
+#define DBG_DEBUG						TRACECLASS_DEBUG
+#define DBG_SKTCLIENT				TRACECLASS_CUSTOM_MIN+0
+#define DBG_SKTCLIENT_DATA	TRACECLASS_CUSTOM_MIN+1
+
+#define CFG_FILE						"varcosv.cfg"
+#define BAUDRATE						"115200"
+#define PORT								"5000"
+#define MYID 								"10"
+
+#define DB_VARCOLANSV				"varcolan.db"
+#define DB_VARCOLANEV				"varcolan_events.db"
+
+#define DEV_TYPE_UNKNOWN					0
+#define DEV_TYPE_SOCKET						1
+#define DEV_TYPE_SERIAL						2
+
+#define MAX_NAME_SIZE							32
+
+/*
+ * firmware archive filename format:
+ * type_majorminor.tar
+ * i.e.: varcolan_0102.tar
+ */
+#define FIRMWARE_NEW_PATH			"./firmware_new/"
+#define FIRMWARE_UPD_PATH			"./firmware/"
+#define FIRMWARE_UNPACKER			"unpkg.sh"
+#define FIRMWARE_PKG_EXT			".tar"
+#define FIRMWARE_BIN_EXT			".bin"
+#define FIRMWARE_TXT_EXT			".txt"
+#define FIRMWARE_VARCOLAN			"varcolan"
+#define FIRMWARE_SUPERVISOR		"supervisor"
+#define FIRMWARE_SUPPLY				"supply"
+#define FIRMWARE_DISPLAY			"display"
+#define FIRMWARE_CHECK_TIME		10				// [sec]
+
+#define SCRIPT_PATH						"./script/"
+#define SCRIPT_FILENAME				"runme.cmd"
+#define SCRIPT_STATUS_FNAME		"status.cmd"
+
+using namespace std;
+
+/*
+ * global data
+ */
+struct globals_st
+{
+	uint8_t myID;
+	uint8_t defaultDest;
+	int port;
+	int brate;
+	bool useSerial, useSocketClient, useSocketServer;
+	char device[80];	// contain serial port or the server IP address
+	bool connected;
+	bool run;
+	int loopLatency; // [us]
+
+	// fifo for sniffing
+	bool usefifo;
+	string fifoName;
+
+	// badge reader
+	bool has_reader;
+	char reader_device[80];
+	int reader_brate;
+
+	//............................
+	// weektimes
+	typedef struct
+	{
+		Weektime_parameters_t params;
+		char name[MAX_NAME_SIZE];
+	} weektime_t;
+	weektime_t weektimes[MAX_WEEKTIMES];
+	uint8_t globWeektimesCRC;
+	//............................
+	// profiles
+	typedef struct
+	{
+		Profile_parameters_t params;
+		char name[MAX_NAME_SIZE];
+	} profile_t;
+	profile_t profiles[MAX_PROFILES];
+	uint8_t globProfilesCRC;
+	//............................
+	// terminals
+	typedef struct
+	{
+		Terminal_parameters_to_send_t params;
+		char name[MAX_NAME_SIZE];
+	} terminal_t;
+	terminal_t terminals[MAX_TERMINALS];
+	//............................
+
+
+	uint16_t devAnsTimeout;	// time for each device to answer
+//	frame_t frame;
+//	uint8_t frameData[HPROT_PAYLOAD_SIZE];
+
+	//----------------------------------------------
+	// protocol message queue
+	typedef struct frameData_st
+	{
+		enum channel_e {chan_unk,chan_serial,chan_ethernet} channel;
+		frame_t frame;
+		uint8_t frameData[HPROT_PAYLOAD_SIZE];
+		int client;
+
+		frameData_st()
+		{
+		channel=chan_unk;
+		client=-1;
+		frame.data=frameData;
+		}
+	} frameData_t;
+	queue<frameData_t> frameQueue;
+	//----------------------------------------------
+	// internal data messages that must be sent to the master
+	typedef struct dataEvent_st
+	{
+		sv_DataTypeCode_t dataEvent;
+		union
+		{
+		int badge_id;
+		int weektime_id;
+		int terminal_id;
+
+		// for firmware update event
+		uint8_t fw_device_type;
+		char fw_version_file[5];
+		} tag;
+	} dataEvent_t;
+	queue<dataEvent_t> dataEventQueue;
+	//----------------------------------------------
+
+
+	/**
+	 * ctor of global data
+	 */
+	globals_st()
+	{
+	}
+};
+
+/*
+ * generic result class
+ */
+struct Result
+{
+public:
+#define MAX_MESSAGE_SIZE		256
+	enum status_e
+	{
+		is_unknown,
+		is_waiting,
+		is_ok,
+		is_error
+	} status;
+
+	int value;
+	//std::string message;
+	char message[MAX_MESSAGE_SIZE];
+
+	void reset() {status=is_unknown;value=0;message[0]=0;}
+	void setStatus(status_e st) {status=st;}
+	status_e getStatus() {return status;}
+
+	void setError(int val=0) {status=is_error;value=val;}
+	void setError(const char* msg,int val=0)
+		{
+		status=is_error;
+		strcpy(message,msg);
+		value=val;
+		}
+	void setOK(const char *msg,int val=0)
+		{
+		status=is_ok;
+		strcpy(message,msg);
+		value=val;
+		}
+	void setOK(int val=0) {status=is_ok;value=val;}
+	void setWaiting(int val=0) {status=is_waiting;value=val;}
+
+	bool isError() {return (status==is_error) ? (true) : (false);}
+	bool isOK() {return (status==is_ok) ? (true) : (false);}
+	bool isUnknown() {return (status==is_unknown) ? (true) : (false);}
+	bool isWaiting() {return (status==is_waiting) ? (true) : (false);}
+};
+
+//-----------------------------------------------------------------------------
+// PROTOTYPES
+//-----------------------------------------------------------------------------
+int checkDeviceType(const char *dev);
+
+//-----------------------------------------------------------------------------
+// GLOBAL DATA
+//-----------------------------------------------------------------------------
+
+#endif
+
+//-----------------------------------------------
+#endif /* GLOBAL_H_ */

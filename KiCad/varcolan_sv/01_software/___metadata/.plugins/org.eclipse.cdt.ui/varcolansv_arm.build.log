@@ -1,0 +1,7 @@
+12:23:31 **** Clean-only build of configuration Debug for project varcolansv_arm ****
+make clean 
+rm -rf  ./src/varcolansv_arm.o  ./src/varcolansv_arm.d  varcolansv_arm
+ 
+
+12:23:31 Build Finished (took 76ms)
+

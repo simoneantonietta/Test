@@ -1,0 +1,1 @@
+set sysroot /home/luca/applications/rasptools/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/arm-linux-gnueabihf

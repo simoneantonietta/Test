@@ -1,0 +1,10 @@
+10:14:29 **** Incremental Build of configuration Debug for project supervisor ****
+make all 
+Building target: supervisor
+Invoking: GCC C++ Linker
+g++  -o "supervisor"  ./src/common/utils/SimpleCfgFile.o ./src/common/utils/Trace.o ./src/common/utils/Utils.o  ./src/common/serial/serial.o  ./src/common/prot6/hprot.o  ./src/comm/CommTh.o ./src/comm/SerCommTh.o ./src/comm/SktCommTh.o  ./src/RXHFrame.o ./src/TXHFrame.o ./src/main.o   -lpthread
+Finished building target: supervisor
+ 
+
+10:14:29 Build Finished (took 167ms)
+

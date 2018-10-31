@@ -1,0 +1,100 @@
+/**----------------------------------------------------------------------------
+ * PROJECT: gpsnif
+ * PURPOSE:
+ * UDP interface for communication with HPROT
+ *-----------------------------------------------------------------------------  
+ * CREATION: 12 May 2016
+ * Author: Luca Mini
+ * 
+ * LICENCE: please see LICENCE.TXT file
+ * 
+ * HISTORY (of the module):
+ *-----------------------------------------------------------------------------
+ * Author              | Date        | Description
+ *-----------------------------------------------------------------------------
+ *-----------------------------------------------------------------------------
+ */
+
+#ifndef COMM_UDPCOMMTH_H_
+#define COMM_UDPCOMMTH_H_
+#include "../common/prot6/hprot.h" // need only for size defines
+#include "../global.h"
+#include "../common/utils/Utils.h"
+#include "../common/utils/Trace.h"
+#include "../common/utils/TimeFuncs.h"
+#include "../common/prot6/hprot.h"
+#include "../common/prot6/hprot_stdcmd.h"
+#include "../RXHFrame.h"
+#include "CommTh.h"
+
+
+#define SKSRV_MAX_CLIENTS						70
+#define SKSRV_BUFFER_SIZE						HPROT_BUFFER_SIZE
+
+
+#define UDP_BUFSIZE									1024
+
+class UDPCommTh : public CommTh
+{
+public:
+	UDPCommTh();
+	virtual ~UDPCommTh();
+
+	string name;
+
+	bool impl_OpenComm(const string dev,int param,void* p);
+	void impl_CloseComm(void* p);
+	bool impl_Write(uint8_t* buff,int size,void* p);
+	int impl_Read(uint8_t* buff,int size,void* p);
+
+	void clearLinkCheck() {linkChecked=false;};
+
+	// should be mutexed?
+	bool getLinkCheckedStatus() {return linkChecked;}
+
+	int addClient(uint8_t id,struct sockaddr_in clientaddr,int clientlen,uint32_t ip);
+	int getClientFromID(uint8_t id);
+	int getClientFromIP(uint32_t ip);
+	int getClientFromIP(string ip);
+	uint32_t ip_string_2_uint32(string ip);
+	string ip_uint32_2_string(uint32_t ip);
+
+	bool loadUdpIpFile(string fname);
+
+private:
+  int sockfd; /* socket */
+  int clientlen; /* byte size of client's address */
+  struct sockaddr_in serveraddr; /* server's addr */
+  struct sockaddr_in clientaddr; /* client addr */
+  struct hostent *hostp; /* client host info */
+  char internal_buf[UDP_BUFSIZE]; /* message buf */
+  char *hostaddrp; /* dotted decimal host addr string */
+  int optval; /* flag value for setsockopt */
+  int n; /* message byte size */
+
+	bool linkChecked;
+
+	virtual void onFrame(frame_t &f);
+
+	struct ClientData
+	{
+		uint8_t id;										// protocol ID
+		protocolData_t protocolData;
+		char buffer[SKSRV_BUFFER_SIZE];		// data buffer
+		int nDataAvailable;
+
+		// udp info
+		union clientIP_u
+		{
+			uint32_t ip;								// used to indentify the datagram
+			uint8_t ip_fld[4];					// as bytes
+		} clientIP;
+	  struct sockaddr_in clientaddr; /* client addr */
+	  int clientlen; /* byte size of client's address */
+
+	} clients[SKSRV_MAX_CLIENTS];
+	int last_client;
+};
+
+//-----------------------------------------------
+#endif /* COMM_UDPCOMMTH_H_ */

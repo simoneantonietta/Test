@@ -1,0 +1,22 @@
+//============================================================================
+// Name        : froute.cpp
+// Author      : 
+// Version     :
+// Copyright   : Your copyright notice
+// Description : Hello World in C++, Ansi-style
+//============================================================================
+
+#include <iostream>
+using namespace std;
+
+#define NPADS	10
+
+int main()
+{
+vector<Pad
+for(int p=0;p<NPADS;p++)
+	{
+
+	}
+return 0;
+}

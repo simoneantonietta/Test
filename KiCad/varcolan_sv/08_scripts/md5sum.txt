@@ -1,0 +1,1 @@
+e1f729e494a237d446b52e2460a608a0  /dev/mmcblk0

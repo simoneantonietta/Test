@@ -1,0 +1,95 @@
+/**----------------------------------------------------------------------------
+ * PROJECT: froute
+ * PURPOSE:
+ * Net object
+ *-----------------------------------------------------------------------------  
+ * CREATION: Jul 21, 2016
+ * Author: Luca Mini
+ * 
+ * LICENCE: please see LICENCE.TXT file
+ * 
+ * HISTORY (of the module):
+ *-----------------------------------------------------------------------------
+ * Author              | Date        | Description
+ *-----------------------------------------------------------------------------
+ *-----------------------------------------------------------------------------
+ */
+
+#ifndef NET_H_
+#define NET_H_
+
+#include "global.h"
+#include "Pad.h"
+
+class Net
+{
+public:
+	Net();
+	virtual ~Net();
+
+	//-----------------------------------------------------------------------------
+	// property getters/setters
+	//-----------------------------------------------------------------------------
+
+	meas_t getLenght() const
+	{
+	return lenght;
+	}
+
+	void setLenght(meas_t lenght)
+	{
+	this->lenght = lenght;
+	}
+
+	const std::string& getName() const
+	{
+	return name;
+	}
+
+	void setName(const std::string& name)
+	{
+	this->name = name;
+	}
+
+	meas_t getWidth() const
+	{
+	return width;
+	}
+
+	void setWidth(meas_t width)
+	{
+	this->width = width;
+	}
+	//-----------------------------------------------------------------------------
+	// overload
+	//-----------------------------------------------------------------------------
+
+	bool operator ==(const std::string &other_name) const
+		{
+		// check if the search is for name and value
+		if((*this).name==other_name)
+			return(true);
+		else
+			return(false);
+		}
+
+	const Pad& getPads(int n) const
+	{
+	return pads;
+	}
+
+	void setPads(const& Pad pad)
+	{
+	this->pads = pads;
+	}
+
+private:
+	std::string name;
+	meas_t width;
+	meas_t lenght;
+
+	std::vector<Pad> pads;
+};
+
+//-----------------------------------------------
+#endif /* NET_H_ */
