@@ -1,7 +1,6 @@
 EESchema Schematic File Version 2
 LIBS:3852_6-rescue
 LIBS:Contatto868-3V-rescue
-LIBS:saet
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -31,13 +30,14 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
+LIBS:saet
 LIBS:3852_6-cache
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 2
-Title "Magnetic Contact 3V on 868.3 MHz - CS 3862"
+Title "Magnetic Contact 3V on 868.3 MHz - CS 3933"
 Date "mercoledì 03 giugno 2015"
 Rev "2.0"
 Comp ""
@@ -151,7 +151,7 @@ F 4 "CSA560 EXT" H 8050 1200 60  0001 C CNN "Saet_code"
 	1    0    0    -1  
 $EndComp
 $Comp
-L LED DL1
+L LED-RESCUE-3852_6 DL1
 U 1 1 53F31549
 P 8300 2750
 F 0 "DL1" H 8300 2850 59  0000 C CNN
@@ -405,6 +405,7 @@ F 0 "P1" H 2350 4000 50  0000 C CNN
 F 1 "SERIAL CONNECTOR" V 2450 3600 50  0000 C CNN
 F 2 "Connectors_Molex:Connector_Molex_PicoBlade_53047-0410" H 2350 3750 50  0001 C CNN
 F 3 "" H 2350 3750 50  0000 C CNN
+F 4 " " H 2350 3750 60  0001 C CNN "Saet_code"
 	1    2350 3750
 	-1   0    0    -1  
 $EndComp
@@ -459,7 +460,7 @@ Text Label 5450 4150 0    60   ~ 0
 RX
 NoConn ~ 5700 4350
 $Comp
-L Q_NMOS_DGS Q1
+L Q_NMOS_GSD Q1
 U 1 1 5BA24173
 P 3750 4400
 F 0 "Q1" H 4050 4450 50  0000 R CNN
@@ -816,6 +817,7 @@ F 0 "P3" H 2550 5850 50  0000 C CNN
 F 1 "TAMPER CONNECTOR" V 2650 5700 50  0000 C CNN
 F 2 "Connectors_Molex:Connector_Molex_PicoBlade_53047-0210" H 2550 5700 50  0000 C CNN
 F 3 "" H 2550 5700 50  0000 C CNN
+F 4 " " H 2550 5700 60  0001 C CNN "Saet_code"
 	1    2550 5700
 	-1   0    0    1   
 $EndComp

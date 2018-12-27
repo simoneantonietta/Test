@@ -36,7 +36,7 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 2 2
-Title "Magnetic Contact 3V on 868.3 MHz - CS 3862"
+Title "Magnetic Contact 3V on 868.3 MHz - CS 3933"
 Date "mercoledì 03 giugno 2015"
 Rev "2.0"
 Comp ""
@@ -543,11 +543,11 @@ $EndComp
 Text Notes 10200 3550 0    39   ~ 0
 U2(6)
 Text Notes 10200 3700 0    39   ~ 0
-U2(31)-U3(4)
+U2(31)
 Text Notes 10200 3850 0    39   ~ 0
-U2(2)-U3(6)
+U2(22)
 Text Notes 10200 4000 0    39   ~ 0
-U2(1)-U3(7)
+U2(21)
 Text Notes 10200 4150 0    39   ~ 0
 U2(17)
 Text Notes 10200 4300 0    39   ~ 0
@@ -824,4 +824,17 @@ Wire Wire Line
 	2750 6300 2750 6400
 Wire Wire Line
 	7000 3750 7500 3750
+$Comp
+L GND-RESCUE-Contatto868-3V #PWR028
+U 1 1 5C0A69F6
+P 7500 4350
+F 0 "#PWR028" H 7500 4350 30  0001 C CNN
+F 1 "GND" H 7500 4280 30  0001 C CNN
+F 2 "" H 7500 4350 60  0000 C CNN
+F 3 "" H 7500 4350 60  0000 C CNN
+	1    7500 4350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7500 4300 7500 4350
 $EndSCHEMATC
