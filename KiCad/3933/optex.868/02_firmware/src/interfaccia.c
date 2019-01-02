@@ -246,8 +246,8 @@ versione ff09				//per prove; non funziona write parametri, togliere rssi_rx_max
 
 
 // porta spi per comunicazione con SI4432
-#define     SPI_CLOCK_1     P1OUT |=  0x01              // P1.0 Uscita clock della porta seriale sincrona (Io sono master)
-#define     SPI_CLOCK_0     P1OUT &= ~0x01
+#define     SPI_CLOCK_1     P1OUT |=  0x20              // P1.5 Uscita clock della porta seriale sincrona (Io sono master)
+#define     SPI_CLOCK_0     P1OUT &= ~0x20
 
 #define     SPI_OUT_1       P1OUT |=  0x80              // P1.7 Uscita dati della porta seriale sincrona                    [nella versione precedente era 1.2]
 #define     SPI_OUT_0       P1OUT &= ~0x80
@@ -596,17 +596,18 @@ enum rx_function{detector_events,req_init, ack, nack, GDE, GPageM, GPropertyM, G
 volatile unsigned int flag_tx_finished = 0 ;
 volatile unsigned char rx_mex[11];
 volatile unsigned int tipo_connessione_sensore;
-volatile unsigned char tx_string[11], rx_string[1+9];                    // stringhe di rx e tx per comunicazione UART
-volatile unsigned int tx_index=0, rx_index=0;                            // indici per comunicazione UART 
-volatile enum state actual_state = Wakeup;
+unsigned char tx_string[11], rx_string[1+9];                    // stringhe di rx e tx per comunicazione UART
+unsigned int tx_index=0, rx_index=0;                            // indici per comunicazione UART 
+enum state actual_state = Wakeup;
 volatile int flag_rx = 1;
 volatile enum rx_function rx_cmd = IDLE, tx_cmd = IDLE;
 unsigned char ack_str[6] = {0x00,0xaa,0x05,0x06,0x71,0x26};     // acknowledge 
 unsigned char init_str[6] = {0x00,0xaa,0x05,0x30,0x01,0xe0};    // control panel event con attvazione in modalità ARM
 unsigned char GMN_str[5] = {0x00, 0xaa, 0x04, 0x39, 0xe7};      // get model number (1,2 = VXS - 3,4 = BXS) 
-volatile unsigned int string_size=0;
+volatile unsigned int string_size = 0;
 volatile int  uart_pause_flag = 1;
-volatile int rx_valid_flag = 0;
+int rx_valid_flag = 0;
+int sensor_model = 0;
 
 /***************************************************************************/
 /******************** INIZIO DEL MAIN **************************************/
@@ -622,9 +623,7 @@ int main(void)
     DCOCTL  =   CALDCO_1MHZ;
     BCSCTL1 =   CALBC1_1MHZ | XT2OFF;
     BCSCTL3 =   XCAP_1;                                         //XIN/XOUT Cap :0, 6, 10,12.5 pF  (xcap0/xcap3)
-
-	
-    
+  
     timeout = 100;
     while (--timeout)
     {
@@ -637,12 +636,12 @@ int main(void)
 // ____________________________________________________________
 // |PIN | FUNZ.|DIR|PULL|  UTILIZZO            |  COMMENTI     |
 // |----|------|---|----|----------------------|---------------|
-// |    | P1.0 | O |    |SCLK al SI4432        |               |
+// |    | P1.0 | I |    |LIBERO                |               |
 // |    | P1.1 | I |    |UART RX e contatto    | interrupt     |
 // |    | P1.2 | O |    |UART TX               |               |
 // |    | P1.3 | I |    |input ADC batt 9VDC   |               |
 // |    | P1.4 | O | PD |JTAG                  |modif per pont.|
-// |    | P1.5 | I | PD |JTAG                  |modif per pontc|
+// |    | P1.5 | O |    |SCLK al SI4432        |               |
 // |    | P1.6 | I |    |inpSO da SI4432 e da..|               |
 // |    | P1.7 | O |    |SI al SI4432          |               |
 // |    -------------------------------------------------------|
@@ -667,14 +666,14 @@ int main(void)
 // |____|______|___|____|______________________|_______________|
 
     #ifdef BATTERIA_9V
-        P1DIR=0x95;     
-        P1OUT=0x00;     // se 0x40 = pull up solo sul MISO per test
-        P1REN=0x20;     // 0x60 se per prova metto pull up al MISO // JTAG pull-dwnati         //p1.4 uscita a massa per lettura ponticello    
+        P1DIR=0xb4;     
+        P1OUT=0x00;     
+        P1REN=0x01//0x20;     // JTAG pull-dwnati         //p1.4 uscita a massa per lettura ponticello    
 	    P1SEL=0x08;     // P1.3 ADC                             
     #else
-        P1DIR=0x95;     
-        P1OUT=0x00;     // se 0x40 = pull up solo sul MISO per test
-        P1REN=0x28;     // 0x68 se per prova metto pull up al MISO // JTAG pull-dwnati         //p1.4 uscita per lettura ponticello       
+        P1DIR=0xb4;     
+        P1OUT=0x00;     
+        P1REN=0x09;//0x28     // JTAG pull-dwnati         //p1.4 uscita per lettura ponticello       
 	    P1SEL=0x00;     // P1.3 input con pull up
     #endif
     P1IE =0x00;     //disabilita gli interrrupts sugli input
@@ -687,7 +686,17 @@ int main(void)
     P2IFG = 0;      // cancella eventuali flags
 
     riconoscimento_sensore_connesso();                          // riconosce se la connessione al sensore esterno è seriale o contatto
-   
+
+    /* inizializzazione modulo SPI hardware per interfaccia radio */
+    P1SEL |= BIT7 | BIT6 | BIT5;
+    P1SEL2 |= BIT7 | BIT6 | BIT5;
+    UCB0CTL1 = UCSWRST;
+    UCB0CTL0 |= UCCKPH + UCMSB + UCMST + UCSYNC;                // 3-pin, 8-bit SPI master
+    UCB0CTL1 |= UCSSEL_2;                                       // SMCLK
+    UCB0BR0 |= 0x0;                                            // /1
+    UCB0BR1 = 0x00; 
+    UCB0CTL1 &= ~UCSWRST;                                       // **Initialize USCI state machine**   
+
    periodo_rx_sincrona[0] = 32767;
    periodo_rx_sincrona[1] = 32767;
    periodo_rx_sincrona[2] = 32767;
@@ -754,9 +763,9 @@ int main(void)
 
 	TA0CTL |= MC_2;              // Start Timer_A in continuous mode
     _EINT();                     // Enable interrupts
-    
+
     init_sensors();                                             // inizializzazione per sensore volumetrico o per contatto      
-    
+       
 //    *************** PAUSA INIZIALE ****************
 
 	tempo_led_on = 1+ (250/250);
@@ -885,6 +894,90 @@ int main(void)
 
 		CLR_WDT;
 
+        if(flag_rx == 0) 
+        {                            
+                        flag_rx = 1;                                // resetta il flag che segnala la ricezione di un messaggio
+                        if(rx_valid_flag == 1)                      // il messaggio ricevuto non ha incontrato errori di trasmissione [controllo del checksum OK]
+                        {                  
+                            __delay_cycles(5000);                   // aspetta 5ms circa prima di inviare un qualunque messaggio di risposta, per consentire al canale RX del sensore di addormentarsi ed esser pronto alla ricezione  
+                            CLR_WDT;
+                            switch(rx_cmd)
+                            {
+                                case ack:
+                                                        break;
+                                case nack:                          // ritrasmetto l'ultimo messaggio
+    //                                                    sensore_tx(tx_cmd);
+                                                        break;
+                                case detector_events:
+                                                        if(tx_cmd != detector_events)
+                                                        {
+                                                           // if(flag_tx_finished == 1)             //aaa quando si utilizzerà un unico clock in tutto il programma potrebbe esser meglio questa soluzione
+                                                           // {
+                                                                flag_tx_finished = 0;               // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
+                                                                sensore_tx(ack_str,6);              // ack
+                                                                while(flag_tx_finished == 0)             
+                                                                    CLR_WDT;
+                                                                tx_cmd = ack;
+                                                           // }
+                                                        }                                                                          
+                                                        break;
+                                case req_init:          
+ /*                                                       flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
+                                                        sensore_tx(ack_str,6);                  // ack
+                                                        tx_cmd = ack;
+                                                        while(flag_tx_finished == 0) 
+                                                            CLR_WDT;                            // aspetta che l'ack sia stato trasmesso
+                                                        __delay_cycles(6000);  
+                                                        CLR_WDT;          
+                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
+                                                        sensore_tx(init_str,6);                  // ack
+                                                        tx_cmd = req_init;                      
+                                                        while(flag_tx_finished == 0)
+                                                            CLR_WDT;                            // aspetta che l'inizializzazione sia stata trasmessa
+                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
+                                                        while(rx_cmd != ack)                    //aaa ------------- SOSTITUIRE CON UN ALTRO MODO IN CUI NON SI POSSA BLOCCARE TUTTO -------------------
+                                                                CLR_WDT;
+                                                        __delay_cycles(10000);
+                                                        CLR_WDT;
+                                                        sensore_tx(GMN_str,5); 
+                                                        tx_cmd = GMN;
+                                                        while(flag_tx_finished == 0)    
+                                                            CLR_WDT;                            // aspetta che l'ultima trasmissione sia finita   
+   */                                                     break;
+                                case GDE:
+                                                        break;
+                                case GPageM:
+                                                        break;
+                                case GPropertyM:
+                                                        break;
+                                case GDP:
+                                                        break;
+                                case GMN:
+                                                        switch(rx_mex[1])                       // rilevazione del modello di sensore OPTEX
+                                                        {
+                                                            case 1:                             // VXS-RAM
+                                                                    break;          
+                                                            case 2:                             // VXS-RDAM
+                                                                    break;
+                                                            case 3:                             // BXS-R
+                                                                    break;
+                                                            case 4:                             // BXS-RAM
+                                                                    break;
+                                                        }
+                                                        break;
+                                case GCV:
+                                                        break;     
+                                default:                ;   
+                            }
+                        }
+                        else                                    // checksum error: ritrasmette l'ultimo comando trasmesso se ho tx qualcosa
+                        {
+                              CLR_WDT;
+    //                        sensore_tx(tx_cmd);                        
+                        }
+        }
+
+
 		switch ( stato)
 		{
 			case 0xf0:                                  //dopo reset per leggere ingressi e vbatt.
@@ -924,7 +1017,6 @@ int main(void)
 			    else
 					    temp_main = 2;
 			    break;
-
 
 			case 0:                                     //stato riposo
 
@@ -968,8 +1060,7 @@ int main(void)
                                             
                      #else
 
-                    	if ( input_stato.b.pontic_p1_4)
-	                    {                                                                                           //come non securgross
+                          //come non securgross
 /*                        switch(tipo_connessione_sensore)    
                           {
 
@@ -996,39 +1087,7 @@ int main(void)
 							                    dati_periferica.n.stato_new.n.allarme_2 = 0;
                                         break;
                           }
-*/
-
-	                    }
-	                    else
-	                    {
-/*                        switch(tipo_connessione_sensore)    
-                          {
-                                case 0:             // connessione contatto*/
-
-					        if (/*(flag.movimento) || */(cnt_imp_tappa == 0) || (input_stato.b.tappa == 0)  /* || (input_stato.b.ampolla == 0)*/)
-							    dati_periferica.n.stato_new.n.allarme_2 = 1;                                         // AUX
-					        else
-							    dati_periferica.n.stato_new.n.allarme_2 = 0;
-
-					     /*   if ((input_stato.b.ampolla == 0))
-							    dati_periferica.n.stato_new.n.allarme_1 = 1;                                         // CM
-					        else
-							    dati_periferica.n.stato_new.n.allarme_1 = 0;*/
-
-/*                                      break;
-                                case 1:             // connessione uart
-                                        if(allarme_x sulla uart)
-							                    dati_periferica.n.stato_new.n.allarme_1 = 1;                                        // CM
-					                    else
-							                    dati_periferica.n.stato_new.n.allarme_1 = 0;
-                                        if(allarme_y sulla uart)
-							                    dati_periferica.n.stato_new.n.allarme_2 = 1;                                        // CM
-					                    else
-							                    dati_periferica.n.stato_new.n.allarme_2 = 0;
-                                        break;
-                          }
-*/
-	                    }
+*/	             	                    
 
                     #endif
 
@@ -1063,7 +1122,6 @@ int main(void)
 									tempo_led_on = 250;                    // on per 62 secondi, viene spento a fine portante
 	    				}
 	    			#endif
-
 					if ((dati_periferica.n.stato_new.i8 != dati_periferica.n.stato_rx.i8) && (flag.comunicazione_in_corso == 0))
 					{
 						cnt_ripetizione_tx = MAX_RIPETIZIONI;
@@ -1078,13 +1136,10 @@ int main(void)
 						stato = 2;
 						timeout = 35000 / USEC15625;
 					}
-
 	        		break;
 
 	        case 1:
 	           		break;
-
-
 
 			case 2:                                     //attesa fine tx
 
@@ -1110,7 +1165,6 @@ int main(void)
 					stato = 0;
 				}
 			    break;
-
 
 			case 3:                                     //attesa fine rx
 					if ( flag.adc_in_corso)
@@ -1275,12 +1329,8 @@ void riconoscimento_sensore_connesso(void)
         TA1CTL |= TASSEL_2 + MC_0 + ID_0; //TASSEL_2 + MC_0 + ID_0;      // con i 32kHz del quarzo esterno sarebbe TA1CTL |= TASSEL_1 + MC_0 + ID_0
         TA1CCR0 = 5000;                    //4000;                        // con i 32kHz del quarzo esterno sarebbe TA1CCR0 = 160 per ottenere 5ms
         
-        UCA0CTL1 |= UCSWRST;                    // reset UART interface
-        
+        UCA0CTL1 |= UCSWRST;                    // reset UART interface        
         UCA0CTL1 |= UCSSEL_2;                   // SMCLK: 1MHz
-//        UCA0BR0 = 0xa0;                         // 8MHz 19200bps : UCABR0 = 416d = 1a0h
-//        UCA0BR1 = 0x01;                         // 8MHz 19200bps              
-//        UCA0MCTL = UCBRS2 + UCBRS0;             // UCBRSx = 6, UCBRFx = 0
         UCA0BR0 = 0x34;                         // 1MHz 19200bps : UCABR0 = 52d = 34h
         UCA0BR1 = 0x00;                         // 1MHz 19200bps
         UCA0MCTL = 0x00;                        // UCBRSx = 0, UCBRFx = 0
@@ -1297,101 +1347,74 @@ void riconoscimento_sensore_connesso(void)
 
 void init_sensors(void)
 {
-    int flag_test = 0;
-    while(flag_test == 0)
-    { 
-        CLR_WDT;   
-        switch(tipo_connessione_sensore)
-        {
-            case 0:                                             // contatto
-                    break;
-            case 1:                                             // sensore volumetrico comunicante in UART                
-                    while(flag_rx != 0) 
-                        CLR_WDT;                                // aspetta di aver ricevuto un messaggio sulla UART              
-                    flag_rx = 1;                                // resetta il flag che segnala la ricezione di un messaggio
-                    if(rx_valid_flag == 1)                      // il messaggio ricevuto non ha incontrato errori di trasmissione [controllo del checksum OK]
-                    {                  
-                        __delay_cycles(5000);     
-                        switch(rx_cmd)
-                        {
-                            case ack:
-                                                    break;
-                            case nack:                          // ritrasmetto l'ultimo messaggio
-//                                                    sensore_tx(tx_cmd);
-                                                    break;
-                            case detector_events:
-                                                    if(tx_cmd != detector_events)
-                                                    {
-                                                        flag_tx_finished = 0;               // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                        sensore_tx(ack_str,6);              // ack
-                                                        tx_cmd = ack;
-                                                    }
-//                                                    else                                    // evita che alla prossima ricezione possa catalogare un detector_events come risposta al mio vecchio comando                      
-//                                                        tx_cmd = IDLE;                                                                            
-                                                    break;
-                            case req_init:          
-                                                    flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                    sensore_tx(ack_str,6);                  // ack
-                                                    tx_cmd = ack;
-                                                    while(flag_tx_finished == 0) 
-                                                        CLR_WDT;                            // aspetta che l'ack sia stato trasmesso
-                                                    __delay_cycles(6000);  
-                                                    CLR_WDT;          
-                                                    flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                    sensore_tx(init_str,6);                  // ack
-                                                    tx_cmd = req_init;                      
-                                                    while(flag_tx_finished == 0)
-                                                        CLR_WDT;                            // aspetta che l'inizializzazione sia stata trasmessa
-                                                    flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                    flag_test = 1;                                    
-                                                    break;
-                            case GDE:
-                                                    break;
-                            case GPageM:
-                                                    break;
-                            case GPropertyM:
-                                                    break;
-                            case GDP:
-                                                    break;
-                            case GMN:
-                                                    switch(rx_mex[1])                       // rilevazione del modello di sensore OPTEX
-                                                    {
-                                                        case 1:                             // VXS-RAM
-                                                                break;          
-                                                        case 2:                             // VXS-RDAM
-                                                                break;
-                                                        case 3:                             // BXS-R
-                                                                break;
-                                                        case 4:                             // BXS-RAM
-                                                                break;
-                                                    }
-                                                    break;
-                            case GCV:
-                                                    break;     
-                            default:                ;   
-                        }
-                    }
-                    else                                    // checksum error: ritrasmette l'ultimo comando trasmesso se ho tx qualcosa
-                    {
-                          ;
-//                        sensore_tx(tx_cmd);                        
-                    }
-                    if(flag_test == 1)
-                    {                            
-                            while(rx_cmd != ack)
-                                    CLR_WDT;
-                            __delay_cycles(10000);
+    int flag_init_finished = 0;
+    
+    switch(tipo_connessione_sensore)
+    {
+        case 0:                                             // contatto
+                break;
+        case 1:                                             // sensore volumetrico comunicante in UART   
+                while(flag_init_finished == 0)
+                { 
+                        CLR_WDT;                
+                        while(flag_rx != 0) 
+                            CLR_WDT;                                // aspetta di aver ricevuto un messaggio sulla UART              
+                        flag_rx = 1;                                // resetta il flag che segnala la ricezione di un messaggio
+                        if(rx_valid_flag == 1)                      // il messaggio ricevuto non ha incontrato errori di trasmissione [controllo del checksum OK]
+                        {                  
+                            __delay_cycles(5000);                   // aspetta 5ms circa prima di inviare un qualunque messaggio di risposta, per consentire al canale RX del sensore di addormentarsi ed esser pronto alla ricezione  
                             CLR_WDT;
-                            sensore_tx(GMN_str,5); 
-                            tx_cmd = GMN;
-                            while(flag_tx_finished == 0)    
-                                CLR_WDT;                    // aspetta che l'ultima trasmissione sia finita   
-                            flag_tx_finished = 0;             
-//                            flag_test = 0;
-                    }
-                    break;
-        }
-    }
+                            switch(rx_cmd)
+                            {
+                                case nack:                          // ritrasmetto l'ultimo messaggio
+    //                                                    sensore_tx(tx_cmd);
+                                                        break;
+                                case detector_events:
+                                                        if(tx_cmd != detector_events)
+                                                        {
+                                                            flag_tx_finished = 0;               // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
+                                                            sensore_tx(ack_str,6);              // ack
+                                                            tx_cmd = ack;
+                                                        }                                                                          
+                                                        break;
+                                case req_init:          
+                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
+                                                        sensore_tx(ack_str,6);                  // ack
+                                                        tx_cmd = ack;
+                                                        while(flag_tx_finished == 0) 
+                                                            CLR_WDT;                            // aspetta che l'ack sia stato trasmesso
+                                                        __delay_cycles(6000);  
+                                                        CLR_WDT;          
+                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
+                                                        sensore_tx(init_str,6);                  // ack
+                                                        tx_cmd = req_init;                      
+                                                        while(flag_tx_finished == 0)
+                                                            CLR_WDT;                            // aspetta che l'inizializzazione sia stata trasmessa
+                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
+                                                        while(rx_cmd != ack)                    // ------------- SOSTITUIRE CON UN ALTRO MODO IN CUI NON SI POSSA BLOCCARE TUTTO -------------------
+                                                                CLR_WDT;
+                                                        __delay_cycles(10000);
+                                                        CLR_WDT;
+                                                        sensore_tx(GMN_str,5); 
+                                                        tx_cmd = GMN;
+                                                        while(flag_tx_finished == 0)    
+                                                            CLR_WDT;                            // aspetta che l'ultima trasmissione sia finita                                                
+                                                        flag_init_finished = 1; 
+                                                        break;                               
+                                case GMN:               
+                                                        sensor_model = rx_mex[1];               // rilevazione del modello di sensore OPTEX: 1 = VXS-RAM, 2 = VXS-RDAM, 3 = BXS-R, 4 = BXS-RAM
+                                                        break;    
+                                default:                ;   
+                            }
+                        }
+                        else                                    // checksum error: ritrasmette l'ultimo comando trasmesso se ho tx qualcosa
+                        {
+                              CLR_WDT;
+    //                        sensore_tx(tx_cmd);                        
+                        }                      
+            }
+            break;
+     }    
 }
 
 void sensore_tx(unsigned char string[11], unsigned int size)
@@ -2012,9 +2035,6 @@ void tx_polling(void)
 	   buffer_radio.dati_rdy = 0;
 	   buffer_radio.flag.reset = 0;
 
-	DCOCTL  =   CALDCO_1MHZ;
-    BCSCTL1 =   CALBC1_1MHZ | XT2OFF;
-
 }
 
 
@@ -2079,9 +2099,6 @@ void radio_on()
 				SDN_0;                  //  TOGLIE LO SHUT DOWN al SI4432  e attende 20 msec
 			    CLR_WDT;
 			}
-
-	        DCOCTL =   CALDCO_8MHZ;     //CALIBRAZIONE DEL DCO A 8 MHz (deve andare A PILA!)
-            BCSCTL1=   CALBC1_8MHZ  | XT2OFF;
 
 			wreg(SI4432_CRYSTAL_OSCILLATOR_LOAD_CAPACITANCE,0xb9,DA_RADIO | DISINT);           //reg 0x09; //Adjust Crystal for zero freq error
 			wreg(SI4432_OPERATING_AND_FUNCTION_CONTROL_1, SI4432_XTON, DA_RADIO | DISINT);     //reg 0x07; //ready mode
@@ -2157,7 +2174,6 @@ void init_radio(unsigned char canale)
 			while ((j & SI4432_PWST_MASK ) != (1 << 5))                     //test se ready
 			{               
 			   rx_byte(&j,SI4432_CRYSTAL_OSCILLATOR_CONTROL_TEST,1,DA_RADIO | DISINT);
-LED_T;
 			}
 
 			tx_byte((unsigned char*)config_05_0c,SI4432_INTERRUPT_ENABLE_1,8,DA_RADIO | DISINT);   //da reg 0x05 a reg 0x0c
@@ -2206,62 +2222,37 @@ LED_T;
 
 void wreg(unsigned int address,unsigned int dati,unsigned char mode)
 {
-  unsigned int i,bit_p;
-
+    while (!(IFG2 & UCB0TXIFG));        // USCI_B0 TX buffer ready?
+    IFG2 &= ~UCB0RXIFG;                 // resetta il flag di ricezione
 	if (mode & DISINT)
 		_DINT();                     // DISABILITA GLI interrupts
 	if (mode & DA_RADIO)
 	{
 		SPI_CS_RADIO_0;
-		SPI_CS_RADIO_0;
-		SPI_CS_RADIO_0;
-		SPI_CS_RADIO_0;
 		address |= 0x80;
-	}
-	
-	bit_p = 0x80;
-	for ( i=0;i<8;i++)
-	{
-			if ( address  & bit_p ) //& (0x80 >> i))
-				SPI_OUT_1;
-			else
-				SPI_OUT_0;
-			SPI_CLOCK_1;
-			bit_p >>= 1;
-			SPI_CLOCK_0;
-	}
-
-	bit_p = 0x80;
-	for ( i=0;i<8;i++)
-	{
-			if ( dati & bit_p ) //(0x80 >> i))
-				SPI_OUT_1;
-			else
-				SPI_OUT_0;
-			SPI_CLOCK_1;
-			bit_p >>= 1;
-			SPI_CLOCK_0;
-	}
-	if (mode & DA_RADIO)
+	}	       
+    UCB0TXBUF = address;                // Send address over SPI to Slave       
+    while (!(IFG2 & UCB0RXIFG));        // tx and rx finished
+    IFG2 &= ~UCB0RXIFG;                 // resetta il flag di ricezione 
+    UCB0TXBUF = dati;                   // Send data over SPI to Slave
+    while (!(IFG2 & UCB0RXIFG));        // tx and rx finished
+    if (mode & DA_RADIO)
 	{
 		SPI_CS_RADIO_1;
 	}
-	SPI_OUT_0;
 	if ( mode & DISINT)
 	    _EINT();                    // Enable interrupts
 }
 
 void tx_byte(unsigned char *dati,unsigned char address,unsigned char numero,unsigned char mode)
 {
-  unsigned int i,j,bit_p;
-
-	if (mode & DISINT)
+    unsigned int j;
+    while (!(IFG2 & UCB0TXIFG));        // USCI_B0 TX buffer ready?
+    IFG2 &= ~UCB0RXIFG;                 // resetta il flag di ricezione   
+    if (mode & DISINT)
 		_DINT();                     // DISABILITA GLI interrupts
 	if (mode & DA_RADIO)
 	{
-		SPI_CS_RADIO_0;
-		SPI_CS_RADIO_0;
-		SPI_CS_RADIO_0;
 		SPI_CS_RADIO_0;
 		address |= 0x80;
 	}
@@ -2269,87 +2260,55 @@ void tx_byte(unsigned char *dati,unsigned char address,unsigned char numero,unsi
 	{
 		address |= 0x40;               //incrementa indirizzo ad ogni byte scritto
 	}
-	bit_p = 0x80;
-	for ( i=0;i<8;i++)
-	{
-			if ( address  & bit_p ) //(0x80 >> i))
-				SPI_OUT_1;
-			else
-				SPI_OUT_0;
-			SPI_CLOCK_1;
-			bit_p >>= 1;
-			SPI_CLOCK_0;
-	}
+    UCB0TXBUF = address;                // Send address over SPI to Slave
+    while (!(IFG2 & UCB0RXIFG));            // trasmissione finita	
+    IFG2 &= ~UCB0RXIFG;
+            
 	for ( j=0;j<numero;j++)
 	{
-		bit_p = 0x80;
-		for ( i=0;i<8;i++)
-		{
-			if ( (*(dati+j))  & bit_p ) //(0x80 >> i))
-				SPI_OUT_1;
-			else
-				SPI_OUT_0;
-			SPI_CLOCK_1;
-			bit_p >>= 1;
-			SPI_CLOCK_0;
-		}
+            UCB0TXBUF = *(dati+j);                  // Send address over SPI to Slave
+            while (!(IFG2 & UCB0RXIFG));            // trasmissione finita	
+            IFG2 &= ~UCB0RXIFG;            
 	}
-	if (mode & DA_RADIO)
+   if (mode & DA_RADIO)
 	{
 		SPI_CS_RADIO_1;
 	}
-	SPI_OUT_0;
 	if ( mode & DISINT)
 	    _EINT();                    // Enable interrupts
 }
 
 void rx_byte(unsigned char *dati,unsigned char address,unsigned char numero,unsigned char mode)
 {
-  unsigned int i,j,bit_p;
-
+    unsigned int j;
+    while (!(IFG2 & UCB0TXIFG));        // USCI_B0 TX buffer ready?
+    IFG2 &= ~UCB0RXIFG;                 // resetta il flag di ricezione   
 	if (mode & DISINT)
 		_DINT();                     // DISABILITA GLI interrupts
 	if (mode & DA_RADIO)
 	{
-		SPI_CS_RADIO_0;
-		SPI_CS_RADIO_0;
-		SPI_CS_RADIO_0;
 		SPI_CS_RADIO_0;
 	}
 	else
 	{
 		address |= 0xC0;               //read e incrementa indirizzo ad ogni byte letto
 	}
-	bit_p = 0x80;
-	for ( i=0;i<8;i++)
-	{
-			if ( address  & bit_p)
-				SPI_OUT_1;
-			else
-				SPI_OUT_0;
-			SPI_CLOCK_1;
-			bit_p >>= 1;
-			SPI_CLOCK_0;
-	}
+    UCB0TXBUF = address;                // Send address over SPI to Slave
+    while(!(IFG2 & UCB0RXIFG));	        // ricevuto 1 byte          
+    IFG2 &= ~UCB0RXIFG;
 	for ( j=0;j<numero;j++)
 	{
-		bit_p = 0x80;
-		for ( i=0;i<8;i++)
-		{
-			if (SPI_IN)
-				*(dati+j) |= bit_p;
-			else
-				*(dati+j) &= ~(bit_p);
-			SPI_CLOCK_1;
-			bit_p >>=1;
-			SPI_CLOCK_0;
-		}
+        
+        UCB0TXBUF = 0x00;                   // Send 0 over SPI to Slave per mantenere il clock sul Byte ricevuto
+        while(!(IFG2 & UCB0RXIFG));	            // ricevuto 1 byte          
+        *(dati+j) = UCB0RXBUF;      // ricevuto 1 byte (è la risposta della radio)              
 	}
+    
 	if (mode & DA_RADIO)
 	{
 		SPI_CS_RADIO_1;
 	}
-	if ( mode & DISINT)
+	if ( mode & DISINT) 
 	    _EINT();                    // Enable interrupts
 }
 
@@ -2515,9 +2474,6 @@ void gestione_radio_ex_interr(void)
 	unsigned char temp[2];
 	unsigned char temp_b;
 
-	DCOCTL =   CALDCO_8MHZ;                                             //CALIBRAZIONE DEL DCO A 8 MHz (deve andare A PILA!)
-    BCSCTL1=   CALBC1_8MHZ  | XT2OFF;
-
 		rx_byte(temp,SI4432_INTERRUPT_STATUS_1,2,DA_RADIO);           	//legge status interrupt e clear interrup pending
 
 		if ( temp[1] & SI4432_IPREAVAL)
@@ -2572,8 +2528,6 @@ void gestione_radio_ex_interr(void)
   			SDN_1;       				//radio off
 		}
 
-		DCOCTL  =   CALDCO_1MHZ;
-		BCSCTL1 =   CALBC1_1MHZ | XT2OFF;
 }
 
 
@@ -2582,23 +2536,6 @@ void gestione_radio_ex_interr(void)
 /****      FUNZIONI DI GESTIONE DEGLI INTERRUPTS            ****/
 /***************************************************************/
 
-/*---------------------------------------------------------------------------------
-// GESTISCE L'INTERRUPT della PORTA2
-*/
-/*#pragma vector=PORT2_VECTOR
-__interrupt void interr_port2(void)
-{
-    if (( P2IFG & MASK_TAPP) && (P2IE & MASK_TAPP))
-	{
-        P2IE  &= ~MASK_TAPP;            // DISabilita ULTERIORI interrupts per rimbalzi
-		cnt_mask_tappa = 3;             //pausa minima fra impulsi = 2/3 * 15,625 msec
-		if (cnt_imp_tappa)
-			cnt_imp_tappa--;
-
-		cnt_tempo_tappa = (segmC.parametri_periferica.tempo_tappa <<  2);      //si ricarica ad ogni impulso
-	}
-}
-*/
 /*---------------------------------------------------------------------------------
 // GESTISCE L'INTERRUPT della PORTA1
 */
@@ -2722,8 +2659,7 @@ __interrupt void Timer_A0(void)
 
 // --------- Temporizzazioni
     	P2OUT |= 0x0A;     // PULL up anche su p2.1,3
-//    	P1DIR  = 0x25;     // p1.5 = uscita per lettura ponticello
-    	P1OUT |= 0x20;     // p1.4 con pullup lettura ponticello
+//    	P1DIR  = 0x25;     // p1.5 = uscita per lettura ponticello    	
 //    	P1REN |= 0x20;     // p1.5 = input con pull up per lettura ponticello
 
 		if ( timeout)
@@ -2732,17 +2668,15 @@ __interrupt void Timer_A0(void)
 		if ( cnt_post_fpro)
 			   cnt_post_fpro--;
 
-		temp  = P2IN & 0x0e;
-		temp |= P1IN & 0x20;   //lettura p1.4 ponticello
+		temp  = P2IN & 0x0e;		
 
 		P2OUT=0x01;     // PULL up solo su p2.0
 
-//		P1DIR  =  0x05;     //
-	    P1OUT &= ~0x20;     //  pull dw su P15
+//		P1DIR  =  0x05;     	
 
-		if ( (temp & 0x2e) != input_old)
+		if ( (temp & 0x0e) != input_old)
 		{
-			input_old = (temp & 0x2e);
+			input_old = (temp & 0x0e);
 			input_cnt = 65000/USEC15625;
 //			stai_sveglio = 100000/USEC15625;
 		}
@@ -2751,7 +2685,7 @@ __interrupt void Timer_A0(void)
 		else
 		{
 //			input_fronte.i8 = ((~input_old) & 0x0e) & (~input_stato.i8);
-			input_stato.i8    = (~input_old) & 0x2e;
+			input_stato.i8    = (~input_old) & 0x0e;
 		}
 
 //    if(tipo_connessione_sensore == 0)     // connessione tramite contatto

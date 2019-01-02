@@ -557,7 +557,7 @@ Wire Wire Line
 Wire Wire Line
 	9450 5700 5100 5700
 Wire Wire Line
-	9550 5300 9550 5600
+	9550 1900 9550 5600
 Wire Wire Line
 	9550 5600 5200 5600
 Wire Wire Line
@@ -595,8 +595,6 @@ Wire Wire Line
 Wire Wire Line
 	9800 1700 9050 1700
 Wire Wire Line
-	6300 3000 6300 2050
-Wire Wire Line
 	10100 5600 10050 5600
 Wire Wire Line
 	4050 1800 4050 1700
@@ -613,10 +611,6 @@ Wire Wire Line
 	7400 2750 7500 2750
 Wire Wire Line
 	8600 2750 8500 2750
-Wire Wire Line
-	9150 2050 9150 1900
-Wire Wire Line
-	9150 1900 9800 1900
 Wire Wire Line
 	9250 2200 9250 2100
 Wire Wire Line
@@ -648,8 +642,6 @@ Wire Wire Line
 	2800 1700 2800 1800
 Wire Wire Line
 	7400 2750 7400 2850
-Wire Wire Line
-	6300 2050 9150 2050
 Wire Wire Line
 	8900 2350 8900 3900
 Connection ~ 8900 3900
@@ -863,4 +855,7 @@ F 4 "LE7011" H 8300 2750 60  0001 C CNN "Saet_code"
 	1    8300 2750
 	-1   0    0    -1  
 $EndComp
+Wire Wire Line
+	9800 1900 9550 1900
+Connection ~ 9550 5300
 $EndSCHEMATC
