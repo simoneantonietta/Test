@@ -1,0 +1,444 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:CS3935-cache
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+Wire Bus Line
+	6050 800  10650 800 
+Wire Bus Line
+	10650 800  10650 3300
+Wire Bus Line
+	6050 3300 6050 800 
+Text Notes 10300 950  0    60   ~ 0
+3935B
+$Comp
+L CONN_02X12 P5
+U 1 1 5C4995FA
+P 2500 2150
+F 0 "P5" H 2500 2650 50  0000 C CNN
+F 1 "CONN_02X12_new" V 2500 2150 50  0000 C CNN
+F 2 "saet:Socket_Strip_Angled_2x12_mirrored" H 2450 1200 50  0000 C CNN
+F 3 "" H 2500 950 50  0000 C CNN
+	1    2500 2150
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_02X12 P6
+U 1 1 5C499600
+P 4200 2150
+F 0 "P6" H 4200 2650 50  0000 C CNN
+F 1 "CONN_02X12_old" V 4200 2150 50  0000 C CNN
+F 2 "saet:Socket_Strip_Angled_2x12_mirrored" H 4250 1200 50  0000 C CNN
+F 3 "" H 4200 950 50  0000 C CNN
+	1    4200 2150
+	1    0    0    -1  
+$EndComp
+NoConn ~ 3950 1600
+NoConn ~ 4450 1600
+NoConn ~ 3950 2700
+NoConn ~ 4450 2700
+Wire Wire Line
+	4550 1450 4550 2400
+Wire Wire Line
+	4550 2400 4450 2400
+Wire Wire Line
+	2250 1800 2100 1800
+Wire Wire Line
+	2100 1800 2100 2900
+Wire Wire Line
+	2100 2900 4550 2900
+Wire Wire Line
+	4550 2900 4550 2600
+Wire Wire Line
+	4550 2600 4450 2600
+Wire Wire Line
+	2750 1800 2900 1800
+Wire Wire Line
+	2900 1800 2900 2900
+Connection ~ 2900 2900
+Wire Wire Line
+	2250 2000 2100 2000
+Connection ~ 2100 2000
+Wire Wire Line
+	2750 2000 2900 2000
+Connection ~ 2900 2000
+Wire Wire Line
+	1500 1450 4550 1450
+Wire Wire Line
+	2250 1700 2200 1700
+Wire Wire Line
+	2200 1700 2200 1400
+Wire Wire Line
+	2200 1400 4600 1400
+Wire Wire Line
+	4600 1400 4600 2200
+Wire Wire Line
+	4600 2200 4450 2200
+Wire Wire Line
+	2750 1700 2900 1700
+Wire Wire Line
+	2900 1700 2900 1350
+Wire Wire Line
+	2900 1350 4650 1350
+Wire Wire Line
+	4650 1350 4650 2300
+Wire Wire Line
+	4650 2300 4450 2300
+Wire Wire Line
+	2250 1900 2150 1900
+Wire Wire Line
+	2150 1900 2150 1300
+Wire Wire Line
+	2150 1300 4700 1300
+Wire Wire Line
+	4700 1300 4700 2500
+Wire Wire Line
+	4700 2500 4450 2500
+Wire Wire Line
+	2750 1900 2850 1900
+Wire Wire Line
+	2850 1900 2850 1300
+Connection ~ 2850 1300
+Wire Wire Line
+	2250 2100 2050 2100
+Wire Wire Line
+	2050 2100 2050 1250
+Wire Wire Line
+	2050 1250 4750 1250
+Wire Wire Line
+	4750 1250 4750 1900
+Wire Wire Line
+	4750 1900 4450 1900
+Wire Wire Line
+	2750 2100 2950 2100
+Wire Wire Line
+	2950 2100 2950 1200
+Wire Wire Line
+	2950 1200 4800 1200
+Wire Wire Line
+	4800 1200 4800 2000
+Wire Wire Line
+	4800 2000 4450 2000
+Wire Wire Line
+	2250 2200 2000 2200
+Wire Wire Line
+	2000 2200 2000 1150
+Wire Wire Line
+	2000 1150 4850 1150
+Wire Wire Line
+	4850 1150 4850 1800
+Wire Wire Line
+	4850 1800 4450 1800
+Wire Wire Line
+	2750 2200 3000 2200
+Wire Wire Line
+	3000 2200 3000 1100
+Wire Wire Line
+	3000 1100 4900 1100
+Wire Wire Line
+	4900 1100 4900 1700
+Wire Wire Line
+	4900 1700 4450 1700
+Wire Wire Line
+	2250 2400 1950 2400
+Wire Wire Line
+	1950 2400 1950 1050
+Wire Wire Line
+	1950 1050 3850 1050
+Wire Wire Line
+	3850 1050 3850 1800
+Wire Wire Line
+	3850 1800 3950 1800
+Wire Wire Line
+	3250 1700 3950 1700
+Wire Wire Line
+	2250 2500 1900 2500
+Wire Wire Line
+	1900 2500 1900 1000
+Wire Wire Line
+	1900 1000 3800 1000
+Wire Wire Line
+	3450 2500 3950 2500
+Wire Wire Line
+	3950 2000 3800 2000
+Wire Wire Line
+	3800 2000 3800 1000
+Wire Wire Line
+	3300 1900 3950 1900
+Wire Wire Line
+	3400 2200 3950 2200
+Wire Wire Line
+	3350 2100 3950 2100
+Wire Wire Line
+	3900 2400 3950 2400
+Wire Wire Line
+	2750 2400 3250 2400
+Wire Wire Line
+	3250 2400 3250 1700
+Wire Wire Line
+	3300 1900 3300 2500
+Wire Wire Line
+	3300 2500 2750 2500
+Wire Wire Line
+	3350 2100 3350 2600
+Wire Wire Line
+	3350 2600 2750 2600
+Wire Wire Line
+	2250 2600 2150 2600
+Wire Wire Line
+	2150 2600 2150 2850
+Wire Wire Line
+	2150 2850 3400 2850
+Wire Wire Line
+	3400 2850 3400 2200
+Wire Wire Line
+	2250 2700 2200 2700
+Wire Wire Line
+	2200 2700 2200 2800
+Wire Wire Line
+	2200 2800 3900 2800
+Wire Wire Line
+	3900 2800 3900 2400
+Wire Wire Line
+	2750 2700 3850 2700
+Wire Wire Line
+	2750 2300 3450 2300
+Wire Wire Line
+	3450 2300 3450 2500
+Wire Wire Line
+	3850 2700 3850 2300
+Wire Wire Line
+	3850 2300 3950 2300
+$Comp
+L CONN_01X02 P4
+U 1 1 5C499663
+P 1250 1650
+F 0 "P4" H 1250 1800 50  0000 C CNN
+F 1 "CONN_01X02" V 1350 1650 50  0000 C CNN
+F 2 "saet:Sauro_3.5_2_ways" H 1250 2000 50  0000 C CNN
+F 3 "" H 1250 1650 50  0000 C CNN
+	1    1250 1650
+	-1   0    0    1   
+$EndComp
+Wire Bus Line
+	900  800  5500 800 
+Wire Bus Line
+	5500 800  5500 3300
+Wire Bus Line
+	5500 3300 900  3300
+Wire Bus Line
+	900  3300 900  800 
+Text Notes 5150 950  0    60   ~ 0
+3935A
+Wire Wire Line
+	2250 1600 1450 1600
+Wire Wire Line
+	1500 1700 1450 1700
+Wire Wire Line
+	1500 1450 1500 1700
+Connection ~ 1500 1600
+Wire Bus Line
+	6000 3600 10600 3600
+Wire Bus Line
+	10600 3600 10600 6100
+Wire Bus Line
+	10600 6100 6000 6100
+Wire Bus Line
+	6000 6100 6000 3600
+Text Notes 10250 3750 0    60   ~ 0
+3935D
+Wire Bus Line
+	850  3600 5450 3600
+Wire Bus Line
+	5450 3600 5450 6100
+Wire Bus Line
+	5450 6100 850  6100
+Wire Bus Line
+	850  6100 850  3600
+Text Notes 5100 3750 0    60   ~ 0
+3935C
+Wire Bus Line
+	10650 3300 6050 3300
+$Comp
+L CONN_02X12 P3
+U 1 1 5C49A1D5
+P 8450 2000
+F 0 "P3" H 8450 2500 50  0000 C CNN
+F 1 "CONN_02X12_B" V 8450 2000 50  0000 C CNN
+F 2 "saet:Socket_Strip_Angled_2x12_mirrored" H 8400 1050 50  0000 C CNN
+F 3 "" H 8450 800 50  0000 C CNN
+	1    8450 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P2
+U 1 1 5C49A268
+P 7500 2000
+F 0 "P2" H 7500 2150 50  0000 C CNN
+F 1 "CONN_01X02" V 7600 2000 50  0000 C CNN
+F 2 "saet:Sauro_3.5_2_ways" H 7500 2350 50  0000 C CNN
+F 3 "" H 7500 2000 50  0000 C CNN
+	1    7500 2000
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	8200 1950 7700 1950
+Wire Wire Line
+	7700 2050 7850 2050
+Wire Wire Line
+	7850 2050 7850 1950
+Connection ~ 7850 1950
+$Comp
+L CONN_02X12 P1
+U 1 1 5C49A5B5
+P 3150 4700
+F 0 "P1" H 3150 5200 50  0000 C CNN
+F 1 "CONN_02X12_C" V 3150 4700 50  0000 C CNN
+F 2 "saet:Socket_Strip_Angled_2x12_mirrored" H 3100 3750 50  0000 C CNN
+F 3 "" H 3150 3500 50  0000 C CNN
+	1    3150 4700
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_02X12 P7
+U 1 1 5C49A60D
+P 8450 4750
+F 0 "P7" H 8450 5250 50  0000 C CNN
+F 1 "CONN_02X12_D" V 8450 4750 50  0000 C CNN
+F 2 "saet:Socket_Strip_Angled_2x12_mirrored" H 8400 3800 50  0000 C CNN
+F 3 "" H 8450 3550 50  0000 C CNN
+	1    8450 4750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2900 4250 2750 4250
+Wire Wire Line
+	2750 4250 2750 4650
+Wire Wire Line
+	2750 4650 2900 4650
+Wire Wire Line
+	8700 4300 8800 4300
+Wire Wire Line
+	8800 4300 8800 4700
+Wire Wire Line
+	8800 4700 8700 4700
+NoConn ~ 2750 1600
+NoConn ~ 2250 2300
+NoConn ~ 3950 2600
+NoConn ~ 4450 2100
+NoConn ~ 8200 1450
+NoConn ~ 8200 1550
+NoConn ~ 8200 1650
+NoConn ~ 8200 1750
+NoConn ~ 8200 1850
+NoConn ~ 8700 1850
+NoConn ~ 8700 1750
+NoConn ~ 8700 1650
+NoConn ~ 8700 1550
+NoConn ~ 8700 1450
+NoConn ~ 8700 1950
+NoConn ~ 8700 2050
+NoConn ~ 8700 2150
+NoConn ~ 8700 2250
+NoConn ~ 8700 2350
+NoConn ~ 8700 2450
+NoConn ~ 8700 2550
+NoConn ~ 8200 2550
+NoConn ~ 8200 2450
+NoConn ~ 8200 2350
+NoConn ~ 8200 2250
+NoConn ~ 8200 2150
+NoConn ~ 8200 2050
+NoConn ~ 2900 4150
+NoConn ~ 2900 4350
+NoConn ~ 2900 4450
+NoConn ~ 2900 4550
+NoConn ~ 2900 4750
+NoConn ~ 2900 4850
+NoConn ~ 2900 4950
+NoConn ~ 2900 5050
+NoConn ~ 2900 5150
+NoConn ~ 2900 5250
+NoConn ~ 3400 5250
+NoConn ~ 3400 5150
+NoConn ~ 3400 5050
+NoConn ~ 3400 4950
+NoConn ~ 3400 4850
+NoConn ~ 3400 4750
+NoConn ~ 3400 4550
+NoConn ~ 3400 4450
+NoConn ~ 3400 4350
+NoConn ~ 3400 4150
+NoConn ~ 8200 4200
+NoConn ~ 8200 4400
+NoConn ~ 8200 4500
+NoConn ~ 8200 4600
+NoConn ~ 8200 4800
+NoConn ~ 8200 4900
+NoConn ~ 8200 5000
+NoConn ~ 8200 5100
+NoConn ~ 8200 5200
+NoConn ~ 8200 5300
+NoConn ~ 8700 5300
+NoConn ~ 8700 5200
+NoConn ~ 8700 5100
+NoConn ~ 8700 5000
+NoConn ~ 8700 4900
+NoConn ~ 8700 4800
+NoConn ~ 8700 4600
+NoConn ~ 8700 4500
+NoConn ~ 8700 4400
+NoConn ~ 8700 4200
+Wire Wire Line
+	3400 4250 3550 4250
+Wire Wire Line
+	3550 4250 3550 4650
+Wire Wire Line
+	3550 4650 3400 4650
+Wire Wire Line
+	8200 4300 8050 4300
+Wire Wire Line
+	8050 4300 8050 4700
+Wire Wire Line
+	8050 4700 8200 4700
+$EndSCHEMATC
