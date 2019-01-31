@@ -1,6 +1,5 @@
 EESchema Schematic File Version 2
-LIBS:Contatto868-3V-rescue
-LIBS:saet
+LIBS:3933-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -30,13 +29,14 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
-LIBS:Contatto868-3V-cache
+LIBS:saet
+LIBS:3933-cache
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 2 2
-Title "Magnetic Contact 3V on 868.3 MHz - CS 3933"
+Title "Magnetic Contact 3V on 868.3 MHz - CS 3862"
 Date "mercoledì 03 giugno 2015"
 Rev "2.0"
 Comp ""
@@ -238,9 +238,11 @@ F 4 "RSA000 EXT" V 6300 1600 60  0001 C CNN "Saet_code"
 	1    0    0    -1  
 $EndComp
 $Comp
-L INDUCTOR L1
+L INDUCTOR-RESCUE-3852_6 L1
 U 1 1 53F4B986
 P 6300 2350
+AR Path="/53F4B986" Ref="L1"  Part="1" 
+AR Path="/53F4C1B5/53F4B986" Ref="L1"  Part="1" 
 F 0 "L1" H 6300 2500 59  0000 C CNN
 F 1 "120n" H 6300 2250 59  0000 C CNN
 F 2 "Inductors_SMD:L_0402" H 6300 2350 60  0001 C CNN
@@ -250,9 +252,11 @@ F 4 "TB3103 EXT" H 6300 2350 60  0001 C CNN "Saet_code"
 	0    -1   -1   0   
 $EndComp
 $Comp
-L INDUCTOR L11
+L INDUCTOR-RESCUE-3852_6 L11
 U 1 1 53F4B9A9
 P 5500 3500
+AR Path="/53F4B9A9" Ref="L11"  Part="1" 
+AR Path="/53F4C1B5/53F4B9A9" Ref="L11"  Part="1" 
 F 0 "L11" H 5500 3650 59  0000 C CNN
 F 1 "5n6" H 5500 3400 59  0000 C CNN
 F 2 "Inductors_SMD:L_0402" H 5500 3500 60  0001 C CNN
@@ -262,9 +266,11 @@ F 4 "TB3106 EXT" H 5500 3500 60  0001 C CNN "Saet_code"
 	0    -1   1    0   
 $EndComp
 $Comp
-L INDUCTOR L5
+L INDUCTOR-RESCUE-3852_6 L5
 U 1 1 53F4B9AF
 P 4500 3100
+AR Path="/53F4B9AF" Ref="L5"  Part="1" 
+AR Path="/53F4C1B5/53F4B9AF" Ref="L5"  Part="1" 
 F 0 "L5" H 4500 3250 59  0000 C CNN
 F 1 "15n" H 4500 3000 59  0000 C CNN
 F 2 "Inductors_SMD:L_0402" H 4500 3100 60  0001 C CNN
@@ -274,9 +280,11 @@ F 4 "TB3104 EXT" H 4500 3100 60  0001 C CNN "Saet_code"
 	1    0    0    -1  
 $EndComp
 $Comp
-L INDUCTOR L4
+L INDUCTOR-RESCUE-3852_6 L4
 U 1 1 53F4B9C4
 P 3600 3100
+AR Path="/53F4B9C4" Ref="L4"  Part="1" 
+AR Path="/53F4C1B5/53F4B9C4" Ref="L4"  Part="1" 
 F 0 "L4" H 3600 3250 59  0000 C CNN
 F 1 "15n" H 3600 3000 59  0000 C CNN
 F 2 "Inductors_SMD:L_0402" H 3600 3100 60  0001 C CNN
@@ -286,9 +294,11 @@ F 4 "TB3104 EXT" H 3600 3100 60  0001 C CNN "Saet_code"
 	1    0    0    -1  
 $EndComp
 $Comp
-L INDUCTOR L2
+L INDUCTOR-RESCUE-3852_6 L2
 U 1 1 53F4BAF9
 P 6800 4800
+AR Path="/53F4BAF9" Ref="L2"  Part="1" 
+AR Path="/53F4C1B5/53F4BAF9" Ref="L2"  Part="1" 
 F 0 "L2" H 6800 4950 59  0000 C CNN
 F 1 "11n" H 6800 4700 59  0000 C CNN
 F 2 "Inductors_SMD:L_0402" H 6800 4800 60  0001 C CNN
@@ -441,9 +451,11 @@ F 3 "" H 2750 7100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L INDUCTOR L3
+L INDUCTOR-RESCUE-3852_6 L3
 U 1 1 53F4CB1F
 P 2000 2900
+AR Path="/53F4CB1F" Ref="L3"  Part="1" 
+AR Path="/53F4C1B5/53F4CB1F" Ref="L3"  Part="1" 
 F 0 "L3" H 2000 3050 59  0000 C CNN
 F 1 "9n" H 2000 2800 59  0000 C CNN
 F 2 "Inductors_SMD:L_0402" H 2000 2900 60  0001 C CNN
@@ -528,26 +540,14 @@ F 4 "IL1196S" H 4200 5000 60  0001 C CNN "Saet_code"
 	1    4200 5000
 	1    0    0    -1  
 $EndComp
-$Comp
-L SI4432B U1
-U 1 1 53F5B695
-P 8150 3950
-F 0 "U1" H 7750 4550 60  0000 C CNN
-F 1 "SI4432B" H 8650 4550 59  0000 C CNN
-F 2 "Housings_DFN_QFN:QFN-20-1EP_4x4mm_Pitch0.5mm" H 8150 3950 60  0001 C CNN
-F 3 "~" H 8150 3950 60  0000 C CNN
-F 4 "IU1162S" H 8150 3950 60  0001 C CNN "Saet_code"
-	1    8150 3950
-	1    0    0    -1  
-$EndComp
 Text Notes 10200 3550 0    39   ~ 0
 U2(6)
 Text Notes 10200 3700 0    39   ~ 0
-U2(31)
+U2(31)-U3(4)
 Text Notes 10200 3850 0    39   ~ 0
-U2(22)
+U2(2)-U3(6)
 Text Notes 10200 4000 0    39   ~ 0
-U2(21)
+U2(1)-U3(7)
 Text Notes 10200 4150 0    39   ~ 0
 U2(17)
 Text Notes 10200 4300 0    39   ~ 0
@@ -558,10 +558,9 @@ L ANTENNA_POL ANT1
 U 1 1 546215C2
 P 1400 2650
 F 0 "ANT1" H 1500 2890 59  0000 R CNN
-F 1 "Antenna Johanson" V 1200 2450 59  0000 L CNN
-F 2 "saet:antenna_Johanson" H 1400 2650 60  0001 C CNN
+F 1 "Antenna PCB" V 1200 2450 59  0000 L CNN
+F 2 "saet:antenna_pcb_complete_reversed" H 1400 2650 60  0001 C CNN
 F 3 "" H 1400 2650 60  0000 C CNN
-F 4 "US5602" H 1400 2650 60  0001 C CNN "Saet_code"
 	1    1400 2650
 	1    0    0    -1  
 $EndComp
@@ -825,8 +824,19 @@ Wire Wire Line
 Wire Wire Line
 	7000 3750 7500 3750
 $Comp
+L SI4432B U1
+U 1 1 5C0E7925
+P 8150 3950
+F 0 "U1" H 8500 4550 60  0000 C CNN
+F 1 "SI4432B" H 7650 4550 60  0000 C CNN
+F 2 "Housings_DFN_QFN:QFN-20-1EP_4x4mm_Pitch0.5mm" H 8150 3950 60  0000 C CNN
+F 3 "" H 8150 3950 60  0000 C CNN
+	1    8150 3950
+	1    0    0    -1  
+$EndComp
+$Comp
 L GND-RESCUE-Contatto868-3V #PWR028
-U 1 1 5C0A69F6
+U 1 1 5C0E7BDA
 P 7500 4350
 F 0 "#PWR028" H 7500 4350 30  0001 C CNN
 F 1 "GND" H 7500 4280 30  0001 C CNN

@@ -218,8 +218,10 @@ versione ff09				//per prove; non funziona write parametri, togliere rssi_rx_max
 //valori di set parametri
 //tapparella
 
-#define     TEMPO_TAPPA_DEF     10      //in secondi
-#define     IMP_TAPPA_DEF       5       // VALORE DI DEFAULT per gli impulsi di allarme tapparella
+#define     TEMPO_DEF     10      //in secondi
+#define     IMP_DEF       5       // VALORE DI DEFAULT per gli impulsi di allarme contatto
+#define     POLARITY_H    1       // VALORE DI DEFAULT per gli impulsi di allarme contatto
+#define     POLARITY_L    0       
 
 //#define     CLICK_THS_S      120      // Soglie di sensibilità per riconoscimento colpi contro il vetro
 //#define     MOV_THS_S        10       // Soglie di sensibilità per riconoscimento SPOSTAMENTO (apertura finestra)
@@ -230,7 +232,7 @@ versione ff09				//per prove; non funziona write parametri, togliere rssi_rx_max
 
 //#define MASK_RADIO 	0x20
 
-#define MASK_TAPP  	0x04                // ------------------------- sostituire con 0x02 (BIT1) sul port1 ---------------------------
+#define MASK_TAPP  	0x02
 //#define MASK_TAMPER 	0x02
 //#define MASK_AMPOLLA 0x08
 
@@ -337,9 +339,12 @@ const short step_fre_radio[5] = { FREQ_CARR_CHB , FREQ_CARR_CH1 ,  FREQ_CARR_CH2
 
 // *********************  PROTOTIPI DELLE FUNZIONI ******************
 
+void init_timer(void);
+void wait_rx_UART(unsigned int timeout_msec);
 void riconoscimento_sensore_connesso(void);                                                                       // riconosce il sensore esterno e il tipo di connessione con cui si interfaccia
 void init_sensors(void);                                                                                          // inizializza in base al tipo di sensore e di connessione il micro
-void sensore_tx(unsigned char string[11],unsigned int size);
+void sensore_tx(unsigned char *string,unsigned int size);
+void taratura_sensore(void);
 
 void wreg(unsigned int indirizzo,unsigned int dato,unsigned char mode);
 void rx_byte(unsigned char *dati,unsigned char address,unsigned char numero,unsigned char mode);
@@ -472,14 +477,7 @@ union {
 		unsigned char   canale_radio;
 		unsigned char   crc_dati_install;
 		struct{
-			unsigned char   tempo_tappa  ;              //parametri
-			unsigned char   impulsi_tappa;
-			unsigned char   p3           ;
-			unsigned char   p4		     ;
-			unsigned char   p5			 ;
-			unsigned char   p6			 ;
-			unsigned char   libero       ;
-			unsigned char   libero1      ;
+			volatile unsigned char   p[8];
 		} parametri_periferica;
 	};
 	unsigned int p[0];
@@ -544,10 +542,6 @@ struct
 
 unsigned char prossimo_polling;
 
-unsigned char cnt_mask_tappa;
-unsigned char cnt_imp_tappa;
-unsigned char cnt_tempo_tappa;
-
 unsigned char vbatt_media_corta[4];                     //per ogni trasmissione si fanno 4 letture e poi si media il valore
 unsigned char vbatt[4];                                 //valori letti nelle ultime 4 trasmissioni
 unsigned char lev_batteria;                             //si ottiene mediando i valori delle ultime 4 trasmissioni
@@ -561,11 +555,6 @@ unsigned char n_concentratore_in_impianto;
 unsigned char cnt_post_fpro;
 unsigned char scrivi_tempo_batteria_pnd;
 
-
-//------- Temporizzazione
-
-unsigned char input_cnt;
-unsigned char input_old;
 
 typedef union
 {
@@ -591,32 +580,46 @@ unsigned char tempo_led_on;
 unsigned char stato_new_perledon;
 
 enum state{Wakeup, Header, Length, Reading};
-enum rx_function{detector_events,req_init, ack, nack, GDE, GPageM, GPropertyM, GDP, GMN, GCV, IDLE};
+enum rx_function{detector_events=0x70,req_init=0x71, ack=0x06, nack=0x15, SDP, GMN=0x94, IDLE};
 
+volatile int reset = 1, x, st = 0x10;
+volatile int invio_param_flag = 0;
+volatile int tamper_state = 0;                                  // 0 = chiuso, 1 = aperto
 volatile unsigned int flag_tx_finished = 0 ;
-volatile unsigned char rx_mex[11];
-volatile unsigned int tipo_connessione_sensore;
+unsigned char rx_mex[11];
 unsigned char tx_string[11], rx_string[1+9];                    // stringhe di rx e tx per comunicazione UART
 unsigned int tx_index=0, rx_index=0;                            // indici per comunicazione UART 
 enum state actual_state = Wakeup;
 volatile int flag_rx = 1;
-volatile enum rx_function rx_cmd = IDLE, tx_cmd = IDLE;
-unsigned char ack_str[6] = {0x00,0xaa,0x05,0x06,0x71,0x26};     // acknowledge 
-unsigned char init_str[6] = {0x00,0xaa,0x05,0x30,0x01,0xe0};    // control panel event con attvazione in modalità ARM
-unsigned char GMN_str[5] = {0x00, 0xaa, 0x04, 0x39, 0xe7};      // get model number (1,2 = VXS - 3,4 = BXS) 
-volatile unsigned int string_size = 0;
-volatile int  uart_pause_flag = 1;
+volatile enum rx_function rx_cmd = IDLE;//aaa tx_cmd = IDLE;
+unsigned char ack_str[6] = {0x00,0xaa,0x05,0x06,0x71,0x26};                         // acknowledge 
+unsigned char cpe_str[6] = {0x00,0xaa,0x05,0x30,0x01,0xe0};                         // control panel event con attvazione in modalità ARM
+unsigned char GMN_str[5] = {0x00, 0xaa, 0x04, 0x39, 0xe7};                          // get model number (2,3 = VXS - 4,5 = BXS) 
+unsigned char SDP_individualOut_str[8] = {0x00, 0xaa, 0x07, 0x35, 0x00, 0x02, 0x01, 0xe9};        // Set Detector Property : initialized to Individual Output enabled command
+unsigned char SDP_str[12][8] = {{0x00, 0xaa, 0x07, 0x35, 0x00, 0x01, 0x10, 0xf7},             // Timer risparmio
+                                {0x00, 0xaa, 0x07, 0x35, 0x04, 0x00, 0x01, 0xeb},             // Sensibilità PIR
+                                {0x00, 0xaa, 0x07, 0x35, 0x04, 0x01, 0x02, 0xed},             // Impulsi PIR
+                                {0x00, 0xaa, 0x07, 0x35, 0x08, 0x00, 0x01, 0xef},             // Antimasking
+                                {0x00, 0xaa, 0x07, 0x35, 0x0c, 0x00, 0x03, 0xf5},             // Sensibilità microonda
+                                {0x00, 0xaa, 0x07, 0x35, 0x00, 0x01, 0x00, 0xe7},             // Immunità microonda
+                                {0x00, 0xaa, 0x07, 0x35, 0x04, 0x10, 0x01, 0xfb},             // Sensibilità PIR sx [BXS]
+                                {0x00, 0xaa, 0x07, 0x35, 0x04, 0x11, 0x02, 0xfd},             // Impulsi PIR sx [BXS]
+                                {0x00, 0xaa, 0x07, 0x35, 0x04, 0x12, 0x00, 0xfc},             // Sensibilità PIR sx extreme high [BXS]
+                                {0x00, 0xaa, 0x07, 0x35, 0x04, 0x08, 0x01, 0xf3},             // Sensibilità PIR dx [BXS]
+                                {0x00, 0xaa, 0x07, 0x35, 0x04, 0x09, 0x02, 0xf5},             // Impulsi PIR dx [BXS]
+                                {0x00, 0xaa, 0x07, 0x35, 0x04, 0x0a, 0x00, 0xf4}};            // Sensibilità PIR dx extreme high [BXS]
+
+unsigned int string_size = 0;
+int  uart_pause_flag = 1;
 int rx_valid_flag = 0;
-int sensor_model = 0;
 
 /***************************************************************************/
 /******************** INIZIO DEL MAIN **************************************/
 /***************************************************************************/
 int main(void)
 {
-    
     P3DIR=0xE2;
-    P3OUT=0x95;                                                 // PULL up p3.0,2,4; uscita 3.7 =1 (radioOFF)
+    P3OUT=0x97;                                                 // PULL up p3.0,2,4; uscita 3.7 =1 (radioOFF); CS 3.1 = 1 (OFF)
     P3REN=0x15;                                                 // PULL-UP
 
 // PAUSA INIZIALE CON BASSO CONSUMO, per immunita dai rimbalzi dell'inserimento pila
@@ -646,7 +649,7 @@ int main(void)
 // |    | P1.7 | O |    |SI al SI4432          |               |
 // |    -------------------------------------------------------|
 // |    | P2.0 | I |    |LIBERO                |               |
-// |    | P2.1 | I | UD |TAMPER                |               |
+// |    | P2.1 | I | PU |TAMPER                |               |
 // |    | P2.2 | I |    |LIBERO                |               |
 // |    | P2.3 | I |    |LIBERO                |               |
 // |    | P2.4 | I |    |LIBERO                |               |
@@ -666,26 +669,27 @@ int main(void)
 // |____|______|___|____|______________________|_______________|
 
     #ifdef BATTERIA_9V
-        P1DIR=0xb4;     
-        P1OUT=0x00;     
-        P1REN=0x01//0x20;     // JTAG pull-dwnati         //p1.4 uscita a massa per lettura ponticello    
+        P1DIR=0xb0;     // BIT2 inizialmente in INPUT per verifica del tipo di sensore
+        P1OUT=0x04;     // BIT2 alto per verifica sensore
+        P1REN=0x03;     // JTAG pull-dwnati, BIT2 in pull-up         //p1.4 uscita a massa per lettura ponticello    
 	    P1SEL=0x08;     // P1.3 ADC                             
     #else
-        P1DIR=0xb4;     
-        P1OUT=0x00;     
-        P1REN=0x09;//0x28     // JTAG pull-dwnati         //p1.4 uscita per lettura ponticello       
+        P1DIR=0xb0;     // BIT2 inizialmente in INPUT per verifica del tipo di sensore
+        P1OUT=0x04;     // BIT2 alto per verifica sensore
+        P1REN=0x0D;     // JTAG pull-dwnati, BIT2 in pull-up         //p1.4 uscita per lettura ponticello       
 	    P1SEL=0x00;     // P1.3 input con pull up
     #endif
     P1IE =0x00;     //disabilita gli interrrupts sugli input
 
     P2DIR=0x80;  
-    P2OUT=0x1D;     // PULL up p2.0,2,3,4
+    P2OUT=0x1F;     // PULL up p2.0,1,2,3,4
     P2REN=0x0B;     // PULL-UP/dw
     P2SEL=0xC0;     // QUARZO
     P2IE = 0;       // disabilita gli interrrupts sugli input
     P2IFG = 0;      // cancella eventuali flags
-
-    riconoscimento_sensore_connesso();                          // riconosce se la connessione al sensore esterno è seriale o contatto
+    
+//    P1DIR |= 0x10;          // p1.4 per test
+//    P1OUT |= 0x10;
 
     /* inizializzazione modulo SPI hardware per interfaccia radio */
     P1SEL |= BIT7 | BIT6 | BIT5;
@@ -697,11 +701,10 @@ int main(void)
     UCB0BR1 = 0x00; 
     UCB0CTL1 &= ~UCSWRST;                                       // **Initialize USCI state machine**   
 
-   periodo_rx_sincrona[0] = 32767;
-   periodo_rx_sincrona[1] = 32767;
-   periodo_rx_sincrona[2] = 32767;
-   periodo_rx_sincrona[3] = 32767;
-
+    int i=0;
+    while(i<4)
+       periodo_rx_sincrona[i++] = 32767;
+   
     // CONFIGURAZIONE TIMER A
     // ACLK =  32.... khz  (quarzo esterno)
     TA0CTL = TASSEL_1 + TACLR + MC_0;    // ACLK/1  clear TAR
@@ -742,105 +745,14 @@ int main(void)
 		segmB.taratura_radio = 0;
 		dati_periferica.n.stato_new.n.guasto =1;
 	}
-	leggi_flash(ADDR_SEGMENTO_C, &segmC.snum_concentratore, 6);    //legge 6 interi: segmC.snum_concentratore, segmC.canale_radio, segmC.crc_dati_install, parametri sensore
-
-	if (calcola_crc_install())
-	{
-		dati_periferica.n.stato_new.n.guasto =1;
-
-		segmC.canale_radio                       = CANALE_BASE;
-		segmC.parametri_periferica.tempo_tappa   = TEMPO_TAPPA_DEF;
-		segmC.parametri_periferica.impulsi_tappa = IMP_TAPPA_DEF  ;
-		segmC.parametri_periferica.p3	         = CLICK_THS_S;
-		segmC.parametri_periferica.p4	         = MOV_THS_S;
-		segmC.parametri_periferica.p5		     = 0xff;
-		segmC.parametri_periferica.p6		     = 0xff;
-		segmC.parametri_periferica.libero        = 0xff;
-		segmC.parametri_periferica.libero1       = NUMERO_PARAMETRI_PERIFERICA; // correzione per esigenze capella // = 0xff;
-
-		segmC.snum_concentratore                 = 0xffff;
-	}
-
-	TA0CTL |= MC_2;              // Start Timer_A in continuous mode
+	
+    riconoscimento_sensore_connesso();                          // riconosce se la connessione al sensore esterno è seriale o contatto
+	
+    TA0CTL |= MC_2;              // Start Timer_A in continuous mode
     _EINT();                     // Enable interrupts
 
-    init_sensors();                                             // inizializzazione per sensore volumetrico o per contatto      
-       
-//    *************** PAUSA INIZIALE ****************
+    init_sensors();                                             // inizializzazione per sensore volumetrico o per contatto               
 
-	tempo_led_on = 1+ (250/250);
-    LED_ON;           			// POI ACCENDE IL LED
-    timeout =  500000/USEC15625;
-	while ( timeout)
-	{
-	 	CLR_WDT;
-	 	LPM3;
-	}
-    LED_OFF;
-	tempo_led_on = 0;
-
-// ***************** PRIMA di ENTRARE NEL MAIN LOOP VERIFICO SE DEVO CANCELLARE TUTTO!! *************
-//         PRIMA VUOLE 3 s CON IL PULSANTE PREMUTO
-
-    P2OUT |= 0x02;                                  // PULL up anche su p2.1  PULS_T
-	timeout =  5000000/USEC15625;                   //  5 s
-//	timer_attesa = 3000000 / USEC15625;             //  3 s
-	while (timeout && !PULS_T)
-	{
-		CLR_WDT;
-		LPM3;
-	    P2OUT |= 0x02;                              // PULL up anche su p2.1  PULS_T //il timer interrupt lo toglie
-	}
-    if (timeout ==0)         	                    // OSSIA se il tempo e' scaduto con il pulsante schiacciato
-    {
-	    P2OUT |= 0x02;                              // PULL up anche su p2.1  PULS_T //il timer interrupt lo toglie
-        timeout = 2000000/ USEC15625;      	        //  E LASCIA 1 S DI TEMPO PER mollare il pulsante
-        while (timeout && !PULS_T)
-		{
-	        LED_ON;           			            // POI ACCENDE IL LED
-	  		tempo_led_on = 1 + (250/250);
-			CLR_WDT;
-			LPM3;
-		    P2OUT |= 0x02;                          // PULL up anche su p2.1  PULS_T //il timer interrupt lo toglie
-		}
-        LED_OFF;       			                    // POI ACCENDE IL LED
-  		tempo_led_on = 0;
-        if (timeout)         	                    // SOLO se il pulsante E' stato mollato prima che il cnt arrivasse a 0
-        {
-			segmC.canale_radio                       = CANALE_BASE;
-			segmC.parametri_periferica.tempo_tappa   = TEMPO_TAPPA_DEF;
-			segmC.parametri_periferica.impulsi_tappa = IMP_TAPPA_DEF  ;
-			segmC.parametri_periferica.p3	         = CLICK_THS_S;
-			segmC.parametri_periferica.p4	         = MOV_THS_S;
-			segmC.parametri_periferica.p5		     = 0xff;
-			segmC.parametri_periferica.p6		     = 0xff;
-			segmC.parametri_periferica.libero        = 0xff;
-			segmC.parametri_periferica.libero1       = NUMERO_PARAMETRI_PERIFERICA; // correzione per esigenze capella // = 0xff;
-
-			segmC.snum_concentratore              = 0xffff;
-		    segmC.crc_dati_install = 0;
-			segmC.crc_dati_install = calcola_crc_install();
-			scrivi_flash( &segmC.snum_concentratore, ADDR_SEGMENTO_C, 6);        //scrive 6 interi:
-			CLR_WDT;
-            for (temp_main=0; temp_main<10; temp_main++)
-            {
-		  		tempo_led_on = 0;                                                //led lampeggia
-                LED_T;
-				timeout = 250000/ USEC15625;
-        		while (timeout) // && !PULS_T)
-				{
-					CLR_WDT;
-					LPM3;
-				}
-			}
-        }
-        LED_OFF;
-    }   
-
-	cnt_imp_tappa = segmC.parametri_periferica.impulsi_tappa;
-	cnt_tempo_tappa = (segmC.parametri_periferica.tempo_tappa << 2);
-
-	input_old  = 0xff;
 	input_stato.i8 = 0;
 	cnt_ripetizione_tx = MAX_RIPETIZIONI;
 
@@ -849,21 +761,14 @@ int main(void)
  	stato = 0xf0;             //per leggere ingressi logici e vbatt
     timeout =  500000/USEC15625;
 
-//    if(tipo_connessione_sensore == 0)     // connessione tramite contatto
-//    {
-    _DINT();                  // DISABILITA GLI interrupts
-	P2IE  = MASK_TAPP ;       // abilita gli interrupts su tapp
-//    P1IE = MASK_TAPP;         // abilita gli interrupts su tapp
-    _EINT();                  // Enable interrupts
-//    }
 	if ( segmC.snum_concentratore == 0XFFFF)
 	{
-			dati_periferica.n.numero_sequenza_ultimo_tx = (dati_periferica.n.numero_sequenza_ultimo_tx + 2 ) & 0x7ffe;              //incrementa numer sequenza dopo risposta ok (periferica solo numeri pari
+			dati_periferica.n.numero_sequenza_ultimo_tx = (dati_periferica.n.numero_sequenza_ultimo_tx + 2 ) & 0x7ffe;              // incrementa numer sequenza dopo risposta ok (periferica solo numeri pari
 		    TA0CCTL1 = 0;                                                                                                           // CCR1 interrupt DISABLE
 	}
 	else
 	{
-			dati_periferica.n.numero_sequenza_ultimo_tx = ((dati_periferica.n.numero_sequenza_ultimo_tx + 2) | 0x8000) & 0xfffe;    //incrementa numer sequenza dopo risposta ok
+			dati_periferica.n.numero_sequenza_ultimo_tx = ((dati_periferica.n.numero_sequenza_ultimo_tx + 2) | 0x8000) & 0xfffe;    // incrementa numer sequenza dopo risposta ok
 		    TA0CCTL1 = CCIE;                                                                                                        // CCR1 interrupt enabled
 	}
 
@@ -879,12 +784,10 @@ int main(void)
 
 	if (IFG1 & PORIFG)
 	{
-		CLR_WDT;
-			 cnt_ore = 0;
-			 dati_periferica.n.tempo_batteria = 0;
-			 scrivi_flash(&dati_periferica.n.tempo_batteria,ADDR_SEGMENTO_D, 1);
-			 IFG1 &= ~PORIFG;
-		CLR_WDT;
+		 cnt_ore = 0;
+		 dati_periferica.n.tempo_batteria = 0;
+		 scrivi_flash(&dati_periferica.n.tempo_batteria,ADDR_SEGMENTO_D, 1);
+		 IFG1 &= ~PORIFG;
 	}
 
 /*---------------------------------------- LOOP PRINCIPALE ----------------------------------------*/
@@ -902,92 +805,38 @@ int main(void)
                             __delay_cycles(5000);                   // aspetta 5ms circa prima di inviare un qualunque messaggio di risposta, per consentire al canale RX del sensore di addormentarsi ed esser pronto alla ricezione  
                             CLR_WDT;
                             switch(rx_cmd)
-                            {
-                                case ack:
+                            {     
+                                case nack:                          // ritrasmetto l'ultimo messaggio: se finisco in questa sezione sicuramente avevo trasmesso un cpe
+                                                        sensore_tx(cpe_str,sizeof(cpe_str));                    // cpe            
                                                         break;
-                                case nack:                          // ritrasmetto l'ultimo messaggio
-    //                                                    sensore_tx(tx_cmd);
-                                                        break;
-                                case detector_events:
-                                                        if(tx_cmd != detector_events)
-                                                        {
-                                                           // if(flag_tx_finished == 1)             //aaa quando si utilizzerà un unico clock in tutto il programma potrebbe esser meglio questa soluzione
-                                                           // {
-                                                                flag_tx_finished = 0;               // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                                sensore_tx(ack_str,6);              // ack
-                                                                while(flag_tx_finished == 0)             
-                                                                    CLR_WDT;
-                                                                tx_cmd = ack;
-                                                           // }
-                                                        }                                                                          
+                                case detector_events:                                                           
+                                                        sensore_tx(ack_str,sizeof(ack_str));                    // ack
                                                         break;
                                 case req_init:          
- /*                                                       flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                        sensore_tx(ack_str,6);                  // ack
-                                                        tx_cmd = ack;
-                                                        while(flag_tx_finished == 0) 
-                                                            CLR_WDT;                            // aspetta che l'ack sia stato trasmesso
-                                                        __delay_cycles(6000);  
-                                                        CLR_WDT;          
-                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                        sensore_tx(init_str,6);                  // ack
-                                                        tx_cmd = req_init;                      
-                                                        while(flag_tx_finished == 0)
-                                                            CLR_WDT;                            // aspetta che l'inizializzazione sia stata trasmessa
-                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                        while(rx_cmd != ack)                    //aaa ------------- SOSTITUIRE CON UN ALTRO MODO IN CUI NON SI POSSA BLOCCARE TUTTO -------------------
-                                                                CLR_WDT;
-                                                        __delay_cycles(10000);
-                                                        CLR_WDT;
-                                                        sensore_tx(GMN_str,5); 
-                                                        tx_cmd = GMN;
-                                                        while(flag_tx_finished == 0)    
-                                                            CLR_WDT;                            // aspetta che l'ultima trasmissione sia finita   
-   */                                                     break;
-                                case GDE:
-                                                        break;
-                                case GPageM:
-                                                        break;
-                                case GPropertyM:
-                                                        break;
-                                case GDP:
-                                                        break;
-                                case GMN:
-                                                        switch(rx_mex[1])                       // rilevazione del modello di sensore OPTEX
-                                                        {
-                                                            case 1:                             // VXS-RAM
-                                                                    break;          
-                                                            case 2:                             // VXS-RDAM
-                                                                    break;
-                                                            case 3:                             // BXS-R
-                                                                    break;
-                                                            case 4:                             // BXS-RAM
-                                                                    break;
-                                                        }
-                                                        break;
-                                case GCV:
-                                                        break;     
-                                default:                ;   
+                                                        sensore_tx(ack_str,sizeof(ack_str));                    // ack
+                                                        __delay_cycles(6000);            
+                                                        sensore_tx(cpe_str,sizeof(cpe_str));                    // ack
+                                                        while(rx_cmd != ack)                    
+                                                                CLR_WDT;  
+                                                        invio_param_flag = 1;                                                      
+                                                        break;                                
+                              default:                ;   
                             }
                         }
-                        else                                    // checksum error: ritrasmette l'ultimo comando trasmesso se ho tx qualcosa
-                        {
-                              CLR_WDT;
-    //                        sensore_tx(tx_cmd);                        
-                        }
-        }
+        }        
 
+        if(invio_param_flag == 1)
+            taratura_sensore();
 
 		switch ( stato)
 		{
 			case 0xf0:                                  //dopo reset per leggere ingressi e vbatt.
-
 			    if ( flag.adc_in_corso)
 			    {
 	      			if ((ADC10CTL1 & ADC10BUSY) == 0)
-      				{
+      				{   
 							    if (++pnt_vbatt >= 4)
-							    {
+							    {  
 								    pnt_vbatt =0;
 								    flag.adc_in_corso = 0;
 							    }
@@ -1006,7 +855,7 @@ int main(void)
 				    }
 			    }
 
-			    if ( ((input_cnt == 0) && (flag.adc_in_corso == 0))	 || (timeout == 0) )
+			    if ( ( (flag.adc_in_corso == 0))	 || (timeout == 0) )
 			    {
 					    if (--temp_main == 0)
 					    {
@@ -1022,79 +871,12 @@ int main(void)
 
 					if ( cnt_post_fpro)
 					{
-        				OUT_TEST_1;
+//        				OUT_TEST_1;
 						if ( dati_periferica.n.cnt_sono_vivo == 0)
 	  						dati_periferica.n.cnt_sono_vivo = segmB.tab_random.i8[0x7 & (pnt_tab_random++)];
-		        		OUT_TEST_0;
+//		        		OUT_TEST_0;
 						break;
-					}
-
-                    #ifndef SECURGROSS
-
-// ------------- su allarme1 mappare uno o più degli allarmi della uart -------------------
-/*                        switch(tipo_connessione_sensore)    
-                          {
-                                case 0:             // connessione contatto*/
-					    if ((cnt_imp_tappa == 0) || (input_stato.b.tappa == 0)/* || (input_stato.b.ampolla == 0)*/)
-							    dati_periferica.n.stato_new.n.allarme_2 = 1;                                        // AUX
-					    else
-							    dati_periferica.n.stato_new.n.allarme_2 = 0;
-					    /*if ((flag.movimento) || (input_stato.b.ampolla == 0))
-							    dati_periferica.n.stato_new.n.allarme_1 = 1;                                        // CM
-					    else
-							    dati_periferica.n.stato_new.n.allarme_1 = 0;*/
-
-/*                                      break;
-                                case 1:             // connessione uart
-                                        if(allarme_x sulla uart)
-							                    dati_periferica.n.stato_new.n.allarme_1 = 1;                                        // CM
-					                    else
-							                    dati_periferica.n.stato_new.n.allarme_1 = 0;
-                                        if(allarme_y sulla uart)
-							                    dati_periferica.n.stato_new.n.allarme_2 = 1;                                        // CM
-					                    else
-							                    dati_periferica.n.stato_new.n.allarme_2 = 0;
-                                        break;
-                          }
-*/
-                                            
-                     #else
-
-                          //come non securgross
-/*                        switch(tipo_connessione_sensore)    
-                          {
-
-                                case 0:             // connessione contatto*/
-					        if ((cnt_imp_tappa == 0) || (input_stato.b.tappa == 0)/* || (input_stato.b.ampolla == 0)*/)
-						       	dati_periferica.n.stato_new.n.allarme_2 = 1;                                        // AUX
-					        else
-						       	dati_periferica.n.stato_new.n.allarme_2 = 0;
-
-					      /*  if ((flag.movimento) || (input_stato.b.ampolla == 0))
-							    dati_periferica.n.stato_new.n.allarme_1 = 1;                                        // CM
-					        else
-							    dati_periferica.n.stato_new.n.allarme_1 = 0;*/
-
-/*                                      break;
-                                case 1:             // connessione uart
-                                        if(allarme_x sulla uart)
-							                    dati_periferica.n.stato_new.n.allarme_1 = 1;                                        // CM
-					                    else
-							                    dati_periferica.n.stato_new.n.allarme_1 = 0;
-                                        if(allarme_y sulla uart)
-							                    dati_periferica.n.stato_new.n.allarme_2 = 1;                                        // CM
-					                    else
-							                    dati_periferica.n.stato_new.n.allarme_2 = 0;
-                                        break;
-                          }
-*/	             	                    
-
-                    #endif
-
-					if (input_stato.b.tamper)
-							dati_periferica.n.stato_new.n.tamper = 0;
-					else
-							dati_periferica.n.stato_new.n.tamper = 1;
+					}                    
 
 	   				if ((segmC.snum_concentratore == 0XFFFF) /*|| (dati_periferica.n.mode_f == MP_IN_MANUTENZIONE)*/)
 					{
@@ -1113,9 +895,6 @@ int main(void)
 								    init_radio(segmC.canale_radio);               //tx continua  LAVORO
 					 		        wreg(SI4432_MODULATION_MODE_CONTROL_2,0x00,DA_RADIO | DISINT);            // 0x71; FISSA!!!!
 					 		        wreg(SI4432_OPERATING_AND_FUNCTION_CONTROL_1,SI4432_TXON,DA_RADIO | DISINT);    // manda in trasmissione
-
-  									DCOCTL  =   CALDCO_1MHZ;
-    								BCSCTL1 =   CALBC1_1MHZ | XT2OFF;
 
 									stato = 10;
 									timeout = messaggio_rx.n.dati.i8[0] * (100000 / USEC15625);
@@ -1171,9 +950,8 @@ int main(void)
 					{
 						if ((ADC10CTL1 & ADC10BUSY) == 0)
 						{
-								vbatt_media_corta[3] =	vbatt_media_corta[2];
-								vbatt_media_corta[2] =	vbatt_media_corta[1];
-								vbatt_media_corta[1] =	vbatt_media_corta[0];
+                                for(i=3;i>0;i--)
+    								vbatt_media_corta[i] =	vbatt_media_corta[i-1];
 								vbatt_media_corta[0] =	ADC10MEM >> 2;
 								if (--cnt_conversioni_vbatt)
 								{
@@ -1238,9 +1016,6 @@ int main(void)
 					     		        wreg(SI4432_MODULATION_MODE_CONTROL_2,0x00,DA_RADIO | DISINT);            // 0x71; FISSA!!!!
 					     		        wreg(SI4432_OPERATING_AND_FUNCTION_CONTROL_1,SI4432_TXON,DA_RADIO | DISINT);    // manda in trasmissione
 
-      									DCOCTL  =   CALDCO_1MHZ;
-        								BCSCTL1 =   CALBC1_1MHZ | XT2OFF;
-
 									    stato = 10;
 									    timeout = messaggio_rx.n.dati.i8[0] * (100000 / USEC15625);
 									    tempo_led_on = 250;                    // on per 62 secondi, viene spento a fine portante
@@ -1292,7 +1067,7 @@ int main(void)
 					gestione_radio_ex_interr();
 		}
 		else
-		{
+		{   
 			LPM3;
 		}
 	}   /********** FINE DEL LOOP PRINCIPALE **********/
@@ -1307,28 +1082,65 @@ int main(void)
 /****      FUNZIONI                                         ****/
 /***************************************************************/
 
-void riconoscimento_sensore_connesso(void)
-{
-    P1REN |= BIT2;   // abilito pull-up sul pin da esaminare       
-    P1DIR &= ~BIT2;  // pin da esaminare impostato in IN
-    P1OUT |= BIT2;
+void init_timer(void)
+{    
+// ***************** PRIMA di ENTRARE NEL MAIN LOOP VERIFICO SE DEVO CANCELLARE TUTTO!! *************
+    int i;
+    timeout = 2000000/ USEC15625;      	        //  E LASCIA 1 S DI TEMPO PER mollare il pulsante
+    while(timeout && reset)         
+	{
+        LED_ON;           			            // POI ACCENDE IL LED
+  		tempo_led_on = 1 + (250/250);
+		CLR_WDT;
+		LPM3;
+	}
+    LED_OFF;       			                    // POI ACCENDE IL LED
+	tempo_led_on = 0;
+    if (timeout && !reset)         	                    // SOLO se il pulsante E' stato mollato prima che il cnt arrivasse a 0
+    {
+        segmC.canale_radio = CANALE_BASE;       // reset dei parametri
+        segmC.snum_concentratore = 0xffff;
+        for(i=1;i<8;i++)
+            segmC.parametri_periferica.p[i] = 0xff;
+        scrivi_flash( &segmC.snum_concentratore, ADDR_SEGMENTO_C, 6);        //scrive 6 interi
 
-    if((P1IN & BIT2) == 0x00)             // R5 = 0 Ohm, montaggio contatto
-    {    
-        tipo_connessione_sensore = 0; 
-        P1DIR &= ~BIT1;                 // pin1 in IN per segnalare l'allarme
-        P1IES &= ~BIT1;                 // transizione che genera l'interrupt è 0-1 
-        P1IFG &= ~BIT1;                 // resetta il flag di interrupt
-        P1IE |= BIT1;                   // abilita pin1 in interrupt 
-    }    
+        for (temp_main=0; temp_main<10; temp_main++)
+        {
+	  		tempo_led_on = 0;                                                //led lampeggia
+            LED_T;
+			timeout = 250000/ USEC15625;
+    		while (timeout)
+			{
+				CLR_WDT;
+				LPM3;
+			}
+		}
+    }
+    LED_OFF;
+}
+
+void wait_rx_UART(unsigned int timeout_msec)
+{
+    flag_rx = 1;
+    unsigned int init_timeout = timeout_msec;
+    unsigned int one_msec = 67;
+    while(((init_timeout)-- > 0) && (flag_rx != 0))         // timeout non finito e nessun mex ricevuto sulla UART
+            while((one_msec-- > 0) && (flag_rx != 0))            
+                CLR_WDT; 
+}
+
+void riconoscimento_sensore_connesso(void)
+{    
+    if((P1IN & BIT2) == 0x00)           // R5 = 0 Ohm, montaggio contatto   
+        segmC.parametri_periferica.p[0] = 1;              
     else                                // R5 non montata, montaggio seriale
     {
-        tipo_connessione_sensore = 1;   
-        
+        segmC.parametri_periferica.p[0] = -1;   
+
         TA1CTL |= TACLR;
         TA1CTL |= TASSEL_2 + MC_0 + ID_0; //TASSEL_2 + MC_0 + ID_0;      // con i 32kHz del quarzo esterno sarebbe TA1CTL |= TASSEL_1 + MC_0 + ID_0
-        TA1CCR0 = 5000;                    //4000;                        // con i 32kHz del quarzo esterno sarebbe TA1CCR0 = 160 per ottenere 5ms
-        
+        TA1CCR0 = 5000;                   //4000;                        // con i 32kHz del quarzo esterno sarebbe TA1CCR0 = 160 per ottenere 5ms
+
         UCA0CTL1 |= UCSWRST;                    // reset UART interface        
         UCA0CTL1 |= UCSSEL_2;                   // SMCLK: 1MHz
         UCA0BR0 = 0x34;                         // 1MHz 19200bps : UCABR0 = 52d = 34h
@@ -1347,90 +1159,170 @@ void riconoscimento_sensore_connesso(void)
 
 void init_sensors(void)
 {
-    int flag_init_finished = 0;
-    
-    switch(tipo_connessione_sensore)
+    int i=0;
+    switch(segmC.parametri_periferica.p[0])
     {
-        case 0:                                             // contatto
+        case 1:                                              // contatti
+                __delay_cycles(8000);
+                P2REN |= BIT1;
+                if(PULS_T == 0)                              // tamper inizialmente premuto
+                    init_timer();
                 break;
-        case 1:                                             // sensore volumetrico comunicante in UART   
-                while(flag_init_finished == 0)
-                { 
-                        CLR_WDT;                
-                        while(flag_rx != 0) 
-                            CLR_WDT;                                // aspetta di aver ricevuto un messaggio sulla UART              
-                        flag_rx = 1;                                // resetta il flag che segnala la ricezione di un messaggio
-                        if(rx_valid_flag == 1)                      // il messaggio ricevuto non ha incontrato errori di trasmissione [controllo del checksum OK]
-                        {                  
-                            __delay_cycles(5000);                   // aspetta 5ms circa prima di inviare un qualunque messaggio di risposta, per consentire al canale RX del sensore di addormentarsi ed esser pronto alla ricezione  
-                            CLR_WDT;
-                            switch(rx_cmd)
-                            {
-                                case nack:                          // ritrasmetto l'ultimo messaggio
-    //                                                    sensore_tx(tx_cmd);
-                                                        break;
-                                case detector_events:
-                                                        if(tx_cmd != detector_events)
-                                                        {
-                                                            flag_tx_finished = 0;               // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                            sensore_tx(ack_str,6);              // ack
-                                                            tx_cmd = ack;
-                                                        }                                                                          
-                                                        break;
-                                case req_init:          
-                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                        sensore_tx(ack_str,6);                  // ack
-                                                        tx_cmd = ack;
-                                                        while(flag_tx_finished == 0) 
-                                                            CLR_WDT;                            // aspetta che l'ack sia stato trasmesso
-                                                        __delay_cycles(6000);  
-                                                        CLR_WDT;          
-                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                        sensore_tx(init_str,6);                  // ack
-                                                        tx_cmd = req_init;                      
-                                                        while(flag_tx_finished == 0)
-                                                            CLR_WDT;                            // aspetta che l'inizializzazione sia stata trasmessa
-                                                        flag_tx_finished = 0;                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
-                                                        while(rx_cmd != ack)                    // ------------- SOSTITUIRE CON UN ALTRO MODO IN CUI NON SI POSSA BLOCCARE TUTTO -------------------
-                                                                CLR_WDT;
-                                                        __delay_cycles(10000);
-                                                        CLR_WDT;
-                                                        sensore_tx(GMN_str,5); 
-                                                        tx_cmd = GMN;
-                                                        while(flag_tx_finished == 0)    
-                                                            CLR_WDT;                            // aspetta che l'ultima trasmissione sia finita                                                
-                                                        flag_init_finished = 1; 
-                                                        break;                               
-                                case GMN:               
-                                                        sensor_model = rx_mex[1];               // rilevazione del modello di sensore OPTEX: 1 = VXS-RAM, 2 = VXS-RDAM, 3 = BXS-R, 4 = BXS-RAM
-                                                        break;    
-                                default:                ;   
-                            }
-                        }
-                        else                                    // checksum error: ritrasmette l'ultimo comando trasmesso se ho tx qualcosa
+        default:                                             // sensore volumetrico comunicante in UART                  
+                      
+                wait_rx_UART(11000);                                              // timeout di 11 sec 
+
+                if((flag_rx == 0) && (rx_cmd == detector_events))
+                {
+                    __delay_cycles(2000);
+                    CLR_WDT;
+                    sensore_tx(ack_str,sizeof(ack_str));                            
+                    if((tamper_state & 0x06) != 6)                                           // almeno 1 tamper_chiuso: continuo l'inizializzazione
+                    {
+                        wait_rx_UART(2000);                                       // timeout di 2 sec
+                        if(flag_rx == 0 && rx_cmd == req_init)
                         {
-                              CLR_WDT;
-    //                        sensore_tx(tx_cmd);                        
-                        }                      
-            }
-            break;
-     }    
+                            __delay_cycles(5000);
+                            CLR_WDT;
+                            sensore_tx(ack_str,sizeof(ack_str));                            
+                            __delay_cycles(6000);  
+                            CLR_WDT;     
+                            rx_cmd = nack;
+                            while(rx_cmd != ack)
+                            {     
+                                if(rx_cmd == nack)
+                                    sensore_tx(cpe_str,sizeof(cpe_str));                    // cpe            
+                                else if(rx_cmd == detector_events)
+                                    sensore_tx(ack_str,sizeof(ack_str));
+                                wait_rx_UART(150);                                   // timeout di 150 msec                       
+                            }                
+                            init_timer();
+                        }
+                    }
+                 }
+    }
+
+    leggi_flash(ADDR_SEGMENTO_C, &segmC.snum_concentratore, 6);         //legge 6 interi: segmC.snum_concentratore, segmC.canale_radio, segmC.crc_dati_install, parametri sensore
+   
+    if (calcola_crc_install())
+    {    
+  		dati_periferica.n.stato_new.n.guasto =1;     
+        if(segmC.parametri_periferica.p[0] == 1)                             // contatto
+        {
+		        segmC.parametri_periferica.p[1]          = POLARITY_H  ; 
+//              segmC.parametri_periferica.p[2]          = TEMPO_DEF;     
+//		        segmC.parametri_periferica.p[3]          = IMP_DEF  ;               
+                for(i=4; i< 7; i++)
+    		        segmC.parametri_periferica.p[i]	     = 0xff;
+		        segmC.parametri_periferica.p[7]          = 2;
+        }
+        else
+        {
+                __delay_cycles(5000);
+                sensore_tx(GMN_str,sizeof(GMN_str));
+                wait_rx_UART(150);                          // timeout = 150msec
+                if(segmC.parametri_periferica.p[0] == 2)
+                    segmC.parametri_periferica.p[7]          = 5;
+                else
+                    segmC.parametri_periferica.p[7]          = 7;           
+
+                segmC.parametri_periferica.p[1] = 120;                  // set parametri di default in base alla versione del sensore         
+                segmC.parametri_periferica.p[2] = 1;
+                segmC.parametri_periferica.p[3] = 2;
+
+                switch(segmC.parametri_periferica.p[0])
+                {
+                    case 2: 
+                            segmC.parametri_periferica.p[4] = 1;
+                            break;
+                    case 3:
+                            segmC.parametri_periferica.p[4] = 3;
+                            segmC.parametri_periferica.p[5] = 0;
+                            segmC.parametri_periferica.p[6] = 1;
+                            break;
+                    case 4: 
+                            segmC.parametri_periferica.p[4] = 1;
+                            segmC.parametri_periferica.p[5] = 2;
+                            segmC.parametri_periferica.p[6] = 1;
+                            break;
+                }               
+                invio_param_flag = 1;
+
+                if(segmC.parametri_periferica.p[0] == 4)                              // BXS: set individual output
+                {
+                    sensore_tx(SDP_individualOut_str,sizeof(SDP_individualOut_str));
+                    wait_rx_UART(150);                                              // timeout di 150 msec                
+                }
+                flag_rx = 1;  
+        }    
+        scrivi_flash( &segmC.snum_concentratore, ADDR_SEGMENTO_C, 6);         //scrive 6 interi                                                                 
+    }  
 }
 
-void sensore_tx(unsigned char string[11], unsigned int size)
+void sensore_tx(unsigned char *string, unsigned int size)
 {
+        flag_tx_finished = 0;                                   // resetta il flag che segnala la conclusione della trasmissione del messaggio su UART
         int i;
-        switch(tipo_connessione_sensore)
-        {
-            case 0:                                 // connessione contatto
-                    break;
-            case 1:                                 // connessione seriale UART                   
-                    for(i = 0; i < size; i++)       // copia la stringa da trasmettere nella stringa gestita dall'interrupt della UART
-                        tx_string[i] = string[i]; 
-                    string_size = size;      
-                    UC0IE |= UCA0TXIE;              // abilita interrupt per la trasmissione dei caratteri su UART                                         
-                    break;                   
-        }        
+        for(i = 0; i < size; i++)       // copia la stringa da trasmettere nella stringa gestita dall'interrupt della UART
+            tx_string[i] = *(string+i); 
+        string_size = size;       
+        UC0IE |= UCA0TXIE;              // abilita interrupt per la trasmissione dei caratteri su UART                                                 
+        while(flag_tx_finished == 0) CLR_WDT;                             // aspetta che il mex sia stato trasmesso                                                                                                     
+}
+
+void taratura_sensore(void)
+{      
+    invio_param_flag = 0;                                                           // resetta flag
+    int flag_finished = 0, sdp_count = 0, x=1, checksum, j;
+    while(flag_finished != 1)
+    {                    
+            __delay_cycles(5000);
+
+            if(sdp_count == 6 || sdp_count == 9)                                    // sensibilità PIR sx o dx
+                SDP_str[sdp_count][6] = segmC.parametri_periferica.p[x] % 3;
+            else if(sdp_count == 8 || sdp_count == 11)                              // sensibilità estrema PIR sx o dx
+                SDP_str[sdp_count][6] = segmC.parametri_periferica.p[x] / 3;
+            else
+                SDP_str[sdp_count][6] = segmC.parametri_periferica.p[x];
+            
+            for(checksum = 0,j=1; j<7; j++)
+                checksum += SDP_str[sdp_count][j];
+            SDP_str[sdp_count][7] = checksum & 0xff;      
+          
+            sensore_tx(SDP_str[sdp_count],sizeof(SDP_str[0]));    // SDP      
+
+            rx_cmd = IDLE;            
+            while(rx_cmd != ack)
+            {
+                wait_rx_UART(150);                          // timeout = 150msec
+                if(rx_cmd == detector_events)
+                    sensore_tx(ack_str,sizeof(ack_str));
+                else if(rx_cmd == nack)                     // gestione del NACK
+                    sensore_tx(SDP_str[sdp_count],sizeof(SDP_str[0]));    // SDP      
+            }
+            if(sdp_count == 3 && (segmC.parametri_periferica.p[0] != 2))
+                x = 6;
+            else if(sdp_count<4)
+                x++;
+            else if(sdp_count == 4 || sdp_count == 5)
+                x = sdp_count; 
+            else if(sdp_count == 6 || sdp_count == 7)
+                x = sdp_count - 4;
+            else if(sdp_count == 9 || sdp_count == 10)
+                x = sdp_count - 5;
+            else if(sdp_count == 8 )
+                x = 2;
+            else if( sdp_count == 11)
+                x = 4;
+
+            if(sdp_count == 0 && segmC.parametri_periferica.p[0] == 4)          // modello BXS
+                sdp_count = 6;
+            else
+                sdp_count++;                                                                 
+            
+            if(sdp_count == 11 || (sdp_count == 4 && (segmC.parametri_periferica.p[0] != 3)))                                                        
+                flag_finished = 1;                                      
+    }                                                                
 }
 
 unsigned int  decodifica_dati_rx_comun_perif(void)
@@ -1523,14 +1415,11 @@ unsigned int  decodifica_dati_rx_comun_perif(void)
 							   	   return 0;
 
 							case M_WR_PARAMETRI:
-									 segmC.parametri_periferica.tempo_tappa    = messaggio_rx.n.dati.i8[0];
-									 segmC.parametri_periferica.impulsi_tappa  = messaggio_rx.n.dati.i8[1];
-									 segmC.parametri_periferica.p3		 = messaggio_rx.n.dati.i8[2];
-									 segmC.parametri_periferica.p4	     = messaggio_rx.n.dati.i8[3];
-									 segmC.parametri_periferica.p5			 = messaggio_rx.n.dati.i8[4];
-									 segmC.parametri_periferica.p6			 = messaggio_rx.n.dati.i8[5];
-									 segmC.parametri_periferica.libero         = messaggio_rx.n.dati.i8[6];
-									 segmC.parametri_periferica.libero1        = NUMERO_PARAMETRI_PERIFERICA; // correzione per esigenze capella // = messaggio_rx.n.dati.i8[7];
+
+                                     for(i=1;i<8;i++)                                                        //Non scrivo il modello! (ovvero p[0])     aaa tentativo di ottimizzazione   -> 22 Byte risparmiati
+                                        segmC.parametri_periferica.p[i]         = messaggio_rx.n.dati.i8[i];
+
+                                     invio_param_flag = 1;
 
 									 segmC.crc_dati_install = 0;
 									 segmC.crc_dati_install = calcola_crc_install();
@@ -1665,7 +1554,7 @@ unsigned int  decodifica_dati_rx_comun_perif(void)
 void carica_timer_rx_sincrono(void)
 {
 	unsigned int tempn,temp;
-		temp = ((TA0CCR1 - buffer_radio.timer_perif) + ANTICIPO);        		//tempo da sincronispo "su periferica"
+		temp = ((TA0CCR1 - buffer_radio.timer_perif) + ANTICIPO);        		//tempo da sincronismo "su periferica"
 		//sincronizza periferica
 		tempn = (buffer_radio.timer_perif + buffer_radio.timer_conc - ANTICIPO);
 		if (( tempn - TA0R) < 0x8000)
@@ -1673,7 +1562,7 @@ void carica_timer_rx_sincrono(void)
 		//eventuale correzione errore periodo
 		if (temp < buffer_radio.timer_conc)
 		{
-			  if ( (buffer_radio.timer_conc - temp)  > 6)               // unita da 30,52 usec
+			  if ( (buffer_radio.timer_conc - temp)  > 6)               // unita da 30,52 usec      //aaa si può fare ottimizzazione sostituendolo con un loop che verifichi ogni elemento? Meno rapido ma meno memoria
 			  {
 					if      (periodo_rx_sincrona[0] < periodo_rx_sincrona[1])
 						periodo_rx_sincrona[0]++;
@@ -1685,7 +1574,7 @@ void carica_timer_rx_sincrono(void)
 						periodo_rx_sincrona[3]++;
 			  }
 		}
-		else if ( (temp - buffer_radio.timer_conc)  > 6)
+		else if ( (temp - buffer_radio.timer_conc)  > 6)                                            //aaa come sopra
 		{
 					if      (periodo_rx_sincrona[0] > periodo_rx_sincrona[1])
 						periodo_rx_sincrona[0]--;
@@ -1899,6 +1788,8 @@ void taratura (void)
 
 void format_dati_polling()
 {
+        int i;                                                                             
+
 		messaggio_tx.n.n_sequenza = dati_periferica.n.numero_sequenza_ultimo_tx;
 		messaggio_tx.n.stato_allarmi.i8 = dati_periferica.n.stato_new.i8;
 		messaggio_tx.n.id[0] = segmB.ser_num_perif[0];
@@ -1923,14 +1814,8 @@ void format_dati_polling()
 					       messaggio_tx.n.dati.i8[6] = dati_periferica.n.rssi_rx_max; //segmC.parametri_periferica.libero         ;
 					       messaggio_tx.n.dati.i8[7] = dati_periferica.n.rssi_rx_min; //segmC.parametri_periferica.libero1        ;
 			    #else
-					       messaggio_tx.n.dati.i8[0] = segmC.parametri_periferica.tempo_tappa    ;
-					       messaggio_tx.n.dati.i8[1] = segmC.parametri_periferica.impulsi_tappa  ;
-					       messaggio_tx.n.dati.i8[2] = segmC.parametri_periferica.p3	   ;
-					       messaggio_tx.n.dati.i8[3] = segmC.parametri_periferica.p4		   ;
-					       messaggio_tx.n.dati.i8[4] = segmC.parametri_periferica.p5			   ;
-					       messaggio_tx.n.dati.i8[5] = segmC.parametri_periferica.p6			   ;
-					       messaggio_tx.n.dati.i8[6] = segmC.parametri_periferica.libero         ;
-					       messaggio_tx.n.dati.i8[7] = NUMERO_PARAMETRI_PERIFERICA; // correzione per esigenze capella // = segmC.parametri_periferica.libero1        ;
+                           for(i=0;i<8;i++)                                                    
+                                messaggio_tx.n.dati.i8[i] = segmC.parametri_periferica.p[i];                          
 			    #endif
 				break;
 
@@ -2236,10 +2121,8 @@ void wreg(unsigned int address,unsigned int dati,unsigned char mode)
     IFG2 &= ~UCB0RXIFG;                 // resetta il flag di ricezione 
     UCB0TXBUF = dati;                   // Send data over SPI to Slave
     while (!(IFG2 & UCB0RXIFG));        // tx and rx finished
-    if (mode & DA_RADIO)
-	{
-		SPI_CS_RADIO_1;
-	}
+    if (mode & DA_RADIO)	
+		SPI_CS_RADIO_1;	
 	if ( mode & DISINT)
 	    _EINT();                    // Enable interrupts
 }
@@ -2262,18 +2145,15 @@ void tx_byte(unsigned char *dati,unsigned char address,unsigned char numero,unsi
 	}
     UCB0TXBUF = address;                // Send address over SPI to Slave
     while (!(IFG2 & UCB0RXIFG));            // trasmissione finita	
-    IFG2 &= ~UCB0RXIFG;
-            
+    IFG2 &= ~UCB0RXIFG;            
 	for ( j=0;j<numero;j++)
 	{
             UCB0TXBUF = *(dati+j);                  // Send address over SPI to Slave
             while (!(IFG2 & UCB0RXIFG));            // trasmissione finita	
             IFG2 &= ~UCB0RXIFG;            
 	}
-   if (mode & DA_RADIO)
-	{
-		SPI_CS_RADIO_1;
-	}
+   if (mode & DA_RADIO)	
+		SPI_CS_RADIO_1;	
 	if ( mode & DISINT)
 	    _EINT();                    // Enable interrupts
 }
@@ -2285,29 +2165,21 @@ void rx_byte(unsigned char *dati,unsigned char address,unsigned char numero,unsi
     IFG2 &= ~UCB0RXIFG;                 // resetta il flag di ricezione   
 	if (mode & DISINT)
 		_DINT();                     // DISABILITA GLI interrupts
-	if (mode & DA_RADIO)
-	{
-		SPI_CS_RADIO_0;
-	}
-	else
-	{
-		address |= 0xC0;               //read e incrementa indirizzo ad ogni byte letto
-	}
+	if (mode & DA_RADIO)	
+		SPI_CS_RADIO_0;	
+	else	
+		address |= 0xC0;               //read e incrementa indirizzo ad ogni byte letto	
     UCB0TXBUF = address;                // Send address over SPI to Slave
     while(!(IFG2 & UCB0RXIFG));	        // ricevuto 1 byte          
     IFG2 &= ~UCB0RXIFG;
 	for ( j=0;j<numero;j++)
-	{
-        
+	{        
         UCB0TXBUF = 0x00;                   // Send 0 over SPI to Slave per mantenere il clock sul Byte ricevuto
         while(!(IFG2 & UCB0RXIFG));	            // ricevuto 1 byte          
         *(dati+j) = UCB0RXBUF;      // ricevuto 1 byte (è la risposta della radio)              
-	}
-    
-	if (mode & DA_RADIO)
-	{
-		SPI_CS_RADIO_1;
-	}
+	}    
+	if (mode & DA_RADIO)	
+		SPI_CS_RADIO_1;	
 	if ( mode & DISINT) 
 	    _EINT();                    // Enable interrupts
 }
@@ -2536,49 +2408,31 @@ void gestione_radio_ex_interr(void)
 /****      FUNZIONI DI GESTIONE DEGLI INTERRUPTS            ****/
 /***************************************************************/
 
-/*---------------------------------------------------------------------------------
-// GESTISCE L'INTERRUPT della PORTA1
-*/
-#pragma vector=PORT1_VECTOR
-__interrupt void interr_port1(void)
-{
-    if (( P1IFG & MASK_TAPP) && (P1IE & MASK_TAPP))         // controlla che l'interrupt provenga dalla tapparella
-	{
-        P1IE  &= ~MASK_TAPP;                                // disabilita ulteriori interrupts per rimbalzi
-		cnt_mask_tappa = 3;                                 // pausa minima fra impulsi = 2/3 * 15,625 msec
-		if (cnt_imp_tappa)
-			cnt_imp_tappa--;
-
-		cnt_tempo_tappa = (segmC.parametri_periferica.tempo_tappa <<  2);      //si ricarica ad ogni impulso
-	}
-}
 
 // Funzioni per la gestione delle isr della UART in tx e rx
 #pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR(void)
 {
-    UCA0TXBUF = tx_string[tx_index++]; // TX next character 
-    if(tx_index == 1 && uart_pause_flag == 1 && UCA0TXBUF == 0x00)      // sto trasmettendo la sveglia, quindi dovrò aspettare che il sensore si svegli
-    {
-       TA1CCTL0 |= CCIE;                // compare interrupt abilitato      
-       TA1CTL |= MC_1;                  // abilita il contatore in UP mode
-       UC0IE &= ~UCA0TXIE;              // Disabilita USCI_A0 TX interrupt       
-     }
-    else if (tx_index == string_size)   // TX finita 
-    {        
-       UC0IE &= ~UCA0TXIE;              // Disable USCI_A0 TX interrupt              
-       tx_index = 0; 
-       uart_pause_flag = 1;    
-       flag_tx_finished = 1;
-    }    
-    
+        UCA0TXBUF = tx_string[tx_index++]; // TX next character 
+        if(tx_index == 1 && uart_pause_flag == 1 && UCA0TXBUF == 0x00)      // sto trasmettendo la sveglia, quindi dovrò aspettare che il sensore si svegli
+        {     
+           TA1R = 0;      
+           TA1CCTL0 |= CCIE;                // compare interrupt abilitato      
+           TA1CTL |= MC_1;                  // abilita il contatore in UP mode
+           UC0IE &= ~UCA0TXIE;              // Disabilita USCI_A0 TX interrupt       
+         }
+        else if (tx_index == string_size)   // TX finita 
+        {        
+           UC0IE &= ~UCA0TXIE;              // Disable USCI_A0 TX interrupt              
+           tx_index = 0; 
+           uart_pause_flag = 1;    
+           flag_tx_finished = 1;
+        }    
 } 
   
 #pragma vector=USCIAB0RX_VECTOR 
 __interrupt void USCI0RX_ISR(void) 
 { 
-    //UC0IE &= ~UCA0TXIE;              // Disable USCI_A0 TX interrupt: la ricezione di un messaggio di allarme ha la priorità su qualunque mia trasmissione
-                                     // non serve disabilitare anche il timer perchè la collisione (rx e tx in contemporanea) si può verificare solo prima che sia attivato                  
     static int length, pos, j, sum;
     switch(actual_state)
     {
@@ -2598,7 +2452,7 @@ __interrupt void USCI0RX_ISR(void)
                     case Length:length = UCA0RXBUF;                                
                                 actual_state = Reading;
                                 break;
-                    case Reading:if(pos+2 < length - 1)            // pos è l'indicde del contenuto del pacchetto, disallineato di 3 Bytes rispetto all'intero pacchetto rx (0xAA,length)
+                    case Reading:if(pos+2 < length - 1)                                         // pos è l'indicde del contenuto del pacchetto, disallineato di 3 Bytes rispetto all'intero pacchetto rx (0xAA,length)
                                  {                                           
                                      rx_mex[pos] = UCA0RXBUF;                                             
                                      pos++;                            
@@ -2607,42 +2461,42 @@ __interrupt void USCI0RX_ISR(void)
                                  else
                                  {
                                      rx_mex[pos] = UCA0RXBUF; 
-                                     for(j=0,sum=length+0xaa;j<pos;j++)                      // calcola la somma dei Byte ricevuti eccetto l'ultimo 
+                                     for(j=0,sum=length+0xaa;j<pos;j++)                         // calcola la somma dei Byte ricevuti eccetto l'ultimo 
                                             sum += rx_mex[j];                                                 
-                                     if((sum & 0xff) != rx_mex[pos])                         // checksum error                                     
+                                     if((sum & 0xff) != rx_mex[pos])                            // checksum error                                     
                                             rx_valid_flag = 0;                                     
                                      else                                     
                                             rx_valid_flag = 1;                                                                              
-                                     switch(rx_mex[0])
-                                     {
-                                            case 0x06:  rx_cmd = ack;               // acknowledge ricevuto
-                                                        break;
-                                            case 0x15:  rx_cmd = nack;              // not acknowledge ricevuto
-                                                        break;
-                                            case 0x70:  rx_cmd = detector_events;   // risposta a detector events ricevuta
-                                                        break;
-                                            case 0x71:  if(rx_mex[1] == 0x1f)
-                                                            rx_cmd = req_init;      // richiesta di inizializzazione ricevuta
-                                                        break;
-                                            case 0x90:  rx_cmd = GDE;               // risposta a Get Detector Events ricevuta
-                                                        break;
-                                            case 0x91:  rx_cmd = GPageM;            // risposta a Get Page Mask ricevuta
-                                                        break;
-                                            case 0x92:  rx_cmd = GPropertyM;        // risposta a Get Property Mask ricevuta
-                                                        break;
-                                            case 0x93:  rx_cmd = GDP;               // risposta a Get Detector Property ricevuta
-                                                        break;
-                                            case 0x94:  rx_cmd = GMN;               // risposta a Get Model Number ricevuta                                                          
-                                                        break;
-                                            case 0x95:  rx_cmd = GCV;               // risposta a Get Communication Version ricevuta
-                                                        break;
+                                     rx_cmd = rx_mex[0]; 
+                                     if(rx_cmd == detector_events)                              // gestione stato del tamper
+                                     {      
+                    					dati_periferica.n.stato_new.n.tamper = rx_mex[3] & 0x01;   
+                                        if(segmC.parametri_periferica.p[0] == 4)                // BXS
+                                        {
+                                            dati_periferica.n.stato_new.n.allarme_1 = ((rx_mex[4]>>1 | (rx_mex[1])) & 0x01);
+                                            dati_periferica.n.stato_new.n.allarme_2 = ((rx_mex[4]>>1 | (rx_mex[1])) & 0x02)>>1;                                
+                                        }
+                                        else if(rx_mex[1] != 0 || rx_mex[4] != 0)
+                                            dati_periferica.n.stato_new.n.allarme_1 = 1;
+                                        else
+                                            dati_periferica.n.stato_new.n.allarme_1 = 0;              
+                                        tamper_state = rx_mex[3] & 0x06;
+                                        x = tamper_state ^ st;
+                                        if ( x != 0)
+                                        {
+                                            if((x & 0x10) == 0x10)
+                                                st = x & 0x06;
+                                            else if(x != st)
+                                                reset = 0;
+                                        }
                                      }
+                                     else if(rx_cmd == GMN)
+                                        segmC.parametri_periferica.p[0] = rx_mex[1];            // rilevazione modello sensore OPTEX: 2 = VXS-RAM, 3 = VXS-RDAM, 4 = BXS-R, 5 = BXS-RAM    
                                      flag_rx = 0; 
                                      actual_state = Wakeup;                                     
                                  }                    
                                  break;
-    }         
-   // UC0IE |= UCA0TXIE;              // Enable USCI_A0 TX interrupt
+    }           
 }
 
 //---------------------------------------------------------------------------------
@@ -2651,16 +2505,11 @@ __interrupt void USCI0RX_ISR(void)
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A0(void)
 {
-	unsigned char temp;
+    static unsigned char old_state_tamper = 0, old_state_alarm = 0;
+    static unsigned int alarm_debouncing = 0, tamper_debouncing = 0;
 	static unsigned char cnt_sec, cnt_250msec;
-//	OUT_TEST_1;
 
 	TA0CCR0 += 512;       // Add Offset to CCR,  clock del timer = 32 KHz
-
-// --------- Temporizzazioni
-    	P2OUT |= 0x0A;     // PULL up anche su p2.1,3
-//    	P1DIR  = 0x25;     // p1.5 = uscita per lettura ponticello    	
-//    	P1REN |= 0x20;     // p1.5 = input con pull up per lettura ponticello
 
 		if ( timeout)
 			timeout--;
@@ -2668,40 +2517,50 @@ __interrupt void Timer_A0(void)
 		if ( cnt_post_fpro)
 			   cnt_post_fpro--;
 
-		temp  = P2IN & 0x0e;		
+        if(segmC.parametri_periferica.p[0] == 1)        // contatto
+        {            
+            P2REN |= BIT1;                  // abilita pull-up
+            if(PULS_T == old_state_tamper)                                  
+                tamper_debouncing ++;
+            else
+            {
+                old_state_tamper = PULS_T;
+                tamper_debouncing = 0;
+            }
+            if(tamper_debouncing == 3)
+            {
+                if(old_state_tamper == 0)
+                    dati_periferica.n.stato_new.n.tamper = 0;
+                else
+                {
+                    reset = 0;              // reset attivo a 0 se rilascio il tamper
+                    dati_periferica.n.stato_new.n.tamper = 1;
+                }
+                tamper_debouncing = 0;
+            }
 
-		P2OUT=0x01;     // PULL up solo su p2.0
+            if(segmC.parametri_periferica.p[1] == POLARITY_H)        // polarita' = 1
+                P1OUT |= BIT1;              // settato pull-up
+            else
+                P1OUT &= ~BIT1;             // settato pull-down
+            P1REN |= BIT1;                  // abilita resistenza di pull-up/down
 
-//		P1DIR  =  0x05;     	
-
-		if ( (temp & 0x0e) != input_old)
-		{
-			input_old = (temp & 0x0e);
-			input_cnt = 65000/USEC15625;
-//			stai_sveglio = 100000/USEC15625;
-		}
-		else if ( input_cnt )
-				input_cnt--;
-		else
-		{
-//			input_fronte.i8 = ((~input_old) & 0x0e) & (~input_stato.i8);
-			input_stato.i8    = (~input_old) & 0x0e;
-		}
-
-//    if(tipo_connessione_sensore == 0)     // connessione tramite contatto
-//    {
-
-		if (cnt_mask_tappa)
-		{
-			if ( --cnt_mask_tappa == 0)
-			{
-//              P1IFG &= ~MASK_TAPP;
-//              P1IE |= MASK_TAPP;
-				P2IFG &= ~MASK_TAPP;
-				P2IE  |= MASK_TAPP;            // Riabilita interrupts tapparella
-			}
-		}
-//    }
+            if((P1IN & BIT1) == old_state_alarm)
+                    alarm_debouncing ++;
+            else
+            {
+                    old_state_alarm = P1IN & BIT1;
+                    alarm_debouncing = 0;
+            }
+            if(alarm_debouncing == 3)
+            {            
+                dati_periferica.n.stato_new.n.allarme_1 = 0x01 & (segmC.parametri_periferica.p[1] ^ (old_state_alarm >> 1));            
+                alarm_debouncing = 0;
+            }
+            
+            P1REN &= ~BIT1;
+            P2REN &= ~BIT1;
+        }
 
 		if ( dati_periferica.n.cnt_sono_vivo)
 				dati_periferica.n.cnt_sono_vivo-- ;
@@ -2719,14 +2578,6 @@ __interrupt void Timer_A0(void)
 			        LED_ON;
 			}
 
-			if (cnt_tempo_tappa)
-			{
-				if (--cnt_tempo_tappa == 0)
-				{
-					cnt_imp_tappa   = segmC.parametri_periferica.impulsi_tappa;
-//					cnt_tempo_tappa = segmC.parametri_periferica.tempo_tappa;
-				}
-			}
 			if ( ++cnt_sec >= 1000/250)
 			{                                    //ogni sec
 				cnt_sec = 0;
@@ -2737,8 +2588,7 @@ __interrupt void Timer_A0(void)
 					dati_periferica.n.tempo_batteria++;
 					scrivi_tempo_batteria_pnd = 1;
 				}
-//
-//
+
 				if (dati_periferica.n.cnt_sec_coll_man_inst)
 				{
 					if (--dati_periferica.n.cnt_sec_coll_man_inst == 0)
@@ -2752,21 +2602,20 @@ __interrupt void Timer_A0(void)
 				}
 			}
 		}
-		LPM3_EXIT;
-//	}
+		LPM3_EXIT;   
 }
 
 #pragma vector=TIMER0_A1_VECTOR     //interrupt finestra messaggi sincroni
 __interrupt void Timer0_C1(void)
 {
-		OUT_TEST_1;
+//		OUT_TEST_1;
 		cnt_post_fpro = TA0IV;            //PER CLEAR INT PND
 		if ( ++pnt_periodo_rx_sincrona_uso  > 3)   pnt_periodo_rx_sincrona_uso = 0;
 		TA0CCR1 += periodo_rx_sincrona[pnt_periodo_rx_sincrona_uso] + ((unsigned int)n_concentratore_in_impianto << 11);
 
 		cnt_post_fpro = DELTA_FPROIBITA;
 
-		OUT_TEST_0;
+//		OUT_TEST_0;
 }
 
 
@@ -2777,7 +2626,7 @@ __interrupt void Timer1A0(void)
     TA1CCTL0 &= ~CCIE;               // disabilita compare interrupt e azzera il flag di interrupt
     uart_pause_flag = 0;
     UC0IE |= UCA0TXIE;               // Enable USCI_A0 TX interrupt          
- }
+}
 
 void start_adc(void)
 {
@@ -2809,6 +2658,7 @@ void start_adc(void)
 #endif
 	ADC10CTL0 |= ENC + ADC10SC;             // Sampling and conversion start
     flag.adc_in_corso = 1;
+    
 }
 
 void off_adc(void)
