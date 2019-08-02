@@ -1,0 +1,404 @@
+/*
+ * PROJECT:
+ *
+ * FILENAME: Trace.cpp
+ *
+ * PURPOSE:
+ * Methods implementations
+ *
+ *
+ * LICENSE: please refer to LICENSE.TXT
+ * CREATED: 14-11-08
+ * AUTHOR: 	Luca Mini
+ */
+
+#include "Trace.h"
+
+#include <syslog.h>
+
+/**
+ * ctor
+ * @param numb_of_classes	numbero of trace classes used
+ * @param msgtitle	prefix used to show the message
+ * @param filename	filename used to trace. Special one are:
+ * "stdout" to log on STDOUT
+ * "stderr" to log on STDERR
+ * "syslog" to log on SysLog (for deamons) in this case to see log: tail -f /var/log/messages
+ * otherwise a valid filename to write to file
+ */
+Trace::Trace(int numb_of_classes, string msgtitle,const char *filename)
+{
+mode(filename);
+
+traceEnabled = new bool[numb_of_classes];
+n_classes=numb_of_classes;
+title=msgtitle;
+showClassNumber=false;
+showClassName=true;
+className[TRACECLASS_DEBUG]="DEBUG";
+className[TRACECLASS_FATAL]="FATAL";
+className[TRACECLASS_ERROR]="ERROR";
+className[TRACECLASS_WARN]="WARNING";
+className[TRACECLASS_NOTIFY]="NOTIFY";
+set_all(true);
+}
+
+/**
+ * dtor
+ */
+Trace::~Trace()
+{
+delete [] traceEnabled;
+close();
+}
+
+/**
+ * map the name of the class
+ * @param classNumber number of the class
+ * @param className name of the class
+ */
+void Trace::addClassName(int classNumber, string cname)
+{
+className[classNumber]=cname;
+}
+
+/**
+ * trace function.
+ *
+ * @param	traceclass		integer to specify the class of the message
+ *												[0..200]
+ *											for example: 	0 	low level
+ *																		1		diagnostic
+ *																		10 	test messages
+ * @param format			  same as printf
+ */
+#define SIZE 5000
+void Trace::trace(int traceclass, const char *format, ...)
+{
+va_list ap;
+
+if(traceclass>=n_classes || traceclass<0)
+	{
+	writeLL("TRACE_CLS> Internal error: class value out of range");
+	return;
+	}
+
+char tmp[SIZE];
+
+if(traceEnabled[traceclass])
+	{
+	tmp[0]=(char)NULL;
+
+	va_start(ap,format);
+	vsnprintf(tmp,SIZE - 1,format,ap);
+	va_end(ap);
+
+	string outmsg(tmp);	// convert to string
+	tracef(traceclass,NULL,outmsg);
+	}
+}
+/**
+ * trace function.
+ *
+ * @param	traceclass		integer to specify the class of the message
+ *												[0..200]
+ *											for example: 	0 	low level
+ *																		1		diagnostic
+ *																		10 	test messages
+ * @param msg			  	message to print (string)
+ */
+void Trace::trace(int traceclass, const string msg)
+{
+tracef(traceclass,NULL,msg);
+}
+
+/**
+ * like the trace above but you can pass the function name
+ * @param traceclass
+ * @param _func function name (you can use: __FUNCTION__)
+ * @param format
+ */
+void Trace::tracef(int traceclass, const char *_func, const char *format, ...)
+{
+va_list ap;
+
+if(traceclass>=n_classes || traceclass<0)
+	{
+	writeLL("TRACE_CLS> Internal error: class value out of range");
+	return;
+	}
+
+char tmp[SIZE];
+
+if(traceEnabled[traceclass])
+	{
+	tmp[0]=(char)NULL;
+
+	va_start(ap,format);
+	vsnprintf(tmp,SIZE - 1,format,ap);
+	va_end(ap);
+
+	string outmsg(tmp);	// convert to string
+	tracef(traceclass,_func,outmsg);
+	}
+}
+
+/**
+ * like the trace above but you can pass the function name
+ * @param traceclass
+ * @param _func function name (you can use: __FUNCTION__)
+ * @param msg
+ */
+void Trace::tracef(int traceclass, const char *_func, const string msg)
+{
+fstream fp;
+string outmsg;
+
+if(traceclass>=n_classes || traceclass<0)
+	{
+	writeLL("TRACE_CLS> Internal error: class value out of range");
+	return;
+	}
+if(traceEnabled[traceclass])
+	{
+	char tr[10];
+	sprintf(tr, "%03d", traceclass);
+	outmsg="";
+
+	if(useTimestamp) outmsg=getTimestamp()+" ";
+
+	outmsg+="["+title;
+
+	if(showClassNumber)	outmsg+="|" + (string)tr;
+	if(showClassName)
+		{
+		if(className.find(traceclass)==className.end())
+			outmsg+="|" + (string)tr;
+		else
+			outmsg+="|" + className[traceclass];
+		}
+	if(_func != NULL)
+		{
+		outmsg+="] <" + (string)_func+ "> " + msg;
+		}
+	else
+		{
+		outmsg+="] " + msg;
+		}
+
+	writeLL(outmsg);
+	}
+}
+
+/**
+ * setup of the classes
+ * @param	enable		true=enable, false=disable
+ * @param	...				class to enable/disable
+ *									stop the class list by -1
+ * 	  							if the position of the first class is -1 all classes will be
+ *      						enabled/disabled
+ */
+void Trace::set(bool enable, ...)
+{
+va_list vl;
+int cls=-1;
+va_start(vl,enable);
+
+cls=va_arg(vl,int);
+if(cls>-1)
+	{
+	while(cls>-1)
+		{
+		if(cls<n_classes)	// must be in range
+			traceEnabled[cls]=enable;
+		cls=va_arg(vl,int);
+		}
+	}
+else
+	{
+	set_all(enable);
+	}
+va_end(vl);
+}
+
+/**
+ * enable/disable all traces
+ * @param mode  true all enabled, false all disabled
+ */
+void Trace::set_all(bool mode)
+{
+for(int i=0;i<n_classes;i++)
+	{
+	traceEnabled[i]=mode;
+	}
+}
+
+//-----------------------------------------------------------------------------
+/**
+ * tell if a traceclass is set or not
+ *
+ * @param	traceclass
+ * @return true = set; false= not set
+ */
+bool Trace::isSet(int traceclass)
+{
+return(traceEnabled[traceclass]);
+}
+
+//-----------------------------------------------------------------------------
+/**
+ * setup of a fifo for trace
+ * @param filename
+ * @param create true: create and open the fifo; false: use one already created
+ * @param fp fileptr to fifo (if create=false)
+ */
+void Trace::setFifo(char* filename, bool create, FILE *fp)
+{
+strcpy(TraceFileName,filename);
+if(create)
+	{
+	fifo = fopen(filename, "w");
+	}
+else
+	{
+	fifo=fp;
+	}
+isFifo=true;
+}
+
+//-----------------------------------------------------------------------------
+/**
+ * close the fifo
+ */
+void Trace::closeFifo()
+{
+fclose(fifo);
+}
+
+//-----------------------------------------------------------------------------
+/**
+ * set the timestamp usage
+ * @param useTS true: use timestamp; false: not use
+ */
+void Trace::setUseTimestamp(bool useTS)
+{
+useTimestamp=useTS;
+}
+
+/*
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+	private members
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+*/
+
+/**
+ * low level general routine to writo out
+ * @param msg
+ */
+void Trace::writeLL(string msg)
+{
+switch(tOutput)
+	{
+		case tout_STDOUT:
+			cout << msg << endl;
+			break;
+		case tout_STDERR:
+			cerr << msg << endl;
+			break;
+		case tout_SYSLOG:
+			//openlog(title.c_str(), LOG_PID|LOG_CONS, LOG_USER);
+			openlog("TRACE", LOG_PID|LOG_CONS, LOG_USER);
+			syslog(LOG_INFO, msg.c_str());
+			closelog();
+			break;
+		case tout_FILE:
+			writeToFile(msg);
+			break;
+	}
+}
+
+/**
+ * mode of traces: stdout or file
+ * @param filename		NULL=trace to stdout or	filename
+ * @param whereindicates where to do the output
+ */
+void Trace::mode(const char *filename)
+{
+if(filename==NULL)
+	{
+	TraceFileName=NULL;
+	tOutput=tout_STDOUT;
+	}
+else if(strcmp(filename,TRACEOUTPUT_STDOUT)==0)
+	{
+	TraceFileName=NULL;
+	tOutput=tout_STDOUT;
+	}
+else if(strcmp(filename,TRACEOUTPUT_STDERR)==0)
+	{
+	TraceFileName=NULL;
+	tOutput=tout_STDERR;
+	}
+else if(strcmp(filename,TRACEOUTPUT_SYSLOG)==0)
+	{
+	TraceFileName=NULL;
+	tOutput=tout_SYSLOG;
+	}
+else
+	{
+	TraceFileName=strdup(filename);
+	tOutput=tout_FILE;
+	}
+}
+/**
+ * stop of the use of traces
+ * Note: not need for traces to stdout.
+ */
+void Trace::close(void)
+{
+if(TraceFileName!=NULL)
+	free(TraceFileName);
+}
+
+/**
+ * write to file
+ * @param msg message to be written
+ */
+void Trace::writeToFile(string msg)
+{
+fstream fp;
+if(isFifo)
+	{
+	msg += "\n";
+	fprintf(fifo,msg.c_str());
+	}
+else
+	{
+	// to file
+	fp.open(TraceFileName, ios::app);
+	fp << msg << endl;
+	fp.close();
+	}
+}
+
+/**
+ * return the timestamp string in the format: YMD:HMS
+ *
+ * @return timestamp string
+ */
+string Trace::getTimestamp()
+{
+time_t rawtime;
+struct tm * timeinfo;
+char buffer [80];
+
+time ( &rawtime );
+timeinfo = localtime ( &rawtime );
+
+strftime (buffer,80,"%y%m%d:%H%M%S",timeinfo);
+
+string ret(buffer);
+return(ret);
+}
+
+

@@ -1,0 +1,1286 @@
+/*
+ * PROJECT:
+ *
+ * FILENAME: Utils.cpp
+ *
+ * PURPOSE:
+ * Methods implementations
+ *
+ *
+ * LICENSE: please refer to LICENSE.TXT
+ * CREATED: 29-10-08
+ * AUTHOR: 	Luca Mini
+ */
+
+#include "Utils.h"
+
+#include <iomanip>
+#include <dirent.h>
+
+/**
+ * space Trim for char*
+ * @param str string to trim
+ * @return trimmed char string
+ */
+char* StrTrim(char *str)
+{
+int i, init,end;
+
+init=end=0;
+if(strlen(str)>0)
+	{
+	for(i=0;i<(int)strlen(str);i++)
+		{
+		if(isspace((int)*(str+i))==0)
+			{
+			init=i;
+			break;
+			}
+		}
+	for(i=strlen(str)-1;i>=0;i--)
+		{
+		if(isspace((int)*(str+i))==0)
+			{
+			end=i+1;
+			break;
+			}
+		}
+
+	// trim  dx
+	if(init>0)
+		memmove(str,str+init,end-init);
+
+	// trim  sx
+	*(str+end-init)=0;
+	}
+return(str);
+}
+
+/**
+ * itoa replacemente function
+ * @param buf
+ * @param len
+ * @param num
+ * @return
+ */
+const char *itoa_buf(char *buf, size_t len, int num)
+{
+static char loc_buf[sizeof(int) * 30]; /* not thread safe */
+
+if(!buf)
+	{
+	buf = loc_buf;
+	len = sizeof(loc_buf);
+	}
+
+if(snprintf(buf, len, "%d", num) == -1) return ""; /* or whatever */
+
+return buf;
+}
+
+/**
+ * space trim left (for string)
+ * @param s string to trim
+ * @return string trimmed
+ */
+string& triml(string& s)
+{
+int pos(0);
+for (; s[pos]==' ' || s[pos]=='\t'; ++pos)
+	;
+s.erase(0, pos);
+return s;
+}
+/**
+ * space trim right (for string)
+ * @param s string to trim
+ * @return string trimmed
+ */
+string& trimr(string& s)
+{
+int pos(s.size());
+for (; (pos && s[pos-1]==' ') || (s[pos-1]=='\t'); --pos)
+	;
+s.erase(pos, s.size()-pos);
+return s;
+}
+/**
+ * space trim both left and right (for string)
+ * @param s string to trim
+ * @return string trimmed
+ */
+string& trim(string& s)
+{
+return triml(trimr(s));
+}
+
+/**
+ * to upper a string
+ * @param s string to upercase
+ * @return string converted
+ */
+string& toUpperStr(string & s)
+{
+transform(s.begin(), s.end(), s.begin(), ::toupper);
+return(s);
+}
+/**
+ * to upper a string
+ * @param s string to upercase
+ * @return string converted
+ */
+string& toLowerStr(string & s)
+{
+transform(s.begin(), s.end(), s.begin(), ::tolower);
+return(s);
+}
+
+/**
+ * compares two strings starting from a point for size chars
+ * @param str1	first string to be compared
+ * @param start1 start index
+ * @param str2 second string to be compared
+ * @param start2 start index
+ * @param size chars compared. If size > of the string len, the string len is the size. If =0 use the string len of the shorter one
+ * @return 0 are equals; !=0 are differnt
+ */
+int strsubncmp(const char *str1, int start1, const char *str2, int start2, int size)
+{
+bool equal=true;
+int s1,s2;
+if(size>0)
+	{
+	s1=((unsigned)(size+start1) > strlen(str1)) ? (strlen(str1)-start1) : (size);
+	s2=((unsigned)(size+start2) > strlen(str2)) ? (strlen(str2)-start2) : (size);
+	}
+else
+	{
+	s1=(strlen(str1)-start1);
+	s2=(strlen(str2)-start2);
+	}
+s1=(s2>=s1) ? (s1) : (s2);	// take the minimum
+for(int i=0;i<s1 && equal;i++)
+	{
+	if(str1[start1+i]==0 || str2[start2+i]==0) break;
+	if(str1[start1+i]!=str2[start2+i])
+		{
+		equal=false;
+		break;
+		}
+	}
+return equal ? (0) : (1);
+}
+
+/**
+ * convert to boolean a string
+ * @param str string value to be converted.
+ * @return true; false
+ */
+bool to_bool(const string &str)
+{
+string s(str);
+toLowerStr(s);
+if(	s=="1" ||
+		s=="y" ||
+		s=="yes" ||
+		s=="true"
+		) return(true);
+else
+	return(false);
+}
+
+
+/**
+ * format a string like printf
+ * @param fmt format string
+ * @return string formatted
+ */
+std::string strFormat(const std::string fmt, ...)
+{
+int size = 100;
+std::string str;
+va_list ap;
+while (1)
+	{
+	str.resize(size);
+	va_start(ap, fmt);
+	int n = vsnprintf((char *) str.c_str(), size, fmt.c_str(), ap);
+	va_end(ap);
+	if (n > -1 && n < size)
+		{
+		str.resize(n);
+		return str;
+		}
+	if (n > -1)
+		size = n + 1;
+	else
+		size *= 2;
+	}
+return str;
+}
+
+
+/**
+ * split a string and fill a string vector
+ * @param str	string to split
+ * @param tokens vector where the string is splitted (output)
+ * @param delimiters string representing delimeter where to split
+ * 	example:
+ * #include <string>
+ * #include <iterator>
+ * #include <vector>
+ *
+ * using namespace std;
+ *
+ * int main()
+ *	{
+ *	vector<string> tokens;
+ *	string str("Split me up! Word1 Word2 Word3.");
+ *	// split
+ *	Split(str, tokens);
+ *	// show the vector
+ *	copy(tokens.begin(), tokens.end(), ostream_iterator<string>(cout, ", "));
+ *	}
+ */
+void Split(const string& str,								// string to split
+           vector<string>& tokens,					// vector (output)
+           const string& delimiters					// delimiters
+           )
+{
+    // Skip delimiters at beginning.
+    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    // Find first "non-delimiter".
+    string::size_type pos     = str.find_first_of(delimiters, lastPos);
+
+    //while (string::npos != pos || string::npos != lastPos)
+    while (string::npos != pos || string::npos != lastPos)
+    {
+        // Found a token, add it to the vector.
+        tokens.push_back(str.substr(lastPos, pos - lastPos));
+        // Skip delimiters.  Note the "not_of"
+        lastPos = str.find_first_not_of(delimiters, pos);
+        // Find next "non-delimiter"
+       	pos = str.find_first_of(delimiters, lastPos);
+    }
+}
+
+/**
+ * a faster split function
+ * @param tokens
+ * @param str
+ * @param delimiters
+ */
+void Split2(vector<string> &tokens, char *str, const char *delimiters)
+{
+char *saveptr;
+char *token;
+
+for (token = strtok_r(str, delimiters, &saveptr); token != NULL; token =
+    strtok_r(NULL, delimiters, &saveptr))
+	{
+	tokens.push_back(string(token));
+	}
+}
+
+
+/**
+ * remove all occurrences of a char and resize the string
+ * @param s string to handle
+ * @param c char to remove
+ * @return elaborated string
+ */
+string &strRemoveChar(string &s,char c)
+{
+string::iterator end_pos = std::remove(s.begin(), s.end(), ' ');
+s.erase(end_pos, s.end());
+return s;
+}
+
+/**
+ * replace a substring with another string, if found (only the first occurrence
+ * note: if you need to replace all the occurrence please use
+ * i.es.: replace(tmp.begin(), tmp.end(), '/', '#');
+ * but only for one value (one char) else use strReplaceAll
+ *
+ * @param s string origin
+ * @param to_subst string to be replaced
+ * @param new_str string that replace the to_subst
+ * @return new string that can be changed or equal to s if to_subst is not found
+ */
+string& strReplace(string &s, string to_subst, string new_str)
+{
+size_t r1=s.find(to_subst);
+if(r1!=string::npos) s.replace(r1,to_subst.size(),new_str);
+return(s);
+}
+
+/**
+ * replace a substring with another string, if found (only the first occurrence
+ * note: if you neet to replace all the occurrence please use
+ * i.es.: replace(tmp.begin(), tmp.end(), '/', '#');
+ * but only for one value (one char)
+ *
+ * @param s string origin
+ * @param to_subst string to be replaced
+ * @param new_str string that replace the to_subst
+ * @return new string that can be changed or equal to s if to_subst is not found
+ */
+string& strReplaceAll(string &s, string to_subst, string new_str)
+{
+size_t r1=0;
+while(r1!=string::npos)
+	{
+	r1=s.find(to_subst,r1);
+	if(r1!=string::npos) s.replace(r1,to_subst.size(),new_str);
+	}
+return(s);
+}
+
+/**
+ * extract a stringbetween two delimiters
+ * @param text
+ * @param delimStart
+ * @param delimStop
+ * @return
+ */
+string extractBetween(const string& text, const string& delimStart, const string& delimStop)
+{
+string str = text;
+unsigned first = str.find(delimStart);
+unsigned last = str.find_last_of(delimStop);
+if (first != string::npos && last != string::npos)
+	return str.substr(first, last - first);
+else
+	return "";
+}
+
+/**
+ * check if a string start with a certain string
+ * @param text
+ * @param token
+ * @return
+ */
+bool startsWith(const string& text, const string& token)
+{
+if (text.length() < token.length()) return false;
+return (text.compare(0, token.length(), token) == 0);
+}
+
+//-----------------------------------------------------------------------------
+/**
+ * Set arguments variables with values retrieved from a string
+ *
+ * @param values string of values
+ * @param sep separators (i.e. ", " this separate and eliminates spaces)
+ * @param format format of the fields, similar to which used in printf:
+ * 				%d  integer
+ * 				%f  float
+ * 				%s  string (C)
+ * 				%b  boolean
+ * @param ... list of variables (as pointers)
+ * @return true: ok; false: error
+ */
+bool strSetFields(string values,const string sep, string format, ...)
+{
+bool ret=true;
+vector<string> ftok,tok;
+va_list ap;
+
+Split(format,ftok,sep);
+Split(values,tok,sep);
+
+va_start(ap, format);
+if(ftok.size()==tok.size()) // must be of the same size
+	{
+	for(unsigned int i=0;i<ftok.size();i++)
+		{
+		if(ftok[i]=="%d")
+			{
+			int *v = va_arg(ap, int*);
+			*v=to_number<int>(tok[i]);
+			}
+		else if(ftok[i]=="%f")
+			{
+			float *v = va_arg(ap, float*);
+			*v=to_number<float>(tok[i]);
+			}
+		else if(ftok[i]=="%b")
+			{
+			bool *v = va_arg(ap, bool*);
+			*v=to_bool(tok[i]);
+			}
+		else if(ftok[i]=="%s")
+			{
+			char *v = va_arg(ap, char*);
+			strcpy(v,tok[i].c_str());
+			}
+		//...................
+		else
+			{
+			ret=false;
+			break;
+			}
+		}
+	}
+else
+	{
+	ret=false;
+	}
+va_end(ap);
+return(ret);
+}
+
+/**
+ * generates a string with fields aligned as specified in the parameters
+ * Parameters are couples of posN, valN, like the first one
+ * NOTE: position after the last field, must be -1 to terminate
+ * @param dst destination string
+ * @param pos1 position of the first parameter to write (base 0)
+ * @param ... subsequent parameters; after the last, please inser -1
+ * @return string to print (like dst)
+ * example:
+ * alignFields(strDest,0,"test1",9,"test2,-1);
+ */
+string &alignFields(string &sdst,int pos1, ...)
+{
+#define STR_SIZE	500	// chars of the temporary internal strings
+va_list ap;
+int pos,actual_pos=0, nspc;
+char *stmp, spc[STR_SIZE];
+bool end=false;
+string dst;
+
+va_start(ap, pos1);
+while(!end)
+	{
+	if(actual_pos==0) pos=pos1; else pos=va_arg(ap, int); // if at first step or sequent
+	if(pos<0)
+		{
+		end=true;
+		break;
+		}
+	else
+		{
+		stmp=va_arg(ap, char*);
+
+		nspc=pos-actual_pos;
+		if(nspc<0) nspc=1;	// put at least a space if the field spacing is not correct
+		memset(spc,' ',nspc);
+		spc[nspc]=0;
+		dst +=(string)spc + (string)stmp;
+		actual_pos=(int)dst.size();
+		}
+	}
+sdst=dst;
+va_end(ap);
+return(sdst);
+}
+
+/**
+ * return the string between by two delimeters
+ * @param src the main string
+ * @param left left delimiter
+ * @param right rignt delimiter
+ * @return string between the delimiters
+ */
+string getDelimitedStr(string src,string left, string right)
+{
+string res="";
+size_t pos1, pos2;
+if((pos1=src.find(left)) != string::npos)
+	{
+	pos1+=left.size();
+	if((pos2=src.find(right,pos1)) != string::npos)
+		{
+		res=src.substr(pos1,pos2-pos1);
+		}
+	}
+return(res);
+}
+
+/**
+ * print in a good "dump" fashion a binary data as hex - ascii printable form
+ * @param ptr buffer data pointer
+ * @param buflen size of the buffer
+ */
+void hexdump(void *ptr, int buflen)
+{
+unsigned char *buf = (unsigned char*) ptr;
+int i, j;
+for (i = 0; i < buflen; i += 16)
+	{
+	printf("%06x: ", i);
+	for (j = 0; j < 16; j++)
+		if (i + j < buflen)
+			printf("%02x ", buf[i + j]);
+		else
+			printf("   ");
+	printf(" ");
+	for (j = 0; j < 16; j++)
+		if (i + j < buflen) printf("%c", isprint(buf[i + j]) ? buf[i + j] : '.');
+	printf("\r\n");
+	}
+}
+
+/**
+ * print in a good "dump" fashion a binary data as hex - ascii printable form into a string
+ * @param x is the base memory location for the dump.
+ * @param len size of the buffer to dump
+ * @param w is the number of bytes to display per line.
+ */
+std::string hexdumpStr2(void* x, unsigned long len, unsigned int w)
+{
+std::ostringstream osDump;
+std::ostringstream osNums;
+std::ostringstream osChars;
+std::string szPrevNums;
+bool bRepeated = false;
+unsigned long i;
+
+for (i = 0; i <= len; i++)
+	{
+	if (i < len)
+		{
+		char c = (char) *((char*) x + i);
+		unsigned int n = (unsigned int) *((unsigned char*) x + i);
+		osNums << std::setbase(16) << std::setw(2) << std::setfill('0') << n << " ";
+		if (((i % w) != w - 1) && ((i % w) % 8 == 7)) osNums << "- ";
+		osChars << (iscntrl(c) ? '.' : c);
+		}
+
+	if (osNums.str().compare(szPrevNums) == 0)
+		{
+		bRepeated = true;
+		osNums.str("");
+		osChars.str("");
+		if (i == len - 1) osDump << "*" << std::endl;
+		continue;
+		}
+
+	if (((i % w) == w - 1) || ((i == len) && (osNums.str().size() > 0)))
+		{
+		if (bRepeated)
+			{
+			osDump << "*" << std::endl;
+			bRepeated = false;
+			}
+		osDump << std::setbase(16) << std::setw(8) << std::setfill('0')
+		    << (i - (i % w)) << "  " << std::setfill(' ')
+		    << std::setiosflags(std::ios_base::left)
+		    << std::setw(3 * w + ((w / 8) - 1) * 2) << osNums.str() << " |"
+		    << osChars.str() << std::resetiosflags(std::ios_base::left) << "|"
+		    << std::endl;
+		szPrevNums = osNums.str();
+		osNums.str("");
+		osChars.str("");
+		}
+	}
+
+osDump << std::setbase(16) << std::setw(8) << std::setfill('0') << (i - 1)
+    << std::endl;
+
+return osDump.str();
+}
+
+/**
+ * print in a good "dump" fashion a binary data as hex - ascii printable form
+ * @param strout string that will contains the printable dump
+ * @param ptr buffer data pointer
+ * @param buflen size of the buffer
+ */
+void hexdumpStr(string &strout,void *ptr, int buflen)
+{
+char tmp[20];
+unsigned char *buf = (unsigned char*) ptr;
+int i, j;
+for (i = 0; i < buflen; i += 16)
+	{
+	sprintf(tmp,"%06x: ", i);
+	strout+=tmp;
+	for (j = 0; j < 16; j++)
+		{
+		if (i + j < buflen)
+			{
+			sprintf(tmp,"%02x ", buf[i + j]);
+			strout+=tmp;
+			}
+		else
+			{
+			sprintf(tmp,"   ");
+			strout+=tmp;
+			}
+		}
+	sprintf(tmp," ");
+	strout+=tmp;
+	for (j = 0; j < 16; j++)
+		{
+		if (i + j < buflen)
+			{
+			sprintf(tmp,"%c", isprint(buf[i + j]) ? buf[i + j] : '.');
+			strout+=(string)tmp;
+			}
+		}
+	//sprintf(tmp,"\n");
+	strout+="\r\n";
+	}
+}
+
+
+/**
+ * creates a strng  that is printable from a binary buffer
+ * @param dst buffer for the string result
+ * @param src buffer of the values to be converted
+ * @param len  number of data in src
+ * @return dst pointer
+ */
+char * printableBuffer(char *dst,unsigned char *src, int len)
+{
+*dst=(char) NULL;
+for(int i=0; i<len;i++)
+	{
+	if(isprint(*(src+i)))
+		{
+		*(dst+i)=*(src+i);
+		}
+	else
+		{
+		*(dst+i)='.';
+		}
+	}
+*(dst+len)=0;
+return(dst);
+}
+
+/**
+ * convert a byte vector to a string of hexadecimals
+ * @param dst buffer for the string result
+ * @param src buffer of the values to be converted
+ * @param len number of data in src
+ * @param sep true, add a separator
+ * @param sepChar separator char
+ * @return dst pointer
+ */
+char * Hex2AsciiHex(char *dst,unsigned char *src, int len, bool sep, char sepChar)
+{
+*dst=(char) NULL;
+char tmp[3];
+char tmp1[2];
+
+tmp1[0]=sepChar;
+tmp1[1]=0;
+for(int i=0; i<len;i++)
+	{
+	sprintf(tmp,"%02X",((unsigned int)*(src+i) & 0xFF));
+	if(sep) strcat(tmp,tmp1);
+	strcat(dst,tmp);
+	}
+return(dst);
+}
+
+
+/**
+ * convert a string of hexadecimals in an array of bytes
+ * @param dst buffer for the resulting array of unsigned chars
+ * @param src buffer of values to convwert (i.e. 03A24400)
+ * @param len len of the buffer dst. if the string is longer,
+ *            it will be truncated if shorter the remaining
+ *            buffer dst is not altered
+ * @return number of bytes in dst
+ */
+int AsciiHex2Hex(unsigned char *dst,char *src, int len)
+{
+char str[3];
+int i,j,nbytes;
+unsigned int t;
+
+i=(int)strlen(src)/2;
+nbytes=(i >= len) ? (len) : (i);	// get the minimum
+j=0;
+for(i=0; i<nbytes;i++)
+	{
+	strncpy(str,src+j,2);
+	str[2]=(char)NULL;
+	j+=2;
+	sscanf(str,"%X",&t);
+	*(dst+i)=(unsigned char)t;
+	}
+return(i);
+}
+
+
+/**
+ * convert a string that begin with 0x or not into an int, but values must be in hex
+ * @param v hex string (beginning with 0x or not)
+ * @return integer value >=0; if <0 error
+ */
+int Hex2Int(string &v)
+{
+int r=-1;
+string tmp=v;
+if(v[0]=='0' && (v[1]=='x' || v[1]=='X'))
+	{
+	string tmp=v.substr(2);
+	}
+sscanf(tmp.c_str(),"%X",&r);
+return(r);
+}
+
+/**
+ * check if a string contain an integer number
+ * @param str string to check if is a number
+ * @return true if is an integer
+ */
+bool IsIntNumber(char *str)
+{
+bool innumber=false;
+
+if(str==0) return(false);
+
+for(unsigned int i=0; i<strlen(str); i++)
+	{
+	if(isspace(*(str+i)))
+		{
+		if(innumber)
+			return(false);
+		else
+			continue;
+		}
+
+
+	if(isdigit(*(str+i)))
+		{
+		innumber=true;
+		}
+	else
+		return(false);
+	}
+return(true);
+}
+
+/**
+ * check if a string contain an unsigned integer
+ * @param s string to check
+ * @return true if is an unsigned integer
+ */
+bool IsUIntNumber(const std::string& s)
+{
+for (unsigned int i = 0; i < s.length(); i++)
+	{
+	if (!std::isdigit(s[i]))
+		return false;
+	}
+return true;
+}
+/**
+ * check if a string contain a (signed) integer
+ * @param s string to check
+ * @return true if is a (signed) integer
+ */
+bool IsIntNumber(const std::string& s)
+{
+for (unsigned int i = 0; i < s.length(); i++)
+	{
+	if(i==0)	// first char
+		{
+		if(s[i]!='+' && s[i]!='-' && !std::isdigit(s[i])) return(false);
+		}
+	else	// next chars
+		if (!std::isdigit(s[i]))return false;
+	}
+return true;
+}
+
+/**
+ * get the length of a file
+ * @param fp file pointer
+ * @return length in bytes
+ */
+long int filelength(FILE *fp)
+{
+long int fsize;
+
+fseek(fp, 0, SEEK_END);
+fsize = ftell(fp);
+fseek(fp, 0, SEEK_SET);
+return(fsize);
+}
+
+/**
+ * split the string of the filename with path and return the path
+ * you can use in its place:
+ * #include <libgen.h>
+ * dirname(..)
+ *
+ * @param fnp filename with path
+ * @param slash [optional, default=false] true: return path with the final '/';
+ */
+string filenameGetDir(const string& fnp, bool slash)
+{
+size_t found;
+found=fnp.find_last_of("/\\");
+if(found != string::npos)
+	{
+	if(slash)
+		return(fnp.substr(0,found+1));
+	else
+		return(fnp.substr(0,found));
+	}
+
+else
+	return("");
+}
+
+
+/**
+ * split the string of the filename with path and return the filename
+ * you can use in its place:
+ * #include <libgen.h>
+ * basename(..)
+ *
+ * @param fnp filename with path
+ */
+string filenameGetFilename(const string& fnp)
+{
+size_t found;
+found=fnp.find_last_of("/\\");
+if(found != string::npos)
+	return(fnp.substr(found+1));
+else
+	return(fnp);
+}
+
+/**
+ * split the string of the filename with path and return the extension
+ * @param fnp filename with path
+ * @param dot [optional, default=false] true: return ext with the initial '.';
+ */
+string filenameGetExt(const string& fnp,bool dot)
+{
+size_t found;
+found=fnp.find_last_of(".");
+if(found != string::npos)
+	{
+	if(dot)
+		return(fnp.substr(found));
+	else
+		return(fnp.substr(found+1));
+	}
+else
+	return("");
+}
+
+/**
+ * read a text file into a string
+ * @param fname filename to be read
+ * @param dst string that will contains the text readed
+ * @return true:ok false: error
+ */
+bool txtFile2String(string fname, string &dst)
+{
+FILE* f = fopen(fname.c_str(), "r");
+if(f!=NULL)
+	{
+	// Determine file size
+	fseek(f, 0, SEEK_END);
+	size_t size = ftell(f);
+
+<<<<<<< HEAD
+	char* where = new char[size+1];
+
+	rewind(f);
+	fread(where, sizeof(char), size, f);
+	where[size]=0;	// terminate the string
+
+	dst.assign(where);
+	delete[] where;
+=======
+	char* where = new char[size];
+
+	rewind(f);
+	fread(where, sizeof(char), size, f);
+
+	dst.assign(where);
+	//delete[] where;
+>>>>>>> 91834e28b25e8d5940f57f0e27024db42eccf952
+	return true;
+	}
+return false;
+}
+
+/**
+ * get the list of files in a folder
+ * @param path path
+ * @param files listo of the files found
+ * @param filter filter to get only certain files, separted by '|' i.e.: ".txt|.jpg", set to "" for all files
+ * @param ignore the hidden files
+ * @return true:ok; false:error
+ */
+bool fileList(const char* path, vector<string> &files, string filter,bool ignoreHidden)
+{
+vector<string> fil;
+DIR* dirFile = opendir(path);
+Split(filter,fil,"|");
+if (dirFile)
+	{
+	struct dirent* hFile;
+	//errno = 0;
+	while ((hFile = readdir(dirFile)) != NULL)
+		{
+		if (!strcmp(hFile->d_name, ".")) continue;
+		if (!strcmp(hFile->d_name, "..")) continue;
+
+		// in linux hidden files all start with '.'
+		if (ignoreHidden && (hFile->d_name[0] == '.')) continue;
+
+		// dirFile.name is the name of the file. Do whatever string comparison
+		FOR_EACH(it,string,fil)
+			{
+			if (strstr(hFile->d_name, (*it).c_str()))
+				{
+				files.push_back(hFile->d_name);
+				}
+			}
+		}
+	closedir(dirFile);
+	return true;
+	}
+else
+	return false;
+}
+
+/**
+ * create a binary log file (append)
+ * @param logfname log file name
+ * @param buff bytes buffer
+ * @param size size of the buffer in bytes
+ * @return true: ok
+ */
+bool saveLogFile(const string logfname, char* buff, size_t size)
+{
+ofstream f;
+f.open(logfname.c_str(),ios::binary | ios::out | ios::app);
+if(f.is_open())
+	{
+	f.write((char*)buff,size);
+	f.close();
+	return true;
+	}
+return false;
+}
+
+/**
+ * create a text log file
+ * @param logfname log file name
+ * @param buff data to be written
+ * @param size size of the data in chars
+ * @return
+ */
+bool saveLogFile(const string logfname, const char *buff)
+{
+ofstream f;
+f.open(logfname.c_str(), ios::out | ios::app);
+if(f.is_open())
+	{
+	f << buff;
+	f.close();
+	return true;
+	}
+return false;
+}
+/**
+ * create a text log file
+ * @param logfname log file name
+ * @param buff data to be written
+ * @return
+ */
+bool saveLogFile(const string logfname, const string &buff)
+{
+return saveLogFile(logfname,buff.c_str());
+}
+
+/**
+ * save a strings vector to file
+ * @param fname filename
+ * @param v vector of strings
+ */
+void saveStrVec2File(string fname,vector<string> &v)
+{
+ofstream newfile(fname.c_str());
+FOR_EACH(it,string,v)
+	{
+	//cout << *it << " ";
+	newfile << *it << "\n";
+	};
+newfile.close();
+
+
+//ofstream newfile(fname.c_str());
+//for(string &s : v)
+//	{
+//	cout << s << " ";
+//	newfile << s << " ";
+//	};
+//newfile.close();
+}
+
+/**
+ * check if a file exists and is good
+ * @param filename file to check
+ * @return true: file exists
+ */
+bool fileExists(string filename)
+{
+bool ret;
+ifstream my_file(filename.c_str());
+if (my_file.good())
+	{
+	ret=true;
+	}
+else
+	{
+	ret=false;
+	}
+my_file.close();
+return ret;
+}
+
+/**
+ * check if a string contain a float number
+ * @param str string to check. can be
+ *            (+-)int.decimals
+ *            (+-).decimals
+ *            .decimals
+ *            int.decimals
+ * @return if str is in the right format
+ */
+bool IsFloatNumber(char *str)
+{
+int res=true;
+int st=0;
+for(unsigned int i=0;i<strlen(str);i++)
+	{
+	switch(st)
+		{
+		//---------------
+		case 0:		// sign?
+			switch(*(str+i))
+				{
+				case '+':
+				case '-':
+					st=2;		// expected (digit).digit
+					break;
+
+				case '.':
+					st=4;		// expected a digit but not a .
+					break;
+
+				default:
+					if(isdigit(*(str+i)))
+						st=2;		// expected .digit
+					else
+						{
+						res=false;
+						goto _EXIT;	// error not a float
+						}
+					break;
+				}
+			break;
+		//---------------
+		case 2:		// digit.digit
+			if(isdigit(*(str+i)))
+				continue;
+			else
+				if(*(str+i)=='.')
+					st=4;	// expected digit
+				else
+					{
+					res=false;
+					goto _EXIT;	// error not a float
+					}
+			break;
+
+		//---------------
+		case 4:		// digit
+			if(isdigit(*(str+i)))
+				continue;
+			else
+				{
+				res=false;
+				goto _EXIT;	// error not a float
+				}
+			break;
+		}
+	}
+
+_EXIT:
+return(res);
+}
+/**
+ * check if a string contain a float number
+ * @param str string to check. can be
+ *            (+-)int.decimals
+ *            (+-).decimals
+ *            .decimals
+ *            int.decimals
+ * @return if str is in the right format
+ */
+bool IsFloatNumber(const std::string& s)
+{
+char *str=strdup(s.c_str());
+bool ret=IsFloatNumber(str);
+free(str);
+return(ret);
+}
+
+/**
+ * check if a string contain a double number in scientific
+ * or standard float notation.
+ * @param str string to check. can be
+ *            [m]eE[exp]
+ *
+ *            [m] can be:
+ *            (+-)int
+ *            (+-)int.decimals
+ *            (+-).decimals
+ *            .decimals
+ *            int.decimals
+ *
+ *            [exp] can be
+ *            (+-)float or int
+ *
+ *
+ * @return if str is in the right format
+ *
+ */
+bool IsDoubleNumber(char *str)
+{
+char *str_l=strdup(str);
+char *m,*e;
+int res=0;
+
+m=str_l;
+if((e=strpbrk(str_l,"eE"))!=(char*)NULL)	// is in a scientific notation
+	{
+	*e=0;	// separa le due stringhe
+	e++;
+
+	if(IsFloatNumber(m) || IsIntNumber(m))	res++;
+	if(IsFloatNumber(e) || IsIntNumber(e))	res++;
+	}
+
+free(str_l);
+if(res==2)
+	return(true);
+
+return(false);
+}
+
+/**
+ * check if a string contain a double number in scientific
+ * or standard float notation.
+ * @param s string to check. can be
+ *            [m]eE[exp]
+ *
+ *            [m] can be:
+ *            (+-)int
+ *            (+-)int.decimals
+ *            (+-).decimals
+ *            .decimals
+ *            int.decimals
+ *
+ *            [exp] can be
+ *            (+-)float or int
+ *
+ *
+ * @return if str is in the right format
+ *
+ */
+bool IsDoubleNumber(const std::string& s)
+{
+char *str=strdup(s.c_str());
+bool ret=IsDoubleNumber(str);
+free(str);
+return(ret);
+}
+
+/**
+ * round a number to the best number multiple of to
+ * @param numb floating point number to round
+ * @param gran floating point number to which numb must be a multiple
+ * @return value
+ */
+double RoundTo(double numb, double gran)
+{
+double q,r;
+q=floor(numb/gran);
+r=numb-q*gran;
+if(r>=(gran/2))
+	q+=gran;
+
+return(q*gran);
+}
+
+/**
+ * get a nibble value
+ * @param value byte to elaborate
+ * @param which	indicates which nibble:'H' the higher, 'L' the lower
+ * @return the nibble value (between 0-15)
+ */
+unsigned char getNibble(unsigned char value,char which)
+{
+unsigned char tmp=value;
+tmp=(which=='H') ? (tmp >> 4) : (tmp);
+return(tmp & 0x0F);
+}
+
+/**
+ * start measure time - profiling routine
+ * @param t1us	store start time
+ */
+void profStartTime_us(unsigned int &t1us)
+	{
+	struct timeval tv;
+	unsigned int us=0;
+	gettimeofday(&tv, NULL);
+	us=tv.tv_sec*1000000+tv.tv_usec;
+	t1us=us;
+	}
+/**
+ * delta time from the first call to get time elapsed
+ * #param t1us	get start time
+ * @return delta time in [us]
+ */
+unsigned int profGetDeltaTime_us(unsigned int &t1us)
+	{
+	unsigned int t2us;
+	unsigned int dt=0;
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	t2us=tv.tv_sec*1000000+tv.tv_usec;
+	dt=t2us-t1us;
+	t1us=t2us;	// need if you woant use in continuous mode
+	return(dt);
+	}
+
+/**
+ * write to dmesg log
+ * @param p_message (like printf)
+ */
+void WriteTodmesg(const char* p_message, ...)
+{
+#define PRINT_BUFFER_SIZE (512)
+
+char l_print_data[PRINT_BUFFER_SIZE];
+char l_format[PRINT_BUFFER_SIZE];
+FILE* l_file = fopen("/dev/kmsg", "a");
+if (NULL != l_file)
+	{
+	va_list l_args;
+	snprintf(l_format, PRINT_BUFFER_SIZE, "EA(%d):%s\n", getpid(), p_message);
+	va_start(l_args, p_message);
+	vsnprintf(l_print_data, PRINT_BUFFER_SIZE, l_format, l_args);
+	va_end(l_args);
+	fwrite(l_print_data, strlen(l_print_data), 1, l_file);
+	fclose(l_file);
+	}
+}

@@ -1,0 +1,120 @@
+/*
+ * PROJECT:
+ *
+ * FILENAME: Trace.h
+ *
+ * PURPOSE:
+ * Trace class to debug programs or to implement a common interface
+ * to printing messages
+ *
+ *
+ * LICENSE: please refer to LICENSE.TXT
+ * CREATED: 14-11-08
+ * AUTHOR: 	Luca Mini
+ * 
+ * 16/03/12 L. Mini         Added fifo and timestamp support
+ */
+
+#ifndef _TRACE_H
+#define _TRACE_H
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <stdarg.h>
+#include <cstdlib>
+#include <cstring>
+#include <map>
+
+using namespace std;
+
+
+#define TRACECLASS_CUSTOM_MIN 10
+
+#define TRACECLASS_DEBUG 	0
+#define TRACECLASS_FATAL 	1
+#define TRACECLASS_ERROR 	2
+#define TRACECLASS_WARN 	3
+#define TRACECLASS_NOTIFY 4
+
+
+#define TRACEOUTPUT_STDOUT		"stdout"
+#define TRACEOUTPUT_STDERR		"stderr"
+#define TRACEOUTPUT_SYSLOG		"syslog"
+
+// use these macro to print the function name
+//#define TRACE_cstr(myClass,traceClass,...)		myClass->trace(traceClass,__VA_ARGS__)
+//#define TRACE_str(myClass,traceClass,str)			myClass->trace(traceClass,str)
+//#define TRACEF_cstr(myClass,traceClass,...)		myClass->tracef(traceClass,__FUNCTION__,__VA_ARGS__)
+//#define TRACEF_str(myClass,traceClass,str)		myClass->tracef(traceClass,__FUNCTION__,str)
+
+#define TRACE(myClass,traceClass,...)			myClass->trace(traceClass,__VA_ARGS__)
+#define TRACEF(myClass,traceClass,...)		myClass->tracef(traceClass,__FUNCTION__,__VA_ARGS__)
+
+class Trace
+{
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+public:
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	//-------------------------------
+	//---- variables, properties ----
+	//-------------------------------
+	bool showClassNumber;
+	bool showClassName;
+
+	enum traceOutput_e {tout_STDOUT,tout_STDERR,tout_FILE,tout_SYSLOG};
+
+	//-------------------------------
+	//---- methods               ----
+	//-------------------------------
+	Trace(int numb_of_classes, string msgtitle,const char *filename);		// ctor
+	virtual ~Trace();	// dtor
+	//...............................
+	void trace(int traceclass, const char *format, ...);
+	void trace(int traceclass, const string msg);
+	void tracef(int traceclass, const char *_func, const char *format, ...);
+	void tracef(int traceclass, const char *_func, const string msg);
+	void set(bool enable, ...);
+	void set_all(bool mode);
+	bool isSet(int traceclass);
+	void setUseTimestamp(bool useTS);
+	void addClassName(int classNumber, string cname);
+
+	void setFifo(char *filename, bool create, FILE *fp=NULL);
+	void closeFifo();
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+private:
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	//-------------------------------
+	//---- variables, properties ----
+	//-------------------------------
+	// enable vector for the traces
+	char *TraceFileName;		// trace filename, or =NULL
+	bool *traceEnabled;			// true to show a trace class
+	int n_classes;					// max number of classes
+	string title;						// title added tu the message
+	bool isFifo;					// if use a FIFO as file output
+	FILE* fifo;
+	bool useTimestamp;
+	enum traceOutput_e tOutput;
+
+	//-------------------------------
+	//---- methods               ----
+	//-------------------------------
+	void mode(const char *filename);
+	void close(void);
+	string getTimestamp();
+	virtual void writeToFile(string msg);
+	map<int,string> className;
+
+
+	void writeLL(string msg);
+};
+
+
+
+//=============================================================================
+#endif // _TRACE_H
+
+
