@@ -477,6 +477,11 @@ K ampliop
 F ns/lm158.pdf
 $ENDCMP
 #
+$CMP USB_OTG_rev
+D micro/mini connector
+K USB USB_OTG USB_mini USB_micro
+$ENDCMP
+#
 $CMP VDDA
 K POWER, PWR
 $ENDCMP
