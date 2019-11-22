@@ -454,6 +454,12 @@ D Switch inverseur
 K switch
 $ENDCMP
 #
+$CMP TPS62125DGSR
+D WSON-8, Buck Step-Down DC-DC Converter
+K TPS62125DGSR Step-Down DC-DC Converter WSON-8
+F http://www.ti.com/product/TPS62125
+$ENDCMP
+#
 $CMP TRANSZORB
 D Diode schottky
 K DEV DIODE
