@@ -404,4 +404,9 @@
   (pad AC21 smd circle (at 4.5 5.5) (size 0.3048 0.3048) (layers F.Cu F.Paste F.Mask))
   (pad AC22 smd circle (at 5 5.5) (size 0.3048 0.3048) (layers F.Cu F.Paste F.Mask))
   (pad AC23 smd circle (at 5.5 5.5) (size 0.3048 0.3048) (layers F.Cu F.Paste F.Mask))
+  (model Housings_BGA.3dshapes/BGA-400_20x20_21.0x21.0mm_Pitch1.0mm.wrl
+    (at (xyz 0 0 0))
+    (scale (xyz 0.6 0.6 0.6))
+    (rotate (xyz 0 0 0))
+  )
 )
