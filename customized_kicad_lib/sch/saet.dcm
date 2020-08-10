@@ -1,22 +1,22 @@
 EESchema-DOCLIB  Version 2.0
 #
-$CMP +11V
-K POWER, PWR
-$ENDCMP
-#
 $CMP +12V_Serv
 K POWER, PWR
 $ENDCMP
 #
-$CMP +12Vin
-K POWER, PWR
-$ENDCMP
-#
-$CMP +12Vout
-K POWER, PWR
-$ENDCMP
-#
 $CMP +13.8V
+K POWER, PWR
+$ENDCMP
+#
+$CMP +13.8V2
+K POWER, PWR
+$ENDCMP
+#
+$CMP +13.8V_ext
+K POWER, PWR
+$ENDCMP
+#
+$CMP +14.2V
 K POWER, PWR
 $ENDCMP
 #
@@ -32,25 +32,17 @@ $CMP +5V_usb
 K POWER, PWR
 $ENDCMP
 #
-$CMP 0.33F
-D Condensateur polarise
-$ENDCMP
-#
 $CMP 1N4001
 D Diode simple
 K DEV DIODE
 $ENDCMP
 #
-$CMP 1N4002
-D Diode simple
-K DEV DIODE
-$ENDCMP
-#
-$CMP 1N4148
-D Diode
-$ENDCMP
-#
 $CMP 24C16
+D I2C Serial EEPROM
+K EEPROM Serial
+$ENDCMP
+#
+$CMP 24C512
 D I2C Serial eprom
 K I2C MEMORY
 F memory/24xx512.pdf
@@ -72,11 +64,6 @@ D Retriggerable Monostable
 K TTL monostable
 $ENDCMP
 #
-$CMP 74VHC1G07
-D inverting buffer with Schmitt trigger.
-F 74xx/74ahc_ahct1g14.pdf
-$ENDCMP
-#
 $CMP 7805
 D Linear Regulator +5V
 K POWER REGUL
@@ -87,10 +74,6 @@ $CMP 78L05
 D Linear Regulator +5V
 K POWER REGUL
 F regulator\lm78lxx.pdf
-$ENDCMP
-#
-$CMP AD5282
-D DIgital Potentiometer
 $ENDCMP
 #
 $CMP ADIMPEX
@@ -107,12 +90,6 @@ $ENDCMP
 #
 $CMP ADIMPEX_3ways
 D Connector 3Way P3.5  GIX720031
-$ENDCMP
-#
-$CMP ATMEGA32-A
-D ATMEGA32, TQFP44, 32k Flash, 2k SRAM, 1k EEPROM, JTAG
-K AVR 8bit Microcontroller MegaAVR
-F http://www.atmel.com/Images/doc2503.pdf
 $ENDCMP
 #
 $CMP B130B
@@ -135,31 +112,6 @@ D VARISTANCE
 K VR  DEV
 $ENDCMP
 #
-$CMP BAT54T1G
-D Diode schottky
-K DEV DIODE
-$ENDCMP
-#
-$CMP BC327
-D PNP
-$ENDCMP
-#
-$CMP BC337
-D NPN
-K BC337
-$ENDCMP
-#
-$CMP BC807
-D Transistor PNP (general)
-K pnp transistor
-$ENDCMP
-#
-$CMP BC817
-D 25V Vce, 0.8A Ic, NPN, SOT-23
-K BC818 BC337 Equivalent
-F http://www.fairchildsemi.com/ds/BC/BC817.pdf
-$ENDCMP
-#
 $CMP BJT_NPN
 F transistors/bipolar/*.*
 $ENDCMP
@@ -176,17 +128,13 @@ K N-Channel MOSFET
 F http://www.vishay.com/docs/70215/70215.pdf
 $ENDCMP
 #
-$CMP BlockLed
-D Condensateur polarise
-K LED
-$ENDCMP
-#
 $CMP COB5/2
 D Connector 45° 2ways COB5/2
 $ENDCMP
 #
-$CMP COB5/3
-D Connector 45° 2ways COB5/2
+$CMP CONN_10
+D Symbole general de connecteur
+K CONN
 $ENDCMP
 #
 $CMP CONN_2B
@@ -229,14 +177,6 @@ D Symbole general pour connexions
 K CONN
 $ENDCMP
 #
-$CMP CTM020M8
-D Connector 01x02
-$ENDCMP
-#
-$CMP CTM030M8
-D Connector 01x03
-$ENDCMP
-#
 $CMP DAC7578
 D CDA 8 bits
 K CDA
@@ -248,8 +188,9 @@ K DEV DIODE
 $ENDCMP
 #
 $CMP DMG2307
-D DMG2307L-7, 200V Vds, PChannel MOSFET, TO92
-K P-Channel MOSFET
+D BS107, 200V Vds, N-Channel MOSFET, TO92
+K N-Channel MOSFET
+F http://www.vishay.com/docs/70215/70215.pdf
 $ENDCMP
 #
 $CMP DMN3150
@@ -269,54 +210,27 @@ D Filtre EMI
 K EMI
 $ENDCMP
 #
-$CMP EMIGUARD_2
-D Filtre EMI
-K EMI
-$ENDCMP
-#
 $CMP ENC28J60-C/SS
 D ENC28J60 Single Chip Ethernet Interface, SSOP-28
 K ENC Ethernet
 F http://ww1.microchip.com/downloads/en/devicedoc/39662a.pdf
 $ENDCMP
 #
+$CMP ESDA6V1W5
+D ESD overvoltage protection
+K protection ESD
+$ENDCMP
+#
 $CMP FT-X3
 D Transformer
 $ENDCMP
 #
-$CMP FT232RL
-D USB2 UART
-F /home/walter/Documents/Elettronica/DATA_SHEET/Elettronici/Integrati/Digitali/RTX/FTDI_FT232R.pdf
+$CMP H201CBC
+D Bivar H201CBC, Green & Red Right Angle PCB LED Indicator, 2 LEDs 3mm (T-1), PCB Mount
+F https://componentsearchengine.com/Datasheets/1/H201CBC.pdf
 $ENDCMP
 #
-$CMP FZT751TA
-D Transistor PNP (general)
-K pnp transistor
-$ENDCMP
-#
-$CMP H11L1
-D DIP6, DC Optocoupler Base Connected, Vce 30V, CTR 20%, Viso 2500V
-K NPN DC Optocoupler Base Connected
-$ENDCMP
-#
-$CMP HEF4051BT
-D Analog Multiplexer 8 to 1 lins
-K CMOS MUX MUX8
-$ENDCMP
-#
-$CMP LD-S3528
-K LED
-$ENDCMP
-#
-$CMP LED_1206_G
-K LED
-$ENDCMP
-#
-$CMP LED_1206_R
-K LED
-$ENDCMP
-#
-$CMP LED_1206_Y
+$CMP LED
 K LED
 $ENDCMP
 #
@@ -356,11 +270,6 @@ $CMP LED_R_0805
 K LED
 $ENDCMP
 #
-$CMP LED_R_1206
-D LED generic
-K led diode
-$ENDCMP
-#
 $CMP LED_V
 K LED
 $ENDCMP
@@ -374,6 +283,10 @@ K LED
 $ENDCMP
 #
 $CMP LED_Y_0603
+K LED
+$ENDCMP
+#
+$CMP LM117K
 D LM117K, 1,5A 35V Adjustable Linear Regulator, TO-3
 K Adjustable Voltage Regulator 1,5A Positive
 F http://www.national.com/ds/LM/LM117.pdf
@@ -386,15 +299,9 @@ F ns/lm193.pdf
 $ENDCMP
 #
 $CMP LM217
-D Dual Voltage Comparator
-K Comp
-F ns/lm193.pdf
-$ENDCMP
-#
-$CMP LM2903
-D Dual Voltage Comparator
-K Comp
-F ns/lm193.pdf
+D LM317K, 1.5A 35V Adjustable Linear Regulator, TO-3
+K Adjustable Voltage Regulator 1.5A Positive
+F http://www.national.com/ds/LM/LM117.pdf
 $ENDCMP
 #
 $CMP LM293
@@ -403,7 +310,25 @@ K Comp
 F ns/lm193.pdf
 $ENDCMP
 #
+$CMP LM339-N
+D Quad comparator.
+K Comp
+F op_amps/lm139.pdf
+$ENDCMP
+#
+$CMP LM339M
+D Quad comparator.
+K Comp
+F op_amps/lm139.pdf
+$ENDCMP
+#
 $CMP LM393
+D Dual Voltage Comparator
+K Comp
+F ns/lm193.pdf
+$ENDCMP
+#
+$CMP LM393-N
 D Dual Voltage Comparator
 K Comp
 F ns/lm193.pdf
@@ -421,87 +346,205 @@ K POWER REGUL
 F regulator\lm78xx.pdf
 $ENDCMP
 #
-$CMP LP2985IM5-3.3
-D MICROPOWER 150mA Regulator
-K REGUL POWER  SOT-23-5
-F regulator/LP2985.pdf
+$CMP LT1763
+D LDO 500mA regulator
 $ENDCMP
 #
-$CMP MINI-B-USB-SMD
+$CMP LT1763-3.3
+D LDO 500mA regulator
+$ENDCMP
+#
+$CMP LT1763-5
+D LDO 500mA regulator
+$ENDCMP
+#
+$CMP LTC1480
+D IC RS-48 3.3V RS485
+$ENDCMP
+#
+$CMP M24C16
+D I2C Serial EEPROM
+K EEPROM Serial
+$ENDCMP
+#
+$CMP MAX31855EASA
+D MAX31855EASA, Cold Junction E-type Termocouple Interface, SPI, SO8
+K Cold Junction Termocouple Interface SPI
+F http://datasheets.maximintegrated.com/en/ds/MAX31855.pdf
+$ENDCMP
+#
+$CMP MAX31855JASA
+D MAX31855JASA, Cold Junction J-type Termocouple Interface, SPI, SO8
+K Cold Junction Termocouple Interface SPI
+F http://datasheets.maximintegrated.com/en/ds/MAX31855.pdf
+$ENDCMP
+#
+$CMP MAX31855KASA
+D MAX31855KASA, Cold Junction K-type Termocouple Interface, SPI, SO8
+K Cold Junction Termocouple Interface SPI
+F http://datasheets.maximintegrated.com/en/ds/MAX31855.pdf
+$ENDCMP
+#
+$CMP MAX31855NASA
+D MAX31855NASA, Cold Junction N-type Termocouple Interface, SPI, SO8
+K Cold Junction Termocouple Interface SPI
+F http://datasheets.maximintegrated.com/en/ds/MAX31855.pdf
+$ENDCMP
+#
+$CMP MAX31855RASA
+D MAX31855RASA, Cold Junction R-type Termocouple Interface, SPI, SO8
+K Cold Junction Termocouple Interface SPI
+F http://datasheets.maximintegrated.com/en/ds/MAX31855.pdf
+$ENDCMP
+#
+$CMP MAX31855SASA
+D MAX31855SASA, Cold Junction S-type Termocouple Interface, SPI, SO8
+K Cold Junction Termocouple Interface SPI
+F http://datasheets.maximintegrated.com/en/ds/MAX31855.pdf
+$ENDCMP
+#
+$CMP MAX31855TASA
+D MAX31855TASA, Cold Junction T-type Termocouple Interface, SPI, SO8
+K Cold Junction Termocouple Interface SPI
+F http://datasheets.maximintegrated.com/en/ds/MAX31855.pdf
+$ENDCMP
+#
+$CMP MCP2515
+D Standalone CAN controller with SPI interface
+$ENDCMP
+#
+$CMP MOLEX_90
+D Connector Molex 5 ways 90° Pinhead
+$ENDCMP
+#
+$CMP NFM41CC223R2A3L
+D Emi filter
+K EMI FILTER
+$ENDCMP
+#
+$CMP NSR05F2
+D Diode simple
+K DEV DIODE
+$ENDCMP
+#
+$CMP P3.5
+D Connector 3Way P3.5  GIX720031
+$ENDCMP
+#
+$CMP PMEG4005AEA
+D Diode schottky
+K DEV DIODE
+$ENDCMP
+#
+$CMP PMEG4050
+D Diode simple
+K DEV DIODE
+$ENDCMP
+#
+$CMP RJ45-TRANSFO-LED
+D RJ45 with transformer + leds WURTH
+K RJ45
+$ENDCMP
+#
+$CMP RJ45_LEDS
+D RJ45, status leds
+K RJ45 RJ45_LEDS
+$ENDCMP
+#
+$CMP RJU003N
+D BS107, 200V Vds, N-Channel MOSFET, TO92
+K N-Channel MOSFET
+F http://www.vishay.com/docs/70215/70215.pdf
+$ENDCMP
+#
+$CMP SN65HVD
+D IC RS-48 3.3V RS485
+$ENDCMP
+#
+$CMP SN74LS122
+D Retriggerable Monostable
+K TTL monostable
+$ENDCMP
+#
+$CMP SPST-NO
+D Push Button
+K Switch
+$ENDCMP
+#
+$CMP STPMIC1BPQR
+D Power Management Specialized - PMIC
+$ENDCMP
+#
+$CMP SWITCH_TAMPER
+D Switch inverseur
+K switch
+$ENDCMP
+#
+$CMP TPS62125DGSR
+D WSON-8, Buck Step-Down DC-DC Converter
+K TPS62125DGSR Step-Down DC-DC Converter WSON-8
+F http://www.ti.com/product/TPS62125
+$ENDCMP
+#
+$CMP TRANSZORB
+D Diode schottky
+K DEV DIODE
+$ENDCMP
+#
+$CMP TS321
+D Op amp
+K Ampliop
+F AmpliOp.sch
+$ENDCMP
+#
+$CMP TS321LT
+D Op amp
+K Ampliop
+F AmpliOp.sch
+$ENDCMP
+#
+$CMP TS912
+D Dual Op amp (low power)
+K ampliop
+F ns/lm158.pdf
+$ENDCMP
+#
+$CMP USB_OTG_rev
 D micro/mini connector
 K USB USB_OTG USB_mini USB_micro
 $ENDCMP
 #
-$CMP MLX90109
-D RFID 125KHz reader
-F https://www.melexis.com/-/media/files/documents/datasheets/mlx90109-datasheet-melexis.pdf
-$ENDCMP
-#
-$CMP MSBD02001
-D Connector SMD 2-way
-$ENDCMP
-#
-$CMP MSBD03001
-D Connector SMD 3-way
-$ENDCMP
-#
-$CMP NFL21SP206X1C3
-D Filtre EMI
-K EMI
-$ENDCMP
-#
-$CMP NTHD4102P
-D −20 V, −4.1 A, Dual P−Channel ChipFET
-K dual pmos p-mos p-mosfet transistor
-$ENDCMP
-#
-$CMP NTHD4508N
-D Transistor N-MOSFET (general)
-K nmos n-mos n-mosfet transistor
-$ENDCMP
-#
-$CMP RB751V40
-D Diode Schottky
-F http://www.nxp.com/documents/data_sheet/RB751_SER.pdf
-$ENDCMP
-#
-$CMP SN74LVC1G07DCKR
-D inverting buffer with Schmitt trigger.
-F 74xx/74ahc_ahct1g14.pdf
-$ENDCMP
-#
-$CMP SPST
-D Interrupteur simple
-K switch
-$ENDCMP
-#
-$CMP VCC
+$CMP VDDA
 K POWER, PWR
 $ENDCMP
 #
-$CMP Vin
+$CMP VGSM
 K POWER, PWR
 $ENDCMP
 #
-$CMP Vout
+$CMP VR
+D PTC
+K VR  DEV
+$ENDCMP
+#
+$CMP Vbat+
 K POWER, PWR
 $ENDCMP
 #
-$CMP WT8266-S1
-D ESP8266 ESP-13-WROOM-02 module, 18 pins, 2mm, PCB antenna
-K MODULE ESP8266 ESP-8266
-F http://l0l.org.uk/2014/12/esp8266-modules-hardware-guide-gotta-catch-em-all/
+$CMP Vref+
+K POWER, PWR
 $ENDCMP
 #
-$CMP ZENER_18V
-D Diode zener
-K DEV DIODE
+$CMP Vref-
+K POWER, PWR
 $ENDCMP
 #
-$CMP ZXT690
-D 1.5A Ic, 400V Vce, Silicon Switching Power Transistor NPN, TO-225
-K Switching Power High Voltage Transistor NPN
-F http://www.onsemi.com/pub_link/Collateral/MJE13003-D.PDF
+$CMP Vtest
+K POWER, PWR
+$ENDCMP
+#
+$CMP WURTH_90
+D WURTH Connector Male 90°
 $ENDCMP
 #
 #End Doc Library
